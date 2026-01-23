@@ -423,7 +423,7 @@
 
             <!-- Canadian Postal Code -->
             <div class="form-floating">
-                <input type="text" class="form-control" id="postalCode" placeholder="A1A 1A1"
+                <input type="text" th:field="${registerDto.postalCode}" class="form-control" id="postalCode" placeholder="A1A 1A1"
                        autocomplete="postal-code" maxlength="7"
                        pattern="^[ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][ ]?[0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9]$"
                        title="Valid Canadian postal code, e.g., A1A 1A1" />
@@ -431,6 +431,10 @@
                     <i class="fas fa-mail-bulk"></i>Postal Code (Canada)
                 </label>
                 <div class="form-text">Please enter manually; suggestions do not auto-fill postal codes.</div>
+                <div th:if="${#fields.hasErrors('postalCode')}" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span th:errors="${registerDto.postalCode}"></span>
+                </div>
             </div>
 
             <div class="form-floating">

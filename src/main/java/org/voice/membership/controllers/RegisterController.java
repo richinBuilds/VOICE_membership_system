@@ -65,6 +65,7 @@ public class RegisterController {
                 .password(passwordEncoder.encode(registerDto.getPassword()))
                 .phone(registerDto.getPhone())
                 .address(registerDto.getAddress())
+                .postalCode(registerDto.getPostalCode())
                 .role(Role.USER.name())
                 .creation(new Date())
                 .build();

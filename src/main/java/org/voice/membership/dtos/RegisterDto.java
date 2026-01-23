@@ -24,4 +24,6 @@ public class RegisterDto {
     @NotEmpty(message = "Phone number is required")
     private String phone;
     private String address;
+    @Pattern(regexp = "^[ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][ ]?[0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9]$", message = "Valid Canadian postal code, e.g., A1A 1A1")
+    private String postalCode;
 }
