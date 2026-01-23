@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            margin: 2rem auto;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-title {
+            text-align: center;
+            color: #333;
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2.5rem;
+            font-size: 1rem;
+        }
+
+        .form-floating {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-floating > .form-control {
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 1rem 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-floating > .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            background: white;
+        }
+
+        .form-floating > label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .email-display {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .email-display i {
+            color: #667eea;
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .email-display .email-label {
+            font-weight: 600;
+            color: #333;
+            margin-right: 0.5rem;
+        }
+
+        .email-display .email-value {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 10%;
+            animation-delay: -2s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 70%;
+            left: 80%;
+            animation-delay: -4s;
+        }
+
+        .shape:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            top: 40%;
+            left: 85%;
+            animation-delay: -1s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+        }
+
+        .required {
+            color: #dc3545;
+            margin-left: 4px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+<div class="floating-shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+</div>
+
+<div class="container">
+    <div class="form-container">
+        <h1 class="form-title">
+            <i class="fas fa-user-edit text-primary me-2"></i>
+            Edit Profile
+        </h1>
+        <p class="form-subtitle">Update your personal information</p>
+
+        <form method="post" th:object="${updateUserRequest}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <!-- Form-level error summary for validation errors only -->
+            <div th:if="${#fields.hasErrors()}" class="alert alert-danger py-2">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Please fix the errors below.
+            </div>
+
+            <div class="form-floating">
+                <input type="text" th:field="*{name}" class="form-control" id="name" placeholder="Enter full name" required>
+                <label for="name">
+                    <i class="fas fa-user me-2"></i>Full Name <span class="required">*</span>
+                </label>
+            </div>
+
+            <div class="form-floating">
+                <input type="email" th:field="*{email}" class="form-control" th:classappend="${#fields.hasErrors('email')} ? ' is-invalid' : ''" id="email" placeholder="Enter email" required
+                       pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$" title="Please enter a valid email address (e.g., name@example.com)">
+                <label for="email">
+                    <i class="fas fa-envelope me-2"></i>Email Address <span class="required">*</span>
+                </label>
+                <div th:if="${#fields.hasErrors('email')}" class="invalid-feedback d-block">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    <span th:errors="*{email}"></span>
+                </div>
+            </div>
+
+            <div class="form-floating">
+                <input type="tel" th:field="*{phone}" class="form-control" id="phone" placeholder="(123) 456-7890" inputmode="tel" maxlength="14" pattern="^\(\d{3}\) \d{3}-\d{4}$" title="Format: (123) 456-7890" required>
+                <label for="phone">
+                    <i class="fas fa-phone me-2"></i>Phone Number <span class="required">*</span>
+                </label>
+            </div>
+
+            <div class="form-floating">
+                <input type="text" th:field="*{address}" class="form-control" id="address" placeholder="Enter address">
+                <label for="address">
+                    <i class="fas fa-map-marker-alt me-2"></i>Address
+                </label>
+                <!-- Address suggestions dropdown -->
+                <div id="addressSuggestions" class="list-group shadow d-none" style="position: relative; z-index: 1000;">
+                    <!-- Suggestions injected by script -->
+                </div>
+            </div>
+
+            <!-- Canadian Postal Code -->
+            <div class="form-floating">
+                <input type="text" th:field="*{postalCode}" class="form-control" id="postalCode" placeholder="A1A 1A1" autocomplete="postal-code" maxlength="7" pattern="^[ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][ ]?[0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9]$" title="Valid Canadian postal code, e.g., A1A 1A1">
+                <label for="postalCode">
+                    <i class="fas fa-mail-bulk me-2"></i>Postal Code (Canada)
+                </label>
+                <div class="form-text">Canada-only: format like A1A 1A1</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary submit-btn">
+                <i class="fas fa-save me-2"></i>
+                Update Profile
+            </button>
+            <a th:href="@{/profile}" class="btn btn-outline-secondary mt-3 w-100" role="button">
+                <i class="fas fa-times me-2"></i>
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+<script>
+    (function() {
+        const postalInput = document.getElementById('postalCode');
+        const phoneInput = document.getElementById('phone');
+        const addressInput = document.getElementById('address');
+        const suggestions = document.getElementById('addressSuggestions');
+        // Address autocomplete (Canada-only, no postal code in suggestions)
+        let debounceTimer = null;
+        function debounce(fn, delay) {
+            return function(...args) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        function hideSuggestions() {
+            if (!suggestions) return;
+            suggestions.classList.add('d-none');
+            suggestions.innerHTML = '';
+        }
+
+        function removeCanadianPostalCodes(text) {
+            if (!text) return '';
+            const regex = /\b[ABCEGHJ-NPRSTVXYabceghj-nprstvxy]\d[ABCEGHJ-NPRSTVXYabceghj-nprstvxy]\s?\d[ABCEGHJ-NPRSTVXYabceghj-nprstvxy]\d\b/g;
+            return text.replace(regex, '').replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').replace(/,\s*,/g, ', ').replace(/^,\s*|,\s*$/g, '').trim();
+        }
+
+        function formatAddressSansPostcode(item) {
+            try {
+                const a = item && item.address ? item.address : {};
+                const numberRoad = [a.house_number, a.road].filter(Boolean).join(' ').trim();
+                const locality = a.suburb || a.neighbourhood || a.district || '';
+                const city = a.city || a.town || a.village || a.hamlet || a.municipality || '';
+                const state = a.state || a.province || '';
+                const country = a.country || '';
+                const parts = [numberRoad, locality, city, state, country].filter(Boolean);
+                const joined = parts.join(', ');
+                if (joined) return removeCanadianPostalCodes(joined);
+                return removeCanadianPostalCodes(item.display_name || '');
+            } catch (e) {
+                return removeCanadianPostalCodes(item && item.display_name ? item.display_name : '');
+            }
+        }
+
+        async function fetchSuggestions(query) {
+            if (!query || query.trim().length < 3) {
+                hideSuggestions();
+                return;
+            }
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ca&q=${encodeURIComponent(query)}`;
+                const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!resp.ok) throw new Error('Network response was not ok');
+                const results = await resp.json();
+                if (!suggestions) return;
+                suggestions.innerHTML = '';
+                if (!results || results.length === 0) {
+                    hideSuggestions();
+                    return;
+                }
+                results.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'list-group-item list-group-item-action';
+                    const label = formatAddressSansPostcode(item);
+                    btn.textContent = label;
+                    btn.addEventListener('click', () => {
+                        addressInput.value = label;
+                        hideSuggestions();
+                        addressInput.focus();
+                    });
+                    suggestions.appendChild(btn);
+                });
+                suggestions.classList.remove('d-none');
+            } catch (err) {
+                hideSuggestions();
+            }
+        }
+
+        const onInput = debounce(() => fetchSuggestions(addressInput.value), 250);
+        if (addressInput) addressInput.addEventListener('input', onInput);
+        document.addEventListener('click', (e) => {
+            if (!suggestions) return;
+            if (!suggestions.contains(e.target) && e.target !== addressInput) {
+                hideSuggestions();
+            }
+        });
+
+        // Auto-format Canadian postal code to 'A1A 1A1'
+        if (postalInput) {
+            const formatPostal = () => {
+                const raw = (postalInput.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+                postalInput.value = raw.length > 3 ? `${raw.slice(0, 3)} ${raw.slice(3)}` : raw;
+            };
+            postalInput.addEventListener('input', formatPostal);
+            postalInput.addEventListener('blur', formatPostal);
+        }
+
+        // Auto-format phone number to '(123) 456-7890'
+        if (phoneInput) {
+            const formatPhone = () => {
+                const digits = (phoneInput.value || '').replace(/\D/g, '').slice(0, 10);
+                let formatted = digits;
+                if (digits.length > 6) {
+                    formatted = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+                } else if (digits.length > 3) {
+                    formatted = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+                } else if (digits.length > 0) {
+                    formatted = `(${digits}`;
+                }
+                phoneInput.value = formatted;
+            };
+            phoneInput.addEventListener('input', formatPhone);
+            phoneInput.addEventListener('blur', formatPhone);
+            // Normalize on page load if browser autofills
+            formatPhone();
+        }
+    })();
+</script>
+</body>
+</html>
