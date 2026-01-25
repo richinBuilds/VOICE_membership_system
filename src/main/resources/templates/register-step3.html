@@ -233,8 +233,9 @@
                     </div>
                     <div class="membership-body">
                         <p class="membership-description" th:text="${membership.description}"></p>
+                       <!-- to change the way features are displayed inside the membership card -->
                         <ul class="membership-features" th:if="${membership.features != null}">
-                            <li th:each="feature : ${#strings.arraySplit(membership.features, '\n')}" 
+                            <li th:each="feature : ${#strings.arraySplit(membership.features, lineSeparator)}" 
                                 th:text="${feature.trim()}"></li>
                         </ul>
                     </div>

@@ -217,7 +217,7 @@
                     <p th:if="${membership.features}">
                         <strong>Features:</strong>
                         <ul style="margin-left: 20px; margin-top: 10px;">
-                            <li th:each="feature : ${#strings.arraySplit(membership.features, '\n')}" 
+                            <li th:each="feature : ${#strings.arraySplit(membership.features, lineSeparator)}" 
                                 th:text="${feature.trim()}"></li>
                         </ul>
                     </p>

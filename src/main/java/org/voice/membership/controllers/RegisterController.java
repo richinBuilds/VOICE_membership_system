@@ -193,6 +193,7 @@ public class RegisterController {
         List<Membership> memberships = membershipRepository.findByActiveTrueOrderByDisplayOrderAsc();
         model.addAttribute("memberships", memberships);
         model.addAttribute("selectedMembershipId", registrationData.getSelectedMembershipId());
+        model.addAttribute("lineSeparator", System.lineSeparator());
         model.addAttribute("step", 3);
         model.addAttribute("totalSteps", 4);
         return "register-step3";
@@ -237,6 +238,7 @@ public class RegisterController {
 
         Membership membership = membershipOpt.get();
         model.addAttribute("membership", membership);
+        model.addAttribute("lineSeparator", System.lineSeparator());
         model.addAttribute("step", 4);
         model.addAttribute("totalSteps", 4);
         if (error != null) {

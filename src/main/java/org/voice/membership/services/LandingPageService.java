@@ -84,7 +84,7 @@ public class LandingPageService {
                     .name("Free")
                     .description("Get started with VOICE community")
                     .price(null)
-                    .features("Basic access\nCommunity forum access\nWeekly newsletters\nBasic profile")
+                    .features("Basic access" + System.lineSeparator() + "Community forum access" + System.lineSeparator() + "Weekly newsletters" + System.lineSeparator() + "No voting rights")
                     .isFree(true)
                     .displayOrder(1)
                     .active(true)
@@ -96,7 +96,8 @@ public class LandingPageService {
                     .name("Premium")
                     .description("Support VOICE and unlock premium benefits")
                     .price(new java.math.BigDecimal("20.00"))
-                    .features("Everything in Free\nPriority support\nExclusive webinars\nAdvanced analytics\nCustom dashboard")
+                    .features("Membership with full voting right" + System.lineSeparator() + "Includes two adults and any minor dependents in the same household" + System.lineSeparator() + "Exclusive webinars" + System.lineSeparator() + "Updated on events and kept informed")
+
                     .isFree(false)
                     .displayOrder(2)
                     .active(true)
