@@ -4,7 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
 import java.util.List;
+/**
 
+ Represents a shopping cart associated with a user.
+ Stores membership purchases and related items before checkout.
+ One cart per user, can contain multiple cart items (memberships).
+ Used in the membership checkout process.
+ */
 @Getter
 @Setter
 @Entity

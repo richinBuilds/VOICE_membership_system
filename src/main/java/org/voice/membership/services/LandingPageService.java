@@ -10,7 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+/**
 
+ Business logic service for landing page and membership initialization.
+ Retrieves and manages: memberships, benefits, and landing page content.
+ Initializes default data (Free + Premium memberships, benefits, tagline) on app startup.
+ Provides methods to populate database with seed data if not already present (idempotent).
+ */
 @Service
 public class LandingPageService {
 
@@ -85,6 +91,17 @@ public class LandingPageService {
                     .build();
             membershipRepository.save(freeMembership);
 
+            // Paid membership ($20 annually)
+            Membership paidMembership = Membership.builder()
+                    .name("Premium")
+                    .description("Support VOICE and unlock premium benefits")
+                    .price(new java.math.BigDecimal("20.00"))
+                    .features("Everything in Free\nPriority support\nExclusive webinars\nAdvanced analytics\nCustom dashboard")
+                    .isFree(false)
+                    .displayOrder(2)
+                    .active(true)
+                    .build();
+            membershipRepository.save(paidMembership);
         }
     }
 

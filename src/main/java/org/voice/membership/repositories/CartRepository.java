@@ -1,3 +1,10 @@
+/**
+
+ Data access layer for Cart entity.
+ Provides database queries for shopping cart operations.
+ Finds user carts by user object or user ID for checkout and cart management.
+ Used during registration Step 4 (checkout) and payment processing.
+ */
 package org.voice.membership.repositories;
 
 import org.voice.membership.entities.Cart;

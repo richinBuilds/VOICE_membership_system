@@ -3,6 +3,12 @@ package org.voice.membership.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
+/**
+Represents a child record associated with a user account.
+ Stores child personal information: name, age, date of birth, hearing loss type.
+ Also captures equipment type, siblings names, and chapter location.
+ Users can add multiple children to their account on the dashboard.
+ */
 
 @Getter
 @Setter

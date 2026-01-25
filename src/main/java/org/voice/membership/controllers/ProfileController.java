@@ -1,3 +1,4 @@
+
 package org.voice.membership.controllers;
 
 import org.voice.membership.dtos.UpdateUserRequest;
@@ -30,7 +31,13 @@ import java.util.List;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
+/**
 
+ Handles user dashboard and profile management.
+ Manages user profile viewing, editing, and child account operations.
+ Displays user membership information, manages child information (add, edit, delete).
+ Provides endpoints for profile updates and child management on the user dashboard.
+ */
 @Controller
 @AllArgsConstructor
 @RequestMapping("/profile")

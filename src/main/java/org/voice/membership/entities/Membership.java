@@ -3,7 +3,13 @@ package org.voice.membership.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+/**
 
+ Represents different membership plan options available to users.
+ Stores membership details: name, description, price, features, and active status.
+ Two main memberships: Free and Premium ($20/year).
+ Used during registration (Step 3) and displayed on landing page.
+ */
 @Getter
 @Setter
 @Entity

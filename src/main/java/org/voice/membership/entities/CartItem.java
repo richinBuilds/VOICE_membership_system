@@ -3,7 +3,13 @@ package org.voice.membership.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+/**
 
+ Represents individual items in a user's shopping cart.
+ Links cart to specific membership and tracks quantity and pricing.
+ Stores unit price and total price for each membership in cart.
+ Used during checkout to calculate total membership cost.
+ */
 @Getter
 @Setter
 @Entity

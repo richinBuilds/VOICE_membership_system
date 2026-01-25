@@ -1,3 +1,10 @@
+/**
+
+ Data access layer for CartItem entity.
+ Provides database operations for cart items.
+ Finds cart items by cart and supports bulk deletion when cart is cleared.
+ Used during checkout process to manage membership items in cart.
+ */
 package org.voice.membership.repositories;
 
 import org.voice.membership.entities.CartItem;
