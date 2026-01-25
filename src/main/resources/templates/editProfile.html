@@ -235,11 +235,11 @@
 
             <!-- Canadian Postal Code -->
             <div class="form-floating">
-                <input type="text" th:field="*{postalCode}" class="form-control" id="postalCode" placeholder="A1A 1A1" autocomplete="postal-code" maxlength="7" pattern="^[ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][ ]?[0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9]$" title="Valid Canadian postal code, e.g., A1A 1A1">
+                <input type="text" th:field="*{postalCode}" class="form-control" id="postalCode" placeholder="A1A 1A1" autocomplete="postal-code" maxlength="7" pattern="[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]" title="Valid Canadian postal code, e.g., A1A 1A1">
                 <label for="postalCode">
                     <i class="fas fa-mail-bulk me-2"></i>Postal Code (Canada)
                 </label>
-                <div class="form-text">Canada-only: format like A1A 1A1</div>
+                <div class="form-text">Canada-only: format like A1A 1A1 (space optional)</div>
             </div>
 
             <button type="submit" class="btn btn-primary submit-btn">
@@ -278,7 +278,7 @@
 
         function removeCanadianPostalCodes(text) {
             if (!text) return '';
-            const regex = /\b[ABCEGHJ-NPRSTVXYabceghj-nprstvxy]\d[ABCEGHJ-NPRSTVXYabceghj-nprstvxy]\s?\d[ABCEGHJ-NPRSTVXYabceghj-nprstvxy]\d\b/g;
+            const regex = /\b[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]$\d\b/g;
             return text.replace(regex, '').replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').replace(/,\s*,/g, ', ').replace(/^,\s*|,\s*$/g, '').trim();
         }
 

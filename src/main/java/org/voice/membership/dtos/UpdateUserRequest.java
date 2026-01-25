@@ -22,6 +22,6 @@ public class UpdateUserRequest {
 
     private String address;
 
-    @Pattern(regexp = "^[ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][ ]?[0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9]$", message = "Valid Canadian postal code, e.g., A1A 1A1")
+    @Pattern(regexp = "^[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]$", message = "Valid Canadian postal code, e.g., A1A 1A1")
     private String postalCode;
 }

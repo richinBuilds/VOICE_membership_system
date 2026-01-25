@@ -282,6 +282,11 @@
             color: #084298;
         }
 
+        .status-paid {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
         /* Quick Stats */
         .quick-stats {
             display: grid;
@@ -414,14 +419,16 @@
                     <div class="membership-detail">
                         <div class="membership-detail-label">Status</div>
                         <div class="membership-detail-value">
-                            <span class="status-badge status-active" th:text="${membershipStatus}"></span>
+                            <span class="status-badge" 
+                                  th:classappend="${membershipStatus == 'Paid'} ? 'status-paid' : (${membershipStatus == 'Free'} ? 'status-free' : 'status-active')" 
+                                  th:text="${membershipStatus}"></span>
                         </div>
                     </div>
                     <div class="membership-detail">
                         <div class="membership-detail-label">Expiry Date</div>
                         <div class="membership-detail-value" th:text="${membershipExpiryDate}"></div>
                     </div>
-                    <div class="membership-detail">
+                    <div class="membership-detail" th:if="${showBenefits}">
                         <div class="membership-detail-label">Membership Benefit</div>
                         <div class="membership-detail-value" th:text="${membershipBenefit}"></div>
                     </div>
@@ -460,7 +467,76 @@
                             <span class="info-label">Postal Code</span>
                             <span class="info-value" th:text="${userPostalCode}"></span>
                         </div>
-                        <div class="action-buttons">
+                        
+                        <!-- Children Information Section -->
+                        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #eee;">
+                            <h4 style="color: #667eea; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-child"></i> Children Information
+                            </h4>
+                            <div th:if="${children != null && !children.isEmpty()}">
+                                <div th:each="child, iterStat : ${children}" style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; border: 2px solid #e1e5e9;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #ddd;">
+                                        <h5 style="color: #667eea; margin: 0; font-size: 1.2rem;">
+                                            <i class="fas fa-child me-2"></i>Child <span th:text="${iterStat.index + 1}"></span>
+                                        </h5>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <a th:href="@{'/profile/child/edit/' + ${child.id}}" 
+                                               class="btn-custom btn-secondary-custom" 
+                                               style="padding: 8px 20px; font-size: 0.9rem; text-decoration: none;">
+                                                <i class="fas fa-edit me-1"></i> Edit
+                                            </a>
+                                            <form th:action="@{'/profile/child/delete/' + ${child.id}}" method="post" style="display: inline;">
+                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                                <button type="submit" class="btn-custom" style="padding: 8px 20px; font-size: 0.9rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;" 
+                                                        onclick="return confirm('Are you sure you want to delete this child\'s information?');">
+                                                    <i class="fas fa-trash me-1"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
+                                        <span class="info-label"><i class="fas fa-user me-2"></i>Name</span>
+                                        <span class="info-value" th:text="${child.name != null ? child.name : 'Not provided'}"></span>
+                                    </div>
+                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
+                                        <span class="info-label"><i class="fas fa-birthday-cake me-2"></i>Age</span>
+                                        <span class="info-value" th:text="${child.age != null ? child.age : 'Not provided'}"></span>
+                                    </div>
+                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
+                                        <span class="info-label"><i class="fas fa-calendar me-2"></i>Date of Birth</span>
+                                        <span class="info-value" th:if="${child.dateOfBirth != null}" th:text="${#dates.format(child.dateOfBirth, 'MMMM dd, yyyy')}"></span>
+                                        <span class="info-value" th:if="${child.dateOfBirth == null}">Not provided</span>
+                                    </div>
+                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
+                                        <span class="info-label"><i class="fas fa-hearing me-2"></i>Type of Hearing Loss</span>
+                                        <span class="info-value" th:text="${child.hearingLossType != null && !child.hearingLossType.isEmpty() ? child.hearingLossType : 'Not provided'}"></span>
+                                    </div>
+                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
+                                        <span class="info-label"><i class="fas fa-headphones me-2"></i>Equipment Type</span>
+                                        <span class="info-value" th:text="${child.equipmentType != null && !child.equipmentType.isEmpty() ? child.equipmentType : 'Not provided'}"></span>
+                                    </div>
+                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
+                                        <span class="info-label"><i class="fas fa-users me-2"></i>Siblings' Names</span>
+                                        <span class="info-value" th:text="${child.siblingsNames != null && !child.siblingsNames.isEmpty() ? child.siblingsNames : 'Not provided'}"></span>
+                                    </div>
+                                    <div class="info-row" style="padding: 0.75rem 0;">
+                                        <span class="info-label"><i class="fas fa-map-marker-alt me-2"></i>Chapter / Location</span>
+                                        <span class="info-value" th:text="${child.chapterLocation != null && !child.chapterLocation.isEmpty() ? child.chapterLocation : 'Not provided'}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${children == null || children.isEmpty()}" style="text-align: center; padding: 2rem; color: #666;">
+                                <i class="fas fa-child" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                <p>No children information added yet.</p>
+                            </div>
+                            <div class="action-buttons" style="margin-top: 1.5rem;">
+                                <a href="/profile/child/add" class="btn-custom btn-primary-custom">
+                                    <i class="fas fa-plus"></i> Add Child
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons" style="margin-top: 2rem;">
                             <a href="/profile/edit" class="btn-custom btn-primary-custom">
                                 <i class="fas fa-edit"></i> Edit Profile
                             </a>

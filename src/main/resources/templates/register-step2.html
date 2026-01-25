@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Child Information - Step 2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 2rem 0;
+        }
+
+        .registration-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .child-form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid #e1e5e9;
+        }
+
+        .child-form-section h3 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-floating {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-floating > .form-control {
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 1.2rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-floating > .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-floating > label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .btn-group-custom {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary-custom {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-add-child {
+            background: #28a745;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .btn-add-child:hover {
+            background: #218838;
+        }
+
+        .required {
+            color: #dc3545;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="registration-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1 class="form-title">
+                <i class="fas fa-child me-3"></i>Child Information
+            </h1>
+            <p class="form-subtitle">Step <span th:text="${step}">2</span> of <span th:text="${totalSteps}">4</span></p>
+            <div class="step-indicator">
+                <div class="step active">1</div>
+                <div class="step active">2</div>
+                <div class="step">3</div>
+                <div class="step">4</div>
+            </div>
+        </div>
+
+        <form th:action="@{/register/step2}" method="post" id="childInfoForm">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <div th:each="child, iterStat : ${children}" class="child-form-section">
+                <h3>
+                    <i class="fas fa-user"></i>
+                    Child <span th:text="${iterStat.index + 1}">1</span>
+                </h3>
+
+                <div class="form-floating">
+                    <input type="text" class="form-control" th:id="'childName' + ${iterStat.index}" 
+                           th:name="'childName'" th:value="${child.name}" 
+                           placeholder="Child's Name" required>
+                    <label th:for="'childName' + ${iterStat.index}">
+                        Child's Name <span class="required">*</span>
+                    </label>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="number" class="form-control" th:id="'childAge' + ${iterStat.index}" 
+                                   th:name="'childAge'" th:value="${child.age}" 
+                                   placeholder="Age" min="0" max="18">
+                            <label th:for="'childAge' + ${iterStat.index}">Age</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="date" class="form-control" th:id="'childDob' + ${iterStat.index}" 
+                                   th:name="'childDob'" 
+                                   th:value="${child.dateOfBirth != null ? #temporals.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}" 
+                                   placeholder="Date of Birth">
+                            <label th:for="'childDob' + ${iterStat.index}">
+                                Date of Birth <span class="required">*</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating">
+                    <select class="form-control" th:id="'hearingLossType' + ${iterStat.index}" 
+                            th:name="'hearingLossType'">
+                        <option value="">Select Type of Hearing Loss</option>
+                        <option value="Mild" th:selected="${child.hearingLossType == 'Mild'}">Mild</option>
+                        <option value="Moderate" th:selected="${child.hearingLossType == 'Moderate'}">Moderate</option>
+                        <option value="Severe" th:selected="${child.hearingLossType == 'Severe'}">Severe</option>
+                        <option value="Profound" th:selected="${child.hearingLossType == 'Profound'}">Profound</option>
+                    </select>
+                    <label th:for="'hearingLossType' + ${iterStat.index}">Type of Hearing Loss</label>
+                </div>
+
+                <div class="form-floating">
+                    <input type="text" class="form-control" th:id="'equipmentType' + ${iterStat.index}" 
+                           th:name="'equipmentType'" th:value="${child.equipmentType}" 
+                           placeholder="Type of Equipment Used">
+                    <label th:for="'equipmentType' + ${iterStat.index}">Type of Equipment Used (e.g., Hearing Aid, Cochlear Implant)</label>
+                </div>
+
+                <div class="form-floating">
+                    <input type="text" class="form-control" th:id="'siblingsNames' + ${iterStat.index}" 
+                           th:name="'siblingsNames'" th:value="${child.siblingsNames}" 
+                           placeholder="Siblings' Names">
+                    <label th:for="'siblingsNames' + ${iterStat.index}">Siblings' Names (comma-separated)</label>
+                </div>
+
+                <div class="form-floating">
+                    <input type="text" class="form-control" th:id="'chapterLocation' + ${iterStat.index}" 
+                           th:name="'chapterLocation'" th:value="${child.chapterLocation}" 
+                           placeholder="Chapter / Location">
+                    <label th:for="'chapterLocation' + ${iterStat.index}">Chapter / Location</label>
+                </div>
+            </div>
+
+            <button type="button" onclick="addChild()" class="btn btn-add-child">
+                <i class="fas fa-plus me-2"></i>Add Another Child
+            </button>
+
+            <div class="btn-group-custom">
+                <a href="/register" class="btn btn-secondary-custom">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+                <button type="submit" class="btn btn-primary-custom">
+                    Next: Membership Selection <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function addChild() {
+        const form = document.getElementById('childInfoForm');
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'addChild';
+        form.appendChild(actionInput);
+        form.submit();
+    }
+</script>
+</body>
+</html>

@@ -360,8 +360,21 @@
             <h1 class="form-title">
                 <i class="fas fa-user-plus me-3"></i>Create Account
             </h1>
-            <p class="form-subtitle">Join us today and get started</p>
+            <p class="form-subtitle">Step <span th:text="${step}">1</span> of <span th:text="${totalSteps}">4</span> - Personal Information</p>
             <p class="form-text"><i class="fas fa-asterisk"></i> Fields marked with <span class="required">*</span>are required.</p>
+            <!-- Step Indicator -->
+            <div class="step-indicator" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                <div class="step" th:classappend="${step >= 1} ? 'active' : ''" style="width: 30px; height: 30px; border-radius: 50%; background: #e1e5e9; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold;">1</div>
+                <div class="step" th:classappend="${step >= 2} ? 'active' : ''" style="width: 30px; height: 30px; border-radius: 50%; background: #e1e5e9; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold;">2</div>
+                <div class="step" th:classappend="${step >= 3} ? 'active' : ''" style="width: 30px; height: 30px; border-radius: 50%; background: #e1e5e9; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold;">3</div>
+                <div class="step" th:classappend="${step >= 4} ? 'active' : ''" style="width: 30px; height: 30px; border-radius: 50%; background: #e1e5e9; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold;">4</div>
+            </div>
+            <style>
+                .step.active {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                    color: white !important;
+                }
+            </style>
         </div>
 
         <div th:if="${success}" class="alert success-alert" role="alert">
@@ -373,7 +386,7 @@
             <button type="button" class="btn-close" aria-label="Close"></button>
         </div>
 
-        <form th:action="@{/register}" method="post" th:object="${registerDto}" id="registrationForm">
+        <form th:action="@{/register/step1}" method="post" th:object="${registerDto}" id="registrationForm">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
@@ -425,7 +438,7 @@
             <div class="form-floating">
                 <input type="text" th:field="${registerDto.postalCode}" class="form-control" id="postalCode" placeholder="A1A 1A1"
                        autocomplete="postal-code" maxlength="7"
-                       pattern="^[ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][ ]?[0-9][ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9]$"
+                       pattern="^[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]$"
                        title="Valid Canadian postal code, e.g., A1A 1A1" />
                 <label for="postalCode">
                     <i class="fas fa-mail-bulk"></i>Postal Code (Canada)
@@ -460,8 +473,8 @@
             </div>
 
             <button type="submit" class="btn btn-primary submit-btn">
-                <i class="fas fa-user-plus me-2"></i>
-                Create Account
+                <i class="fas fa-arrow-right me-2"></i>
+                Next: Child Information
             </button>
         </form>
         <!-- Sign In Link -->
