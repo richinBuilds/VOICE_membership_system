@@ -169,6 +169,22 @@
             color: #dc3545;
             margin-left: 4px;
         }
+
+        .date-input-error {
+            border-color: #dc3545 !important;
+            background-color: #fff5f5 !important;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -178,7 +194,7 @@
             <h1 class="form-title">
                 <i class="fas fa-child me-3"></i>Child Information
             </h1>
-            <p class="form-subtitle">Step <span th:text="${step}">2</span> of <span th:text="${totalSteps}">4</span></p>
+            <p class="form-subtitle">Step <span th:text="${step}">2</span> of <span th:text="${totalSteps}">4</span> (Optional)</p>
             <div class="step-indicator">
                 <div class="step active">1</div>
                 <div class="step active">2</div>
@@ -199,9 +215,9 @@
                 <div class="form-floating">
                     <input type="text" class="form-control" th:id="'childName' + ${iterStat.index}" 
                            th:name="'childName'" th:value="${child.name}" 
-                           placeholder="Child's Name" required>
+                           placeholder="Child's Name">
                     <label th:for="'childName' + ${iterStat.index}">
-                        Child's Name <span class="required">*</span>
+                        Child's Name
                     </label>
                 </div>
 
@@ -218,10 +234,11 @@
                         <div class="form-floating">
                             <input type="date" class="form-control" th:id="'childDob' + ${iterStat.index}" 
                                    th:name="'childDob'" 
-                                   th:value="${child.dateOfBirth != null ? #temporals.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}" 
-                                   placeholder="Date of Birth">
+                                   th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}" 
+                                   placeholder="Date of Birth"
+                                   onchange="validateDateInput(this)">
                             <label th:for="'childDob' + ${iterStat.index}">
-                                Date of Birth <span class="required">*</span>
+                                Date of Birth
                             </label>
                         </div>
                     </div>
@@ -266,7 +283,7 @@
             </button>
 
             <div class="btn-group-custom">
-                <a href="/register" class="btn btn-secondary-custom">
+                <a th:href="@{/register}" class="btn btn-secondary-custom">
                     <i class="fas fa-arrow-left me-2"></i>Back
                 </a>
                 <button type="submit" class="btn btn-primary-custom">
@@ -279,15 +296,173 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function addChild() {
-        const form = document.getElementById('childInfoForm');
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = 'addChild';
-        form.appendChild(actionInput);
-        form.submit();
+    function validateDateInput(input) {
+        const dateValue = input.value;
+        const errorMsg = input.parentElement.querySelector('.error-message');
+        
+        if (!dateValue) {
+            // Clear error if date is empty (optional field)
+            input.classList.remove('date-input-error');
+            if (errorMsg) errorMsg.classList.remove('show');
+            return true;
+        }
+
+        // Parse the date
+        const dateParts = dateValue.split('-');
+        if (dateParts.length !== 3) {
+            showDateError(input, 'Invalid date format');
+            return false;
+        }
+
+        const year = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10);
+        const day = parseInt(dateParts[2], 10);
+
+        // Validate year (must be 4 digits and reasonable range)
+        if (isNaN(year) || year < 1900 || year > new Date().getFullYear()) {
+            showDateError(input, 'Year must be between 1900 and ' + new Date().getFullYear());
+            return false;
+        }
+
+        // Validate month (1-12)
+        if (isNaN(month) || month < 1 || month > 12) {
+            showDateError(input, 'Month must be between 01 and 12');
+            return false;
+        }
+
+        // Validate day (1-31 with month-specific validation)
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // Check for leap year
+        if (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) {
+            daysInMonth[1] = 29;
+        }
+
+        if (isNaN(day) || day < 1 || day > daysInMonth[month - 1]) {
+            showDateError(input, 'Day must be valid for the selected month');
+            return false;
+        }
+
+        // Validate the date is not in the future
+        const selectedDate = new Date(year, month - 1, day);
+        const today = new Date();
+        if (selectedDate > today) {
+            showDateError(input, 'Date cannot be in the future');
+            return false;
+        }
+
+        // Clear error if all validations pass
+        input.classList.remove('date-input-error');
+        if (errorMsg) errorMsg.classList.remove('show');
+        return true;
     }
+
+    function showDateError(input, message) {
+        input.classList.add('date-input-error');
+        let errorMsg = input.parentElement.querySelector('.error-message');
+        
+        if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message';
+            input.parentElement.appendChild(errorMsg);
+        }
+        
+        errorMsg.textContent = message;
+        errorMsg.classList.add('show');
+    }
+
+    function addChild() {
+        // Get the total number of child sections
+        const childSections = document.querySelectorAll('.child-form-section');
+        const newIndex = childSections.length;
+
+        // Create a new child form section
+        const newChildSection = document.createElement('div');
+        newChildSection.className = 'child-form-section';
+        newChildSection.innerHTML = `
+            <h3>
+                <i class="fas fa-user"></i>
+                Child <span>${newIndex + 1}</span>
+            </h3>
+
+            <div class="form-floating">
+                <input type="text" class="form-control" id="childName${newIndex}" 
+                       name="childName" placeholder="Child's Name">
+                <label for="childName${newIndex}">
+                    Child's Name
+                </label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="childAge${newIndex}" 
+                               name="childAge" placeholder="Age" min="0" max="18">
+                        <label for="childAge${newIndex}">Age</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="childDob${newIndex}" 
+                               name="childDob" placeholder="Date of Birth"
+                               onchange="validateDateInput(this)">
+                        <label for="childDob${newIndex}">
+                            Date of Birth
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating">
+                <select class="form-control" id="hearingLossType${newIndex}" name="hearingLossType">
+                    <option value="">Select Type of Hearing Loss</option>
+                    <option value="Mild">Mild</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Severe">Severe</option>
+                    <option value="Profound">Profound</option>
+                </select>
+                <label for="hearingLossType${newIndex}">Type of Hearing Loss</label>
+            </div>
+
+            <div class="form-floating">
+                <input type="text" class="form-control" id="equipmentType${newIndex}" 
+                       name="equipmentType" placeholder="Type of Equipment Used">
+                <label for="equipmentType${newIndex}">Type of Equipment Used (e.g., Hearing Aid, Cochlear Implant)</label>
+            </div>
+
+            <div class="form-floating">
+                <input type="text" class="form-control" id="siblingsNames${newIndex}" 
+                       name="siblingsNames" placeholder="Siblings' Names">
+                <label for="siblingsNames${newIndex}">Siblings' Names (comma-separated)</label>
+            </div>
+
+            <div class="form-floating">
+                <input type="text" class="form-control" id="chapterLocation${newIndex}" 
+                       name="chapterLocation" placeholder="Chapter / Location">
+                <label for="chapterLocation${newIndex}">Chapter / Location</label>
+            </div>
+        `;
+
+        // Insert before the "Add Another Child" button
+        const addButton = document.querySelector('.btn-add-child');
+        addButton.parentElement.insertBefore(newChildSection, addButton);
+    }
+
+    // Validate all date inputs on form submission
+    document.getElementById('childInfoForm').addEventListener('submit', function(event) {
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        let isValid = true;
+
+        dateInputs.forEach(input => {
+            if (!validateDateInput(input)) {
+                isValid = false;
+            }
+        });
+
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
 </script>
 </body>
 </html>

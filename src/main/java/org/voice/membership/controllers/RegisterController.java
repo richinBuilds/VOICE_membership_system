@@ -185,8 +185,15 @@ public class RegisterController {
     // Step 3: Membership Selection
     @GetMapping("/step3")
     public String showStep3(Model model, HttpSession session) {
+        System.out.println("=== STEP3 GET - Starting ===");
+        System.out.println("Session ID: " + session.getId());
+        System.out.println("Session attributes: " + java.util.Collections.list(session.getAttributeNames()));
+        
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
+        System.out.println("RegistrationData found: " + (registrationData != null));
+        
         if (registrationData == null) {
+            System.out.println("STEP3 GET - No registration data, redirecting to /register");
             return "redirect:/register";
         }
 
@@ -196,6 +203,7 @@ public class RegisterController {
         model.addAttribute("lineSeparator", System.lineSeparator());
         model.addAttribute("step", 3);
         model.addAttribute("totalSteps", 4);
+        System.out.println("STEP3 GET - Returning register-step3");
         return "register-step3";
     }
 
@@ -222,17 +230,26 @@ public class RegisterController {
     @GetMapping("/step4")
     public String showStep4(@RequestParam(value = "error", required = false) String error,
                            Model model, HttpSession session) {
+        System.out.println("=== STEP4 GET - Starting ===");
+        System.out.println("Session ID: " + session.getId());
+        System.out.println("Session attributes: " + java.util.Collections.list(session.getAttributeNames()));
+        
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
+        System.out.println("RegistrationData found: " + (registrationData != null));
+        
         if (registrationData == null) {
+            System.out.println("STEP4 GET - No registration data, redirecting to /register");
             return "redirect:/register";
         }
 
         if (registrationData.getCartMembershipId() == null) {
+            System.out.println("STEP4 GET - No cart membership ID, redirecting to /register/step3");
             return "redirect:/register/step3";
         }
 
         Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
         if (membershipOpt.isEmpty()) {
+            System.out.println("STEP4 GET - Membership not found, redirecting to /register/step3");
             return "redirect:/register/step3";
         }
 
@@ -244,6 +261,7 @@ public class RegisterController {
         if (error != null) {
             model.addAttribute("error", "An error occurred. Please try again.");
         }
+        System.out.println("STEP4 GET - Returning register-step4");
         return "register-step4";
     }
 

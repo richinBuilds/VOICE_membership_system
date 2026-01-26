@@ -133,6 +133,34 @@
             box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
         }
 
+        .btn-secondary-custom {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #667eea;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-group-checkout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
         .error-message {
             color: #dc3545;
             font-size: 0.875rem;
@@ -214,9 +242,14 @@
                         </label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary-custom">
-                        <i class="fas fa-check me-2"></i>Complete Payment
-                    </button>
+                    <div class="btn-group-checkout">
+                        <a th:href="@{/register/step3}" class="btn btn-secondary-custom">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-check me-2"></i>Complete Payment
+                        </button>
+                    </div>
                 </form>
             </div>
 

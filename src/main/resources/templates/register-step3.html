@@ -243,10 +243,10 @@
             </div>
 
             <div class="btn-group-custom">
-                <a href="/register/step2" class="btn btn-secondary-custom">
+                <a th:href="@{/register/step2}" class="btn btn-secondary-custom">
                     <i class="fas fa-arrow-left me-2"></i>Back
                 </a>
-                <button type="submit" class="btn btn-primary-custom">
+                <button type="submit" class="btn btn-primary-custom" id="nextButton" disabled>
                     Next: Review Cart <i class="fas fa-arrow-right ms-2"></i>
                 </button>
             </div>
@@ -263,6 +263,9 @@
         });
         // Add selected class to clicked card
         document.getElementById('card-' + membershipId).classList.add('selected');
+        
+        // Enable the Next button when a membership is selected
+        document.getElementById('nextButton').disabled = false;
     }
 
     // Initialize selection on page load
@@ -270,6 +273,11 @@
         const selectedRadio = document.querySelector('input[type="radio"]:checked');
         if (selectedRadio) {
             updateSelection(selectedRadio.value);
+            // Enable button if membership was already selected
+            document.getElementById('nextButton').disabled = false;
+        } else {
+            // Disable button if no membership selected
+            document.getElementById('nextButton').disabled = true;
         }
     });
 </script>
