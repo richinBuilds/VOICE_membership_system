@@ -1,321 +1,212 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Review Cart - Step 4</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Review your cart - VOICE Membership">
+
+    <title>Review Cart - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 2rem 0;
-        }
-
-        .registration-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .form-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            padding: 3rem;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-
-        .form-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .form-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-        }
-
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .step {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #e1e5e9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-weight: bold;
-        }
-
-        .step.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .cart-item {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border: 2px solid #e1e5e9;
-        }
-
-        .cart-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .cart-item-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .cart-item-details {
-            margin-bottom: 1rem;
-        }
-
-        .cart-item-details p {
-            margin-bottom: 0.5rem;
-            color: #666;
-        }
-
-        .cart-summary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-top: 2rem;
-        }
-
-        .cart-summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .cart-summary-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.5rem;
-            font-weight: 700;
-            padding-top: 1rem;
-            border-top: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-group-custom {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 1rem 2rem;
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: white;
-            transition: all 0.3s ease;
-            flex: 1;
-        }
-
-        .btn-primary-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
-        }
-
-        .btn-secondary-custom {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 15px;
-            padding: 1rem 2rem;
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #667eea;
-            transition: all 0.3s ease;
-        }
-
-        .btn-secondary-custom:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-danger-custom {
-            background: #dc3545;
-            border: none;
-            border-radius: 10px;
-            padding: 0.5rem 1rem;
-            color: white;
-            font-weight: 600;
-        }
-
-        .btn-danger-custom:hover {
-            background: #c82333;
-        }
-    </style>
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body>
-<div class="registration-container">
-    <div class="form-card">
-        <div class="form-header">
-            <h1 class="form-title">
-                <i class="fas fa-shopping-cart me-3"></i>Review Cart
+
+<body style="background: var(--bg-bone);">
+
+<div class="checkout-container" data-testid="register-step4-container">
+
+    <div class="checkout-card">
+
+        <!-- Header -->
+        <div class="checkout-header">
+
+            <h1 class="checkout-title" data-testid="step4-title">
+                <i class="fas fa-shopping-cart me-2"></i>
+                Review Your Order
             </h1>
-            <p class="form-subtitle">Step <span th:text="${step}">4</span> of <span th:text="${totalSteps}">4</span></p>
-            <div class="step-indicator">
+
+            <p class="text-muted">
+                Step <span th:text="${step}">4</span>
+                of <span th:text="${totalSteps}">4</span>
+                — Final Review
+            </p>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator" data-testid="step-indicator">
                 <div class="step active">1</div>
                 <div class="step active">2</div>
                 <div class="step active">3</div>
                 <div class="step active">4</div>
             </div>
+
         </div>
 
-        <div th:if="${error}" class="alert alert-danger" role="alert" style="margin-bottom: 2rem;">
+        <!-- Error Alert -->
+        <div th:if="${error}"
+             class="alert alert-danger mb-4"
+             role="alert"
+             data-testid="cart-error">
             <i class="fas fa-exclamation-circle me-2"></i>
-            <span th:text="${error}"></span>
+            <span th:text="${error}">Error message</span>
         </div>
 
-        <form th:action="@{/register/step4}" method="post" id="cartForm">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <!-- Form -->
+        <form th:action="@{/register/step4}"
+              method="post"
+              id="cartForm"
+              data-testid="cart-form">
 
-            <div class="cart-item" th:if="${membership}">
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}"/>
+
+            <!-- Cart Item -->
+            <div class="cart-item" th:if="${membership}" data-testid="cart-item">
+
                 <div class="cart-item-header">
-                    <div class="cart-item-title" th:text="${membership.name}"></div>
-                    <button type="button" onclick="removeFromCart()" class="btn btn-danger-custom">
-                        <i class="fas fa-trash me-2"></i>Remove
+                    <div class="cart-item-title" th:text="${membership.name}" data-testid="cart-membership-name">
+                        Membership Name
+                    </div>
+
+                    <button type="button"
+                            onclick="removeFromCart()"
+                            class="btn-danger-custom"
+                            data-testid="remove-item-btn">
+                        <i class="fas fa-trash me-1"></i> Remove
                     </button>
                 </div>
+
                 <div class="cart-item-details">
-                    <p th:if="${membership.description}"><strong>Description:</strong> <span th:text="${membership.description}"></span></p>
-                    <p th:if="${membership.features}">
-                        <strong>Features:</strong>
-                        <ul style="margin-left: 20px; margin-top: 10px;">
-                            <li th:each="feature : ${#strings.arraySplit(membership.features, lineSeparator)}" 
-                                th:text="${feature.trim()}"></li>
-                        </ul>
+
+                    <p th:if="${membership.description}">
+                        <strong>Description:</strong>
+                        <span th:text="${membership.description}">Description text</span>
                     </p>
+
+                    <div th:if="${membership.features}">
+                        <strong>Included Features:</strong>
+                        <ul class="ms-3 mt-2">
+                            <li th:each="feature : ${#strings.arraySplit(membership.features, lineSeparator)}"
+                                th:text="${feature.trim()}">
+                                Feature item
+                            </li>
+                        </ul>
+                    </div>
+
                 </div>
+
             </div>
 
-            <div class="cart-summary">
-                <div class="cart-summary-row">
-                    <span>Membership:</span>
-                    <span th:text="${membership.name}"></span>
-                </div>
-                <div class="cart-summary-row">
-                    <span>Price:</span>
-                    <span th:if="${membership.isFree}">Free</span>
-                    <span th:unless="${membership.isFree}">$<span th:text="${membership.price}"></span></span>
-                </div>
-                <div class="cart-summary-total">
-                    <span>Total:</span>
-                    <span th:if="${membership.isFree}">Free</span>
-                    <span th:unless="${membership.isFree}">$<span th:text="${membership.price}"></span></span>
-                </div>
-            </div>
+            <!-- Order Summary -->
+            <div class="cart-summary" data-testid="order-summary">
 
-            <div class="btn-group-custom">
-                <a th:href="@{/register/step3}" class="btn btn-secondary-custom">
-                    <i class="fas fa-arrow-left me-2"></i>Back
-                </a>
-                <button type="submit" class="btn btn-primary-custom" id="submitBtn">
-                    <span th:if="${membership.isFree}">
-                        Complete Registration <i class="fas fa-check ms-2"></i>
-                    </span>
+                <div class="cart-summary-row">
+                    <span>Membership Plan</span>
+                    <span th:text="${membership.name}">Plan Name</span>
+                </div>
+
+                <div class="cart-summary-row">
+                    <span>Price</span>
+                    <span th:if="${membership.isFree}">Free</span>
                     <span th:unless="${membership.isFree}">
-                        Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
+                        $<span th:text="${membership.price}">0</span>
                     </span>
-                </button>
+                </div>
+
+                <div class="cart-summary-total">
+                    <span>Total</span>
+                    <span th:if="${membership.isFree}" data-testid="cart-total">Free</span>
+                    <span th:unless="${membership.isFree}" data-testid="cart-total">
+                        $<span th:text="${membership.price}">0</span>
+                    </span>
+                </div>
+
             </div>
+
+            <!-- Navigation Buttons -->
+            <div class="btn-group-custom">
+
+                <a th:href="@{/register/step3}"
+                   class="btn btn-secondary-custom"
+                   data-testid="step4-back-btn">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+
+                <button type="submit"
+                        id="submitBtn"
+                        class="btn btn-primary-custom"
+                        data-testid="step4-submit-btn">
+
+                    <span th:if="${membership.isFree}">
+                        <i class="fas fa-check me-1"></i>
+                        Complete Registration
+                    </span>
+
+                    <span th:unless="${membership.isFree}">
+                        Proceed to Payment
+                        <i class="fas fa-arrow-right ms-1"></i>
+                    </span>
+
+                </button>
+
+            </div>
+
         </form>
+
     </div>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    function removeFromCart() {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/register/step4';
-        
-        const csrfToken = document.querySelector('input[name="_csrf"]').value;
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_csrf';
-        csrfInput.value = csrfToken;
-        form.appendChild(csrfInput);
-        
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = 'remove';
-        form.appendChild(actionInput);
-        
-        document.body.appendChild(form);
-        form.submit();
+// Remove item from cart
+function removeFromCart() {
+    if (!confirm('Are you sure you want to remove this item from your cart?')) {
+        return;
     }
 
-    const form = document.getElementById('cartForm');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    if (form) {
-        console.log('Form found, setting up submit handler');
-        form.addEventListener('submit', function(e) {
-            console.log('Form submitting to:', this.action);
-            console.log('Form method:', this.method);
-            console.log('Form is being submitted!');
-            
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
-            }
-            // Don't prevent default - let the form submit normally
-        });
-        
-        // Also add click handler to button as backup
-        if (submitBtn) {
-            submitBtn.addEventListener('click', function(e) {
-                console.log('Submit button clicked!');
-                // Verify the form exists and is valid
-                if (!form.checkValidity()) {
-                    console.log('Form validation failed!');
-                    e.preventDefault();
-                    form.reportValidity();
-                    return false;
-                }
-                console.log('Form is valid, proceeding with submission');
-            });
-        }
-    } else {
-        console.error('Form with id "cartForm" not found!');
-    }
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/register/step4';
+
+    const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_csrf';
+    csrfInput.value = csrfToken;
+
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'remove';
+
+    form.appendChild(csrfInput);
+    form.appendChild(actionInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Prevent double form submission
+const form = document.getElementById('cartForm');
+const submitBtn = document.getElementById('submitBtn');
+
+if (form && submitBtn) {
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    });
+}
 </script>
+
 </body>
 </html>

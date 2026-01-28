@@ -1,21 +1,27 @@
 spring:
   application:
     name: WebRegistration
+
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:Study$2024}
+    url: jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     show-sql: true
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
 
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: smtp.gmail.com
+    port: 587
+    username:
+    password:
     properties:
       mail:
         smtp:
@@ -23,18 +29,15 @@ spring:
           starttls:
             enable: true
 
-  # Session configuration
-  session:
-    timeout: 30m  # Session timeout of 30 minutes
-    store-type: none  # Use default in-memory session store
-
 server:
+  port: 8080
+
   servlet:
     session:
-      timeout: 30m  # Session timeout of 30 minutes
+      timeout: 30m
       cookie:
         http-only: true
-        secure: false  # Set to true in production with HTTPS
+        secure: false
         max-age: 30m
 
 logging:
@@ -42,6 +45,7 @@ logging:
     org:
       hibernate:
         SQL: DEBUG
-        orm:
-          jdbc:
-            bind: TRACE
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE

@@ -1,563 +1,290 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Dashboard - VOICE</title>
+    <meta name="description" content="Your VOICE Membership Dashboard">
+
+    <title>Dashboard - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* Navbar */
-        .navbar-custom {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 1rem 0;
-        }
-
-        .navbar-custom .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .navbar-custom .nav-link {
-            color: #333 !important;
-            margin: 0 10px;
-            transition: color 0.3s ease;
-        }
-
-        .navbar-custom .nav-link:hover {
-            color: #667eea !important;
-        }
-
-        .logout-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white !important;
-            padding: 8px 20px !important;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        /* Main Content */
-        .dashboard-container {
-            padding: 2rem 0;
-            min-height: 100vh;
-        }
-
-        .dashboard-header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .dashboard-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-
-        .dashboard-header p {
-            color: #666;
-            font-size: 1rem;
-        }
-
-        .welcome-greeting {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 1.5rem;
-        }
-
-        .greeting-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-        }
-
-        .greeting-text h2 {
-            font-size: 1.5rem;
-            color: #333;
-            margin: 0;
-        }
-
-        .greeting-text p {
-            color: #666;
-            margin: 5px 0 0 0;
-        }
-
-        /* Cards */
-        .info-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            border-left: 5px solid #667eea;
-        }
-
-        .info-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .info-card h3 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .info-card h3 i {
-            color: #667eea;
-            font-size: 1.5rem;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .info-value {
-            color: #333;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .info-value.highlight {
-            color: #667eea;
-            font-weight: 700;
-        }
-
-        .membership-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .membership-card h3 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .membership-type {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .membership-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .membership-detail {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .membership-detail-label {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            margin-bottom: 0.5rem;
-        }
-
-        .membership-detail-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 1.5rem;
-        }
-
-        .btn-custom {
-            padding: 10px 25px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-
-        .btn-secondary-custom {
-            background: #f8f9fa;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary-custom:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            display: inline-block;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-free {
-            background: #cfe2ff;
-            color: #084298;
-        }
-
-        .status-paid {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        /* Quick Stats */
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .stat-box {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            padding: 1rem;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid #667eea;
-        }
-
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #666;
-            margin-top: 0.5rem;
-        }
-
-        /* Footer */
-        .dashboard-footer {
-            text-align: center;
-            padding: 2rem 0;
-            color: white;
-            font-size: 0.9rem;
-        }
-
-        .dashboard-footer a {
-            color: white;
-            text-decoration: none;
-        }
-
-        .dashboard-footer a:hover {
-            text-decoration: underline;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .dashboard-header {
-                padding: 1.5rem;
-            }
-
-            .dashboard-header h1 {
-                font-size: 1.5rem;
-            }
-
-            .greeting-avatar {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-            }
-
-            .greeting-text h2 {
-                font-size: 1.2rem;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-
-            .btn-custom {
-                width: 100%;
-                text-align: center;
-            }
-
-            .info-row {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-        }
-    </style>
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-voice-medical"></i> VOICE
+
+<body style="background: var(--bg-bone);">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg" data-testid="dashboard-navbar">
+    <div class="container">
+
+        <a class="navbar-brand" th:href="@{/}" data-testid="navbar-brand">
+            <img th:src="@{/images/logo.png}" 
+                 alt="VOICE Logo"
+                 onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#nav"
+                aria-controls="nav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}" data-testid="nav-home">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit"
+                                class="btn btn-primary-custom btn-sm ms-2"
+                                data-testid="logout-btn">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </button>
+                    </form>
+                </li>
+
+            </ul>
+        </div>
+
+    </div>
+</nav>
+
+
+<!-- Main Content -->
+<div class="checkout-container" data-testid="dashboard-container">
+
+    <!-- Welcome Header -->
+    <div class="dashboard-header" data-testid="dashboard-header">
+
+        <div class="welcome-greeting">
+
+            <div class="greeting-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+
+            <div>
+                <h4 th:text="'Welcome back, ' + ${userName}" data-testid="welcome-message">
+                    Welcome back, User
+                </h4>
+                <p class="text-muted mb-0">
+                    Member since <span th:text="${memberSince}" data-testid="member-since">2024</span>
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Membership Card -->
+    <div class="membership-card" data-testid="membership-card">
+
+        <h5>
+            <i class="fas fa-crown me-2"></i>
+            Your Membership
+        </h5>
+
+        <div class="fs-3 fw-bold" th:text="${membershipType}" data-testid="membership-type">
+            Premium Membership
+        </div>
+
+        <div class="membership-details mt-3">
+
+            <div class="membership-detail">
+                <small>Status</small>
+                <div>
+                    <span class="status-badge"
+                          th:classappend="${membershipStatus == 'Paid'} ? 'status-paid' : (${membershipStatus == 'Free'} ? 'status-free' : 'status-active')"
+                          th:text="${membershipStatus}"
+                          data-testid="membership-status">
+                        Active
+                    </span>
+                </div>
+            </div>
+
+            <div class="membership-detail">
+                <small>Expiry Date</small>
+                <div th:text="${membershipExpiryDate}" data-testid="membership-expiry">
+                    Dec 31, 2026
+                </div>
+            </div>
+
+            <div class="membership-detail">
+                <small>Member Since</small>
+                <div th:text="${memberSince}" data-testid="membership-since">
+                    Jan 1, 2024
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Profile Information Card -->
+    <div class="info-card" data-testid="profile-card">
+
+        <h5 class="mb-3">
+            <i class="fas fa-user-circle me-2" style="color: var(--primary);"></i>
+            Profile Information
+        </h5>
+
+        <div class="info-row">
+            <span>Full Name</span>
+            <span th:text="${userName}" data-testid="profile-name">John Doe</span>
+        </div>
+
+        <div class="info-row">
+            <span>Email</span>
+            <span th:text="${userEmail}" data-testid="profile-email">john@example.com</span>
+        </div>
+
+        <div class="info-row">
+            <span>Phone</span>
+            <span th:text="${userPhone}" data-testid="profile-phone">(123) 456-7890</span>
+        </div>
+
+        <div class="info-row">
+            <span>Address</span>
+            <span th:text="${userAddress}" data-testid="profile-address">123 Main St</span>
+        </div>
+
+        <div class="info-row">
+            <span>Postal Code</span>
+            <span th:text="${userPostalCode}" data-testid="profile-postal">A1A 1A1</span>
+        </div>
+
+
+        <!-- Children Section -->
+        <hr class="my-4">
+
+        <h5 class="mb-3" style="color: var(--primary);">
+            <i class="fas fa-child me-2"></i>
+            Registered Children
+        </h5>
+
+        <!-- Children List -->
+        <div th:if="${children != null && !children.isEmpty()}" data-testid="children-list">
+
+            <div class="child-card"
+                 th:each="child, stat : ${children}"
+                 th:data-testid="'child-card-' + ${stat.index}">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Child <span th:text="${stat.index + 1}">1</span>
+                    </h6>
+
+                    <div>
+                        <a th:href="@{'/profile/child/edit/' + ${child.id}}"
+                           class="btn btn-sm btn-secondary-custom me-1"
+                           th:data-testid="'edit-child-' + ${stat.index}">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </a>
+
+                        <form th:action="@{'/profile/child/delete/' + ${child.id}}"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Are you sure you want to delete this child record?')">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}"/>
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    th:data-testid="'delete-child-' + ${stat.index}">
+                                <i class="fas fa-trash me-1"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <span>Name</span>
+                    <span th:text="${child.name}">Child Name</span>
+                </div>
+
+                <div class="info-row">
+                    <span>Age</span>
+                    <span th:text="${child.age}">5</span>
+                </div>
+
+                <div class="info-row">
+                    <span>Hearing Loss</span>
+                    <span th:text="${child.hearingLossType}">Moderate</span>
+                </div>
+
+                <div class="info-row">
+                    <span>Equipment</span>
+                    <span th:text="${child.equipmentType}">Hearing Aid</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- No Children Message -->
+        <div th:if="${children == null || children.isEmpty()}"
+             class="text-center py-4"
+             style="color: var(--text-muted);"
+             data-testid="no-children-message">
+            <i class="fas fa-info-circle me-2"></i>
+            No children have been added yet.
+        </div>
+
+
+        <!-- Action Buttons -->
+        <div class="mt-4 d-flex gap-2 flex-wrap">
+
+            <a th:href="@{/profile/child/add}"
+               class="btn btn-primary-custom"
+               data-testid="add-child-btn">
+                <i class="fas fa-plus me-1"></i> Add Child
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="logout-btn" href="/logout">Logout</a>
-                    </li>
-                </ul>
-            </div>
+
+            <a th:href="@{/profile/edit}"
+               class="btn btn-secondary-custom"
+               data-testid="edit-profile-btn">
+                <i class="fas fa-edit me-1"></i> Edit Profile
+            </a>
+
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="dashboard-container">
-        <div class="container">
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <div class="welcome-greeting">
-                    <div class="greeting-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="greeting-text">
-                        <h2 th:text="'Welcome, ' + ${userName} + '!'"></h2>
-                        <p th:text="'Member since ' + ${memberSince}"></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Membership Section -->
-            <div class="membership-card">
-                <h3>
-                    <i class="fas fa-crown"></i>
-                    Your Membership
-                </h3>
-                <div class="membership-type" th:text="${membershipType}"></div>
-                <div class="membership-details">
-                    <div class="membership-detail">
-                        <div class="membership-detail-label">Status</div>
-                        <div class="membership-detail-value">
-                            <span class="status-badge" 
-                                  th:classappend="${membershipStatus == 'Paid'} ? 'status-paid' : (${membershipStatus == 'Free'} ? 'status-free' : 'status-active')" 
-                                  th:text="${membershipStatus}"></span>
-                        </div>
-                    </div>
-                    <div class="membership-detail">
-                        <div class="membership-detail-label">Expiry Date</div>
-                        <div class="membership-detail-value" th:text="${membershipExpiryDate}"></div>
-                    </div>
-                    <div class="membership-detail" th:if="${showBenefits}">
-                        <div class="membership-detail-label">Membership Benefit</div>
-                        <div class="membership-detail-value" th:text="${membershipBenefit}"></div>
-                    </div>
-                    <div class="membership-detail">
-                        <div class="membership-detail-label">Member Since</div>
-                        <div class="membership-detail-value" th:text="${memberSince}"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <!-- Profile Information -->
-                <div class="col-lg-6">
-                    <div class="info-card">
-                        <h3>
-                            <i class="fas fa-user-circle"></i>
-                            Profile Information
-                        </h3>
-                        <div class="info-row">
-                            <span class="info-label">Full Name</span>
-                            <span class="info-value" th:text="${userName}"></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Email Address</span>
-                            <span class="info-value" th:text="${userEmail}"></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Phone</span>
-                            <span class="info-value" th:text="${userPhone}"></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Address</span>
-                            <span class="info-value" th:text="${userAddress}"></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Postal Code</span>
-                            <span class="info-value" th:text="${userPostalCode}"></span>
-                        </div>
-                        
-                        <!-- Children Information Section -->
-                        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #eee;">
-                            <h4 style="color: #667eea; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-child"></i> Children Information
-                            </h4>
-                            <div th:if="${children != null && !children.isEmpty()}">
-                                <div th:each="child, iterStat : ${children}" style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; border: 2px solid #e1e5e9;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #ddd;">
-                                        <h5 style="color: #667eea; margin: 0; font-size: 1.2rem;">
-                                            <i class="fas fa-child me-2"></i>Child <span th:text="${iterStat.index + 1}"></span>
-                                        </h5>
-                                        <div style="display: flex; gap: 0.5rem;">
-                                            <a th:href="@{'/profile/child/edit/' + ${child.id}}" 
-                                               class="btn-custom btn-secondary-custom" 
-                                               style="padding: 8px 20px; font-size: 0.9rem; text-decoration: none;">
-                                                <i class="fas fa-edit me-1"></i> Edit
-                                            </a>
-                                            <form th:action="@{'/profile/child/delete/' + ${child.id}}" method="post" style="display: inline;">
-                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                                <button type="submit" class="btn-custom" style="padding: 8px 20px; font-size: 0.9rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;" 
-                                                        onclick="return confirm('Are you sure you want to delete this child\'s information?');">
-                                                    <i class="fas fa-trash me-1"></i> Delete
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
-                                        <span class="info-label"><i class="fas fa-user me-2"></i>Name</span>
-                                        <span class="info-value" th:text="${child.name != null ? child.name : 'Not provided'}"></span>
-                                    </div>
-                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
-                                        <span class="info-label"><i class="fas fa-birthday-cake me-2"></i>Age</span>
-                                        <span class="info-value" th:text="${child.age != null ? child.age : 'Not provided'}"></span>
-                                    </div>
-                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
-                                        <span class="info-label"><i class="fas fa-calendar me-2"></i>Date of Birth</span>
-                                        <span class="info-value" th:if="${child.dateOfBirth != null}" th:text="${#dates.format(child.dateOfBirth, 'MMMM dd, yyyy')}"></span>
-                                        <span class="info-value" th:if="${child.dateOfBirth == null}">Not provided</span>
-                                    </div>
-                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
-                                        <span class="info-label"><i class="fas fa-hearing me-2"></i>Type of Hearing Loss</span>
-                                        <span class="info-value" th:text="${child.hearingLossType != null && !child.hearingLossType.isEmpty() ? child.hearingLossType : 'Not provided'}"></span>
-                                    </div>
-                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
-                                        <span class="info-label"><i class="fas fa-headphones me-2"></i>Equipment Type</span>
-                                        <span class="info-value" th:text="${child.equipmentType != null && !child.equipmentType.isEmpty() ? child.equipmentType : 'Not provided'}"></span>
-                                    </div>
-                                    <div class="info-row" style="border-bottom: 1px solid #ddd; padding: 0.75rem 0;">
-                                        <span class="info-label"><i class="fas fa-users me-2"></i>Siblings' Names</span>
-                                        <span class="info-value" th:text="${child.siblingsNames != null && !child.siblingsNames.isEmpty() ? child.siblingsNames : 'Not provided'}"></span>
-                                    </div>
-                                    <div class="info-row" style="padding: 0.75rem 0;">
-                                        <span class="info-label"><i class="fas fa-map-marker-alt me-2"></i>Chapter / Location</span>
-                                        <span class="info-value" th:text="${child.chapterLocation != null && !child.chapterLocation.isEmpty() ? child.chapterLocation : 'Not provided'}"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div th:if="${children == null || children.isEmpty()}" style="text-align: center; padding: 2rem; color: #666;">
-                                <i class="fas fa-child" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                                <p>No children information added yet.</p>
-                            </div>
-                            <div class="action-buttons" style="margin-top: 1.5rem;">
-                                <a href="/profile/child/add" class="btn-custom btn-primary-custom">
-                                    <i class="fas fa-plus"></i> Add Child
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <div class="action-buttons" style="margin-top: 2rem;">
-                            <a href="/profile/edit" class="btn-custom btn-primary-custom">
-                                <i class="fas fa-edit"></i> Edit Profile
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Footer -->
-    <div class="dashboard-footer">
-        <div class="container">
-            <p>Copyright 2023 &copy; VOICE for Children who are Deaf and Hard of Hearing | 
-                <a href="/">Home</a> | 
-                <a href="/profile">Dashboard</a> | 
-                <a href="/profile/edit">Settings</a>
-            </p>
-        </div>
-    </div>
+</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<!-- Footer -->
+<div class="dashboard-footer" data-testid="dashboard-footer">
+    <div class="container">
+        <p class="mb-0">
+            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
+        </p>
+    </div>
+</div>
+
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

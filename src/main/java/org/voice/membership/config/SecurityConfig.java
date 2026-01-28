@@ -17,15 +17,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/register/**").permitAll()
-                        .requestMatchers("/forgot-password").permitAll()
-                        .requestMatchers("/reset-password").permitAll()
-                        .requestMatchers("/api/landing-page/**").permitAll()
-                        .requestMatchers("/profile").hasRole(Role.USER.name())
-                        .anyRequest().authenticated())
+        		.authorizeHttpRequests(auth -> auth
+
+        		        // ✅ Allow static resources (IMPORTANT)
+        		        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+
+        		        // ✅ Public pages
+        		        .requestMatchers("/").permitAll()
+        		        .requestMatchers("/login").permitAll()
+        		        .requestMatchers("/register/**").permitAll()
+        		        .requestMatchers("/forgot-password").permitAll()
+        		        .requestMatchers("/reset-password").permitAll()
+        		        .requestMatchers("/api/landing-page/**").permitAll()
+
+        		        // ✅ Protected pages
+        		        .requestMatchers("/profile").hasRole(Role.USER.name())
+
+        		        .anyRequest().authenticated()
+        		)
+
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/profile", true))
