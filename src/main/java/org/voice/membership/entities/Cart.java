@@ -1,15 +1,17 @@
 package org.voice.membership.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
 import java.util.List;
-/**
 
- Represents a shopping cart associated with a user.
- Stores membership purchases and related items before checkout.
- One cart per user, can contain multiple cart items (memberships).
- Used in the membership checkout process.
+/**
+ * 
+ * Represents a shopping cart associated with a user.
+ * Stores membership purchases and related items before checkout.
+ * One cart per user, can contain multiple cart items (memberships).
+ * Used in the membership checkout process.
  */
 @Getter
 @Setter
@@ -26,6 +28,7 @@ public class Cart {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JsonBackReference
     private User user;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)

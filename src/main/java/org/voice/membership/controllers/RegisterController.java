@@ -63,9 +63,9 @@ public class RegisterController {
 
     @PostMapping("/step1")
     public String handleStep1(@Valid @ModelAttribute("registerDto") RegisterDto registerDto,
-                              BindingResult bindingResult,
-                              Model model,
-                              HttpSession session) {
+            BindingResult bindingResult,
+            Model model,
+            HttpSession session) {
         // Confirm password match
         if (registerDto.getPassword() != null && registerDto.getConfirmPassword() != null
                 && !registerDto.getPassword().equals(registerDto.getConfirmPassword())) {
@@ -116,15 +116,15 @@ public class RegisterController {
 
     @PostMapping("/step2")
     public String handleStep2(@RequestParam(value = "childName", required = false) List<String> childNames,
-                             @RequestParam(value = "childAge", required = false) List<Integer> childAges,
-                             @RequestParam(value = "childDob", required = false) List<String> childDobs,
-                             @RequestParam(value = "hearingLossType", required = false) List<String> hearingLossTypes,
-                             @RequestParam(value = "equipmentType", required = false) List<String> equipmentTypes,
-                             @RequestParam(value = "siblingsNames", required = false) List<String> siblingsNames,
-                             @RequestParam(value = "chapterLocation", required = false) List<String> chapterLocations,
-                             @RequestParam(value = "action", required = false) String action,
-                             Model model,
-                             HttpSession session) {
+            @RequestParam(value = "childAge", required = false) List<Integer> childAges,
+            @RequestParam(value = "childDob", required = false) List<String> childDobs,
+            @RequestParam(value = "hearingLossType", required = false) List<String> hearingLossTypes,
+            @RequestParam(value = "equipmentType", required = false) List<String> equipmentTypes,
+            @RequestParam(value = "siblingsNames", required = false) List<String> siblingsNames,
+            @RequestParam(value = "chapterLocation", required = false) List<String> chapterLocations,
+            @RequestParam(value = "action", required = false) String action,
+            Model model,
+            HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
         if (registrationData == null) {
             return "redirect:/register";
@@ -151,7 +151,8 @@ public class RegisterController {
                     if (childAges != null && i < childAges.size()) {
                         child.setAge(childAges.get(i));
                     }
-                    if (childDobs != null && i < childDobs.size() && childDobs.get(i) != null && !childDobs.get(i).isEmpty()) {
+                    if (childDobs != null && i < childDobs.size() && childDobs.get(i) != null
+                            && !childDobs.get(i).isEmpty()) {
                         try {
                             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
                             child.setDateOfBirth(sdf.parse(childDobs.get(i)));
@@ -185,15 +186,9 @@ public class RegisterController {
     // Step 3: Membership Selection
     @GetMapping("/step3")
     public String showStep3(Model model, HttpSession session) {
-        System.out.println("=== STEP3 GET - Starting ===");
-        System.out.println("Session ID: " + session.getId());
-        System.out.println("Session attributes: " + java.util.Collections.list(session.getAttributeNames()));
-        
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
-        System.out.println("RegistrationData found: " + (registrationData != null));
-        
+
         if (registrationData == null) {
-            System.out.println("STEP3 GET - No registration data, redirecting to /register");
             return "redirect:/register";
         }
 
@@ -203,13 +198,12 @@ public class RegisterController {
         model.addAttribute("lineSeparator", System.lineSeparator());
         model.addAttribute("step", 3);
         model.addAttribute("totalSteps", 4);
-        System.out.println("STEP3 GET - Returning register-step3");
         return "register-step3";
     }
 
     @PostMapping("/step3")
     public String handleStep3(@RequestParam("membershipId") Integer membershipId,
-                              HttpSession session) {
+            HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
         if (registrationData == null) {
             return "redirect:/register";
@@ -229,27 +223,19 @@ public class RegisterController {
     // Step 4: Cart View/Management
     @GetMapping("/step4")
     public String showStep4(@RequestParam(value = "error", required = false) String error,
-                           Model model, HttpSession session) {
-        System.out.println("=== STEP4 GET - Starting ===");
-        System.out.println("Session ID: " + session.getId());
-        System.out.println("Session attributes: " + java.util.Collections.list(session.getAttributeNames()));
-        
+            Model model, HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
-        System.out.println("RegistrationData found: " + (registrationData != null));
-        
+
         if (registrationData == null) {
-            System.out.println("STEP4 GET - No registration data, redirecting to /register");
             return "redirect:/register";
         }
 
         if (registrationData.getCartMembershipId() == null) {
-            System.out.println("STEP4 GET - No cart membership ID, redirecting to /register/step3");
             return "redirect:/register/step3";
         }
 
         Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
         if (membershipOpt.isEmpty()) {
-            System.out.println("STEP4 GET - Membership not found, redirecting to /register/step3");
             return "redirect:/register/step3";
         }
 
@@ -261,18 +247,16 @@ public class RegisterController {
         if (error != null) {
             model.addAttribute("error", "An error occurred. Please try again.");
         }
-        System.out.println("STEP4 GET - Returning register-step4");
         return "register-step4";
     }
 
     @PostMapping("/step4")
     public String handleStep4(@RequestParam(value = "action", required = false) String action,
-                             HttpSession session) {
+            HttpSession session) {
         try {
-            System.out.println("Step4 POST - Action: " + action);
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
+            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
+                    .getAttribute("registrationData");
             if (registrationData == null) {
-                System.out.println("Step4 POST - No registration data in session");
                 return "redirect:/register";
             }
 
@@ -286,35 +270,25 @@ public class RegisterController {
 
             // Proceed to checkout or complete registration
             if (registrationData.getCartMembershipId() == null) {
-                System.out.println("Step4 POST - No cart membership ID");
                 return "redirect:/register/step3";
             }
 
-            System.out.println("Step4 POST - Cart membership ID: " + registrationData.getCartMembershipId());
             Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
             if (membershipOpt.isEmpty()) {
-                System.out.println("Step4 POST - Membership not found");
                 return "redirect:/register/step3";
             }
 
             Membership membership = membershipOpt.get();
-            System.out.println("Step4 POST - Membership: " + membership.getName() + ", IsFree: " + membership.isFree());
 
             if (membership.isFree()) {
                 // Free membership - complete registration directly
-                System.out.println("Step4 POST - Completing registration for free membership");
                 return completeRegistration(session);
             } else {
                 // Paid membership - go to checkout
-                System.out.println("Step4 POST - Redirecting to checkout");
                 return "redirect:/register/checkout";
             }
         } catch (Exception e) {
-            System.err.println("Error in step4: " + e.getMessage());
             e.printStackTrace();
-            // Log the full stack trace
-            e.printStackTrace();
-            // Always redirect, never return a view
             return "redirect:/register/step4?error=processing_failed";
         }
     }
@@ -349,26 +323,28 @@ public class RegisterController {
 
     @PostMapping("/checkout")
     public String handleCheckout(@RequestParam("cardNumber") String cardNumber,
-                                @RequestParam("cardHolderName") String cardHolderName,
-                                @RequestParam("expiryMonth") String expiryMonth,
-                                @RequestParam("expiryYear") String expiryYear,
-                                @RequestParam("cvv") String cvv,
-                                Model model,
-                                HttpSession session) {
+            @RequestParam("cardHolderName") String cardHolderName,
+            @RequestParam("expiryMonth") String expiryMonth,
+            @RequestParam("expiryYear") String expiryYear,
+            @RequestParam("cvv") String cvv,
+            Model model,
+            HttpSession session) {
         try {
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
+            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
+                    .getAttribute("registrationData");
             if (registrationData == null) {
                 return "redirect:/register";
             }
 
             // Basic validation (in production, use proper payment gateway)
             if (cardNumber == null || cardNumber.trim().isEmpty() ||
-                cardHolderName == null || cardHolderName.trim().isEmpty() ||
-                expiryMonth == null || expiryMonth.trim().isEmpty() ||
-                expiryYear == null || expiryYear.trim().isEmpty() ||
-                cvv == null || cvv.trim().isEmpty()) {
+                    cardHolderName == null || cardHolderName.trim().isEmpty() ||
+                    expiryMonth == null || expiryMonth.trim().isEmpty() ||
+                    expiryYear == null || expiryYear.trim().isEmpty() ||
+                    cvv == null || cvv.trim().isEmpty()) {
                 model.addAttribute("error", "All payment fields are required");
-                Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
+                Optional<Membership> membershipOpt = membershipRepository
+                        .findById(registrationData.getCartMembershipId());
                 if (membershipOpt.isPresent()) {
                     model.addAttribute("membership", membershipOpt.get());
                     model.addAttribute("totalAmount", membershipOpt.get().getPrice());
@@ -383,9 +359,11 @@ public class RegisterController {
         } catch (Exception e) {
             System.err.println("Error in checkout: " + e.getMessage());
             e.printStackTrace();
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
+            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
+                    .getAttribute("registrationData");
             if (registrationData != null) {
-                Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
+                Optional<Membership> membershipOpt = membershipRepository
+                        .findById(registrationData.getCartMembershipId());
                 if (membershipOpt.isPresent()) {
                     model.addAttribute("membership", membershipOpt.get());
                     model.addAttribute("totalAmount", membershipOpt.get().getPrice());
@@ -399,15 +377,13 @@ public class RegisterController {
     // Complete registration and create account
     private String completeRegistration(HttpSession session) {
         try {
-            System.out.println("Starting completeRegistration");
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
+            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
+                    .getAttribute("registrationData");
             if (registrationData == null || registrationData.getUserDetails() == null) {
-                System.out.println("completeRegistration - No registration data or user details");
                 return "redirect:/register";
             }
 
             RegisterDto userDetails = registrationData.getUserDetails();
-            System.out.println("completeRegistration - Creating user: " + userDetails.getEmail());
 
             // Create user
             User user = User.builder()
@@ -423,7 +399,8 @@ public class RegisterController {
 
             // Set membership if selected
             if (registrationData.getSelectedMembershipId() != null) {
-                Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getSelectedMembershipId());
+                Optional<Membership> membershipOpt = membershipRepository
+                        .findById(registrationData.getSelectedMembershipId());
                 membershipOpt.ifPresent(user::setMembership);
             }
 
@@ -454,7 +431,8 @@ public class RegisterController {
 
             // Create cart if paid membership
             if (registrationData.getSelectedMembershipId() != null) {
-                Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getSelectedMembershipId());
+                Optional<Membership> membershipOpt = membershipRepository
+                        .findById(registrationData.getSelectedMembershipId());
                 if (membershipOpt.isPresent() && !membershipOpt.get().isFree()) {
                     Cart cart = Cart.builder()
                             .user(user)
@@ -480,19 +458,15 @@ public class RegisterController {
                 UserDetails userDetails1 = userService.loadUserByUsername(user.getEmail());
                 Authentication authentication = new UsernamePasswordAuthenticationToken(
                         userDetails1, null, userDetails1.getAuthorities());
-                
+
                 // Set authentication in SecurityContext
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
                 securityContext.setAuthentication(authentication);
                 SecurityContextHolder.setContext(securityContext);
-                
+
                 // Store in session using Spring Security's session key
                 session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
-                
-                System.out.println("Auto-login successful for: " + user.getEmail());
             } catch (Exception e) {
-                System.err.println("Auto-login failed: " + e.getMessage());
-                e.printStackTrace();
                 // If auto-login fails, redirect to login page with message
                 return "redirect:/login?registered=true";
             }
@@ -501,10 +475,8 @@ public class RegisterController {
             session.removeAttribute("registrationData");
 
             // Redirect to dashboard
-            System.out.println("completeRegistration - Registration complete, redirecting to profile");
             return "redirect:/profile";
         } catch (Exception e) {
-            System.err.println("Error completing registration: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/register?error=registration_failed";
         }

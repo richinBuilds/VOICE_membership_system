@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VOICE Admin Dashboard">
+
+    <title>Admin Dashboard - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body style="background: var(--bg-bone);">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">
+            <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="50" onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item me-3">
+                    <span class="admin-badge">
+                        <i class="fas fa-shield-alt me-1"></i> ADMIN
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Admin Header -->
+<div class="admin-header">
+    <div class="container">
+        <h1><i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard</h1>
+        <p class="mb-0">Welcome back, <span th:text="${adminName}">Admin</span>!</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container mb-5">
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Users</h6>
+                        <h2 class="mb-0" th:text="${totalUsers}">0</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Active Members</h6>
+                        <h2 class="mb-0" th:text="${totalUsers}">0</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">
+                <i class="fas fa-list me-2"></i> All Users
+            </h3>
+            <div>
+                <a th:href="@{/admin/export-users}" class="btn btn-success me-2">
+                    <i class="fas fa-file-excel me-2"></i>Export to Excel
+                </a>
+                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false">
+                    <i class="fas fa-filter me-2"></i>Filters
+                </button>
+            </div>
+        </div>
+        
+        <!-- Filter Panel -->
+        <div class="collapse mb-4" id="filterPanel">
+            <div class="card card-body bg-light">
+                <form id="filterForm" th:action="@{/admin/dashboard}" method="get">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" name="address" 
+                                   th:value="${address}" placeholder="Search by address...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Child Age Range</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="minAge" 
+                                       th:value="${minAge}" placeholder="Min" min="0" max="18">
+                                <span class="input-group-text">to</span>
+                                <input type="number" class="form-control" name="maxAge" 
+                                       th:value="${maxAge}" placeholder="Max" min="0" max="18">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Hearing Loss Type</label>
+                            <select class="form-select" name="hearingLossType">
+                                <option value="">All Types</option>
+                                <option value="Mild" th:selected="${hearingLossType == 'Mild'}">Mild</option>
+                                <option value="Moderate" th:selected="${hearingLossType == 'Moderate'}">Moderate</option>
+                                <option value="Severe" th:selected="${hearingLossType == 'Severe'}">Severe</option>
+                                <option value="Profound" th:selected="${hearingLossType == 'Profound'}">Profound</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Equipment Type</label>
+                            <input type="text" class="form-control" name="equipmentType" 
+                                   th:value="${equipmentType}" placeholder="Search equipment type">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Registration Date Range</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" name="startDate" th:value="${startDate}">
+                                <span class="input-group-text">to</span>
+                                <input type="date" class="form-control" name="endDate" th:value="${endDate}">
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i>Apply Filters
+                            </button>
+                            <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Children</th>
+                        <th>Role</th>
+                        <th>Registration Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}">1</td>
+                        <td th:text="${user.name}">John Doe</td>
+                        <td th:text="${user.email}">user@example.com</td>
+                        <td th:text="${user.phone}">123-456-7890</td>
+                        <td>
+                            <small th:if="${user.address != null and !#strings.isEmpty(user.address)}">
+                                <span th:text="${user.address}">123 Main St</span>
+                                <span th:if="${user.postalCode != null and !#strings.isEmpty(user.postalCode)}" 
+                                      th:text="${', ' + user.postalCode}">, 12345</span>
+                            </small>
+                            <small class="text-muted" th:if="${user.address == null or #strings.isEmpty(user.address)}">
+                                N/A
+                            </small>
+                        </td>
+                        <td>
+                            <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
+                                <span class="badge bg-info text-dark" th:text="${#lists.size(user.children)} + ' child(ren)'">
+                                    2 child(ren)
+                                </span>
+                                <div class="mt-1">
+                                    <small th:each="child, iterStat : ${user.children}">
+                                        <i class="fas fa-child me-1"></i>
+                                        <span th:text="${child.name}">Child Name</span>
+                                        <span th:if="${child.age != null}" th:text="${' (' + child.age + 'y)'}"> (5y)</span>
+                                        <br th:if="${!iterStat.last}"/>
+                                    </small>
+                                </div>
+                            </div>
+                            <small class="text-muted" th:if="${user.children == null or #lists.isEmpty(user.children)}">
+                                No children
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : 'bg-primary'}"
+                                  th:text="${user.role}">USER</span>
+                        </td>
+                        <td th:text="${#dates.format(user.creation, 'yyyy-MM-dd')}">2024-01-01</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-user-btn" 
+                                    th:attr="data-user-id=${user.id}"
+                                    title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Empty state -->
+        <div th:if="${#lists.isEmpty(users)}" class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No users found in the system.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background-color: var(--primary);">
+                <h5 class="modal-title" id="userDetailsModalLabel">
+                    <i class="fas fa-user-circle me-2"></i>User Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userDetailsContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle view user button clicks
+    document.querySelectorAll('.view-user-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            loadUserDetails(userId);
+        });
+    });
+});
+
+function loadUserDetails(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+    const content = document.getElementById('userDetailsContent');
+    
+    // Show loading spinner
+    content.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Fetch user details
+    fetch('/admin/user/' + userId)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load user details (Status: ' + response.status + ')');
+            }
+            return response.json();
+        })
+        .then(data => {
+            content.innerHTML = generateUserDetailsHTML(data);
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${error.message}
+                </div>
+            `;
+        });
+}
+
+function generateUserDetailsHTML(user) {
+    const creationDate = new Date(user.creation).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    let html = `
+        <div class="container-fluid">
+            <!-- Basic Information -->
+            <div class="card mb-3">
+                <div class="card-header text-white" style="background-color: var(--primary);">
+                    <h6 class="mb-0"><i class="fas fa-user me-2"></i>Basic Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Full Name</label>
+                            <div class="fw-bold">${user.name || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Email</label>
+                            <div class="fw-bold">${user.email || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Phone Number</label>
+                            <div class="fw-bold">${user.phone || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Role</label>
+                            <div>
+                                <span class="badge ${user.role === 'ADMIN' ? 'bg-danger' : 'bg-primary'}">
+                                    ${user.role}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Registration Date</label>
+                            <div class="fw-bold">${creationDate}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">User ID</label>
+                            <div class="fw-bold">#${user.id}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="card mb-3">
+                <div class="card-header text-white" style="background-color: var(--primary);">
+                    <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Address Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="text-muted small">Street Address</label>
+                            <div class="fw-bold">${user.address || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Postal Code</label>
+                            <div class="fw-bold">${user.postalCode || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Children Information -->
+            <div class="card mb-3">
+                <div class="card-header text-white" style="background-color: var(--primary);">
+                    <h6 class="mb-0">
+                        <i class="fas fa-child me-2"></i>Children Information
+                        <span class="badge bg-light text-dark ms-2">${user.children ? user.children.length : 0}</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+    `;
+    
+    if (user.children && user.children.length > 0) {
+        user.children.forEach((child, index) => {
+            const childDob = child.dateOfBirth ? new Date(child.dateOfBirth).toLocaleDateString('en-US') : 'N/A';
+            
+            html += `
+                <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-baby me-2"></i>Child ${index + 1}
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label class="text-muted small">Name</label>
+                            <div class="fw-bold">${child.name || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="text-muted small">Age</label>
+                            <div class="fw-bold">${child.age || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="text-muted small">Date of Birth</label>
+                            <div class="fw-bold">${childDob}</div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="text-muted small">Hearing Loss Type</label>
+                            <div class="fw-bold">${child.hearingLossType || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="text-muted small">Equipment Type</label>
+                            <div class="fw-bold">${child.equipmentType || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="text-muted small">Chapter Location</label>
+                            <div class="fw-bold">${child.chapterLocation || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="text-muted small">Siblings</label>
+                            <div class="fw-bold">${child.siblingsNames || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        html += `
+            <div class="text-center text-muted py-3">
+                <i class="fas fa-info-circle me-2"></i>No children information available
+            </div>
+        `;
+    }
+    
+    html += `
+                </div>
+            </div>
+
+            <!-- Membership Information -->
+            <div class="card mb-3">
+                <div class="card-header text-white" style="background-color: var(--primary);">
+                    <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Membership Information</h6>
+                </div>
+                <div class="card-body">
+    `;
+    
+    if (user.membership) {
+        html += `
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="text-muted small">Membership Type</label>
+                    <div class="fw-bold">${user.membership.name || 'N/A'}</div>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="text-muted small">Duration</label>
+                    <div class="fw-bold">${user.membership.duration || 'N/A'}</div>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="text-muted small">Price</label>
+                    <div class="fw-bold">$${user.membership.price || '0.00'}</div>
+                </div>
+                <div class="col-md-12 mb-2">
+                    <label class="text-muted small">Description</label>
+                    <div class="fw-bold">${user.membership.description || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="text-center text-muted py-3">
+                <i class="fas fa-info-circle me-2"></i>No active membership
+            </div>
+        `;
+    }
+    
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+</script>
+
+<!-- Footer -->
+<div class="dashboard-footer">
+    <div class="container">
+        <p class="mb-0">
+            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
+        </p>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

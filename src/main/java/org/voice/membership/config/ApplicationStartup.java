@@ -1,5 +1,6 @@
 package org.voice.membership.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import org.voice.membership.services.LandingPageService;
  * This ensures that default membership options and landing page content are created
  * if they don't already exist in the database.
  */
+@Slf4j
 @Component
 public class ApplicationStartup implements CommandLineRunner {
 
@@ -23,25 +25,24 @@ public class ApplicationStartup implements CommandLineRunner {
      */
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("Initializing application data...");
+        log.info("Initializing application data...");
         
         try {
             // Initialize default membership options (Free and Premium)
             landingPageService.initializeDefaultMemberships();
-            System.out.println("Memberships initialized successfully");
+            log.info("Memberships initialized successfully");
             
             // Initialize default landing page content
             landingPageService.initializeDefaultContent();
-            System.out.println("Landing page content initialized successfully");
+            log.info("Landing page content initialized successfully");
             
             // Initialize default benefits
             landingPageService.initializeDefaultBenefits();
-            System.out.println("Benefits initialized successfully");
+            log.info("Benefits initialized successfully");
             
-            System.out.println("Application startup initialization complete!");
+            log.info("Application startup initialization complete!");
         } catch (Exception e) {
-            System.err.println("Error during application startup initialization: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error during application startup initialization: {}", e.getMessage(), e);
         }
     }
 }

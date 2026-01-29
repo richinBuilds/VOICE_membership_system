@@ -118,7 +118,6 @@ public class ProfileController {
 
             return "profile";
         } catch (Exception e) {
-            System.out.println("Error loading dashboard: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/login";
         }
@@ -182,7 +181,6 @@ public class ProfileController {
             }
             return "redirect:/profile";
         } catch (Exception e) {
-            System.out.println("Error in edit profile: " + e.getMessage());
             model.addAttribute("updateUserRequest", updateUserRequest);
             return "editProfile";
         }
@@ -245,7 +243,6 @@ public class ProfileController {
             childRepository.save(child);
             return "redirect:/profile";
         } catch (Exception e) {
-            System.out.println("Error saving child: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/profile/child/add?error=save_failed";
         }
@@ -315,7 +312,7 @@ public class ProfileController {
             childRepository.save(child);
             return "redirect:/profile";
         } catch (Exception e) {
-            System.out.println("Error updating child: " + e.getMessage());
+
             e.printStackTrace();
             return "redirect:/profile/child/edit/" + id + "?error=update_failed";
         }

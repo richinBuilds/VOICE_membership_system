@@ -71,7 +71,9 @@
                     <ul class="dropdown-menu dropdown-menu-end">
 
                         <li>
-                            <a class="dropdown-item" th:href="@{/profile}" data-testid="nav-dashboard">
+                            <a class="dropdown-item" 
+                               th:href="@{${#authorization.expression('hasRole(''ADMIN'')') ? '/admin/dashboard' : '/profile'}}" 
+                               data-testid="nav-dashboard">
                                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                             </a>
                         </li>
@@ -129,7 +131,7 @@
         <!-- Logged in -->
         <div class="cta-buttons" th:if="${isUserLoggedIn}" data-testid="hero-cta-member">
 
-            <a th:href="@{/profile}"
+            <a th:href="@{${#authorization.expression('hasRole(''ADMIN'')') ? '/admin/dashboard' : '/profile'}}"
                class="btn btn-light btn-lg fw-semibold"
                data-testid="hero-dashboard-btn">
                 <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard

@@ -1401,3 +1401,117 @@ a:hover {
         box-shadow: none;
     }
 }
+
+/* ========== Admin Dashboard Styles ========== */
+.admin-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--bg-white);
+    padding: var(--space-xl) 0;
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.admin-header h1 {
+    color: var(--bg-white);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    margin-bottom: var(--space-xs);
+}
+
+.admin-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.stat-card {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--space-xl);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    border: 1px solid var(--border-light);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+}
+
+.table-card {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-light);
+}
+
+.table-card h3 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.admin-badge {
+    background: var(--primary);
+    color: var(--bg-white);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Admin Table Styles */
+.table-card .table {
+    margin-bottom: 0;
+}
+
+.table-card .table thead {
+    background: var(--bg-light);
+}
+
+.table-card .table thead th {
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-default);
+    padding: var(--space-md);
+}
+
+.table-card .table tbody td {
+    padding: var(--space-md);
+    vertical-align: middle;
+    color: var(--text-secondary);
+}
+
+.table-card .table-hover tbody tr:hover {
+    background-color: var(--bg-light);
+}
+
+/* Admin Filter Panel */
+#filterPanel .card {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+}
+
+#filterPanel .form-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+#filterPanel .form-control,
+#filterPanel .form-select {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-default);
+}
+
+#filterPanel .form-control:focus,
+#filterPanel .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(10, 25, 47, 0.15);
+}
