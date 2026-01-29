@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sign In - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body class="auth-bg">
+
+<!-- ================= LOGIN CONTAINER ================= -->
+
+<div class="auth-container" data-testid="login-container">
+
+    <div class="auth-card">
+
+        <!-- Back -->
+        <a th:href="@{/}"
+           class="btn btn-link text-decoration-none mb-3 p-0"
+           style="color: var(--text-secondary);"
+           data-testid="back-to-home">
+            <i class="fas fa-arrow-left me-1"></i> Back to Home
+        </a>
+
+        <!-- ================= HEADER ================= -->
+
+        <div class="auth-header">
+
+            <img th:src="@{/images/logo.png}"
+                 alt="VOICE Logo"
+                 height="52"
+                 class="mb-3"
+                 onerror="this.style.display='none'"
+                 data-testid="login-logo">
+
+            <h1 data-testid="login-title">Welcome Back</h1>
+
+            <p>Sign in to your VOICE Membership account</p>
+
+        </div>
+
+        <!-- ================= ALERTS ================= -->
+
+        <!-- Error -->
+        <div th:if="${param.error}"
+             class="alert alert-danger text-center"
+             data-testid="login-error">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Invalid email or password
+        </div>
+
+        <!-- Logout -->
+        <div th:if="${param.logout}"
+             class="alert alert-success text-center"
+             data-testid="logout-success">
+            <i class="fas fa-check-circle me-2"></i>
+            You have been logged out successfully
+        </div>
+
+        <!-- Registered -->
+        <div th:if="${param.registered}"
+             class="alert alert-success text-center"
+             data-testid="register-success">
+            <i class="fas fa-check-circle me-2"></i>
+            Account created! Please sign in to continue
+        </div>
+
+        <!-- ================= FORM ================= -->
+
+        <form th:action="@{/login}" method="post" data-testid="login-form">
+
+            <!-- Email -->
+            <div class="form-floating mb-3">
+
+                <input type="email"
+                       class="form-control"
+                       id="username"
+                       name="username"
+                       placeholder="Email"
+                       required
+                       autocomplete="email"
+                       data-testid="login-email">
+
+                <label for="username">
+                    <i class="fas fa-envelope me-1"></i> Email Address
+                </label>
+
+            </div>
+
+            <!-- Password -->
+            <div class="form-floating mb-3">
+
+                <input type="password"
+                       class="form-control"
+                       id="password"
+                       name="password"
+                       placeholder="Password"
+                       required
+                       autocomplete="current-password"
+                       data-testid="login-password">
+
+                <label for="password">
+                    <i class="fas fa-lock me-1"></i> Password
+                </label>
+
+            </div>
+
+            <!-- Options -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div class="form-check">
+
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="rememberMe"
+                           name="remember-me"
+                           data-testid="remember-me">
+
+                    <label class="form-check-label" for="rememberMe">
+                        Remember me
+                    </label>
+
+                </div>
+
+                <a th:href="@{/forgot-password}"
+                   class="auth-link small"
+                   data-testid="forgot-password-link">
+                    Forgot password?
+                </a>
+
+            </div>
+
+            <!-- Button -->
+            <button type="submit"
+                    class="btn btn-primary-custom w-100"
+                    data-testid="login-submit-btn">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                Sign In
+            </button>
+
+        </form>
+
+        <!-- ================= REGISTER ================= -->
+
+        <div class="auth-links">
+
+            <p class="mb-0">
+                Don't have an account?
+                <a th:href="@{/register}" data-testid="register-link">
+                    Create one now
+                </a>
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

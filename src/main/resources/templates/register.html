@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your VOICE Membership account">
+
+    <title>Create Account - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body style="background: var(--bg-bone);">
+
+<div class="checkout-container" data-testid="register-container">
+
+    <div class="checkout-card">
+
+        <!-- Header -->
+        <div class="checkout-header">
+
+            <a th:href="@{/}"
+               class="btn btn-link text-decoration-none mb-3 p-0"
+               style="color: var(--text-secondary);"
+               data-testid="back-to-home">
+                <i class="fas fa-arrow-left me-1"></i> Back to Home
+            </a>
+
+            <h1 class="checkout-title" data-testid="register-title">
+                <i class="fas fa-user-plus me-2"></i>
+                Create Account
+            </h1>
+
+            <p class="text-muted">
+                Step <span th:text="${step}">1</span>
+                of <span th:text="${totalSteps}">4</span>
+                — Personal Information
+            </p>
+
+            <p class="small text-muted">
+                <i class="fas fa-asterisk me-1" style="font-size: 0.6rem; color: var(--danger);"></i>
+                Required fields
+            </p>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator" data-testid="step-indicator">
+                <div class="step" th:classappend="${step >= 1} ? 'active' : ''">1</div>
+                <div class="step" th:classappend="${step >= 2} ? 'active' : ''">2</div>
+                <div class="step" th:classappend="${step >= 3} ? 'active' : ''">3</div>
+                <div class="step" th:classappend="${step >= 4} ? 'active' : ''">4</div>
+            </div>
+
+        </div>
+
+        <!-- Success Alert -->
+        <div th:if="${success}"
+             class="alert success-alert mt-3"
+             role="alert"
+             data-testid="registration-success">
+            <i class="fas fa-check-circle me-2"></i>
+            Account created successfully!
+            <a th:href="@{/login}" class="fw-semibold ms-2">
+                Sign in now
+            </a>
+        </div>
+
+        <!-- Registration Form -->
+        <form th:action="@{/register/step1}"
+              method="post"
+              th:object="${registerDto}"
+              data-testid="register-form">
+
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}"/>
+
+            <!-- Full Name -->
+            <div class="form-floating">
+                <input type="text"
+                       th:field="*{name}"
+                       class="form-control"
+                       id="name"
+                       placeholder="Full Name"
+                       autocomplete="name"
+                       required
+                       data-testid="register-name">
+                <label for="name">
+                    <i class="fas fa-user me-1"></i> Full Name *
+                </label>
+            </div>
+
+            <!-- Email -->
+            <div class="form-floating">
+                <input type="email"
+                       th:field="*{email}"
+                       th:classappend="${#fields.hasErrors('email')} ? ' is-invalid' : ''"
+                       class="form-control"
+                       id="email"
+                       placeholder="Email"
+                       autocomplete="email"
+                       required
+                       data-testid="register-email">
+                <label for="email">
+                    <i class="fas fa-envelope me-1"></i> Email Address *
+                </label>
+                <div th:if="${#fields.hasErrors('email')}"
+                     class="invalid-feedback d-block"
+                     data-testid="email-error">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    <span th:errors="*{email}">Email error</span>
+                </div>
+            </div>
+
+            <!-- Phone + Address Row -->
+            <div class="form-row">
+
+                <div class="form-floating">
+                    <input type="tel"
+                           th:field="*{phone}"
+                           class="form-control"
+                           id="phone"
+                           placeholder="Phone"
+                           autocomplete="tel"
+                           required
+                           data-testid="register-phone">
+                    <label for="phone">
+                        <i class="fas fa-phone me-1"></i> Phone *
+                    </label>
+                </div>
+
+                <div class="form-floating">
+                    <input type="text"
+                           th:field="*{address}"
+                           class="form-control"
+                           id="address"
+                           placeholder="Address"
+                           autocomplete="street-address"
+                           data-testid="register-address">
+                    <label for="address">
+                        <i class="fas fa-map-marker-alt me-1"></i> Address
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Postal Code -->
+            <div class="form-floating">
+                <input type="text"
+                       th:field="*{postalCode}"
+                       class="form-control"
+                       id="postalCode"
+                       placeholder="A1A 1A1"
+                       autocomplete="postal-code"
+                       data-testid="register-postal">
+                <label for="postalCode">
+                    <i class="fas fa-mail-bulk me-1"></i> Postal Code
+                </label>
+            </div>
+
+            <!-- Password -->
+            <div class="form-floating">
+                <input type="password"
+                       th:field="*{password}"
+                       th:classappend="${#fields.hasErrors('password')} ? ' is-invalid' : ''"
+                       class="form-control"
+                       id="password"
+                       placeholder="Password"
+                       autocomplete="new-password"
+                       required
+                       data-testid="register-password">
+                <label for="password">
+                    <i class="fas fa-lock me-1"></i> Password *
+                </label>
+                <div th:if="${#fields.hasErrors('password')}"
+                     class="invalid-feedback d-block"
+                     data-testid="password-error">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    <span th:errors="*{password}">Password error</span>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-floating">
+                <input type="password"
+                       th:field="*{confirmPassword}"
+                       class="form-control"
+                       id="confirmPassword"
+                       placeholder="Confirm Password"
+                       autocomplete="new-password"
+                       required
+                       data-testid="register-confirm-password">
+                <label for="confirmPassword">
+                    <i class="fas fa-lock me-1"></i> Confirm Password *
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit"
+                    class="btn btn-primary-custom w-100 mt-3"
+                    data-testid="register-next-btn">
+                Continue to Next Step
+                <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+
+        </form>
+
+        <!-- Login Link -->
+        <div class="signup-link">
+            <p class="mb-0">
+                Already have an account?
+                <a th:href="@{/login}" data-testid="login-link">Sign in</a>
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

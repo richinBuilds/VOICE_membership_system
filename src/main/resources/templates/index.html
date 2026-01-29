@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VOICE Membership System - Supporting children who are Deaf and Hard of Hearing">
+
+    <title>VOICE Membership System - Join Our Community</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body th:attrappend="data-user-logged-in=${isUserLoggedIn}">
+
+<!-- Skip Link -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ================= NAVBAR ================= -->
+
+<nav class="navbar navbar-expand-lg" data-testid="main-navbar">
+    <div class="container">
+
+        <a class="navbar-brand" th:href="@{/}" data-testid="navbar-logo">
+            <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="40" onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+
+            <ul class="navbar-nav align-items-center">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#benefits" data-testid="nav-benefits">Benefits</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#membership" data-testid="nav-membership">Membership</a>
+                </li>
+
+                <li class="nav-item" th:if="${!isUserLoggedIn}">
+                    <a class="nav-link" th:href="@{/login}" data-testid="nav-signin">Sign In</a>
+                </li>
+
+                <li class="nav-item dropdown" th:if="${isUserLoggedIn}">
+
+                    <a class="nav-link dropdown-toggle"
+                       href="#"
+                       data-bs-toggle="dropdown"
+                       aria-expanded="false"
+                       data-testid="nav-account-dropdown">
+                        <i class="fas fa-user-circle me-1"></i> My Account
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+
+                        <li>
+                            <a class="dropdown-item" 
+                               th:href="@{${#authorization.expression('hasRole(''ADMIN'')') ? '/admin/dashboard' : '/profile'}}" 
+                               data-testid="nav-dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button class="dropdown-item" type="submit" data-testid="nav-logout">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </button>
+                            </form>
+                        </li>
+
+                    </ul>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+
+<section id="main-content" class="hero-section" data-testid="hero-section">
+
+    <div class="container">
+
+        <h1 data-testid="hero-title">Empowering Families of Children Who Are Deaf and Hard of Hearing</h1>
+
+        <p class="tagline" data-testid="hero-tagline">
+            Join our supportive community and access resources, programs, and connections that make a real difference in your family's journey.
+        </p>
+
+        <!-- Guest -->
+        <div class="cta-buttons" th:if="${!isUserLoggedIn}" data-testid="hero-cta-guest">
+
+            <a th:href="@{/register}"
+               class="btn btn-light btn-lg fw-semibold"
+               data-testid="hero-join-btn">
+                <i class="fas fa-user-plus me-2"></i>Join Now
+            </a>
+
+            <a th:href="@{/login}"
+               class="btn btn-outline-light btn-lg fw-semibold"
+               data-testid="hero-signin-btn">
+                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+            </a>
+
+        </div>
+
+        <!-- Logged in -->
+        <div class="cta-buttons" th:if="${isUserLoggedIn}" data-testid="hero-cta-member">
+
+            <a th:href="@{${#authorization.expression('hasRole(''ADMIN'')') ? '/admin/dashboard' : '/profile'}}"
+               class="btn btn-light btn-lg fw-semibold"
+               data-testid="hero-dashboard-btn">
+                <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= BENEFITS ================= -->
+
+<section id="benefits" class="section-padding bg-light" data-testid="benefits-section">
+
+    <div class="container">
+
+        <h2 class="section-title" data-testid="benefits-title">Why Join VOICE?</h2>
+
+        <div class="benefits-grid">
+
+            <div class="benefit-card"
+                 th:each="benefit : ${benefits}"
+                 data-testid="benefit-card">
+
+                <div class="benefit-icon">
+                    <i th:class="'fas ' + ${benefit.icon}"></i>
+                </div>
+
+                <h5 th:text="${benefit.title}">
+                    Title
+                </h5>
+
+                <p th:text="${benefit.description}">
+                    Description
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= MEMBERSHIP ================= -->
+
+<section id="membership" class="section-padding" data-testid="membership-section">
+
+    <div class="container">
+
+        <h2 class="section-title" data-testid="membership-title">Choose Your Membership</h2>
+
+        <!-- FILTER BUTTONS -->
+        <div class="membership-filters text-center" data-testid="membership-filters">
+
+            <!-- Free -->
+            <a th:href="${isUserLoggedIn} ? '#membership' : '/login'"
+               class="filter-btn btn-membership-free"
+               data-testid="filter-free-btn">
+                Free Membership
+            </a>
+
+            <!-- Paid -->
+            <a th:href="${isUserLoggedIn} ? '#membership' : '/login'"
+               class="filter-btn btn-membership-paid"
+               data-testid="filter-paid-btn">
+                Paid Membership
+            </a>
+
+        </div>
+
+
+        <!-- MEMBERSHIP GRID -->
+        <div class="membership-grid" data-testid="membership-grid">
+
+            <div class="membership-card"
+                 th:each="membership, stat : ${memberships}"
+                 th:classappend="${membership.isFree} ? ' free' : ' paid'"
+                 th:data-testid="'membership-card-' + ${stat.index}">
+
+                <div class="membership-header">
+
+                    <h3 th:text="${membership.name}">
+                        Membership Name
+                    </h3>
+
+                    <div class="membership-price"
+                         th:if="${membership.isFree}">
+                        Free
+                    </div>
+
+                    <div class="membership-price"
+                         th:unless="${membership.isFree}">
+                        $<span th:text="${membership.price}">0</span>/month
+                    </div>
+
+                </div>
+
+                <div class="membership-body">
+
+                    <p class="membership-description"
+                       th:text="${membership.description}">
+                        Description
+                    </p>
+
+                    <ul class="membership-features"
+                        th:if="${membership.features != null}">
+
+                        <li th:each="feature : ${#strings.arraySplit(membership.features,'\n')}"
+                            th:text="${feature.trim()}">
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                <div class="membership-footer">
+
+                    <a th:href="@{/register}"
+                       class="membership-btn"
+                       th:text="${membership.isFree ? 'Get Started Free' : 'Subscribe Now'}"
+                       th:data-testid="'membership-cta-' + ${stat.index}">
+                        Subscribe
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= FOOTER ================= -->
+
+<footer class="site-footer" data-testid="site-footer">
+
+    <div class="container text-center">
+
+        <p class="mb-0">
+            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
+        </p>
+
+    </div>
+
+</footer>
+
+<!-- ================= JS ================= -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const buttons = document.querySelectorAll(".filter-btn");
+    const cards = document.querySelectorAll(".membership-card");
+
+    // Show all cards on load
+    cards.forEach(card => {
+        card.style.display = "flex";
+    });
+
+    buttons.forEach(button => {
+
+        button.addEventListener("click", function () {
+
+            // Active button styling
+            buttons.forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+
+            const filter = this.dataset.filter;
+
+            cards.forEach(card => {
+
+                if (filter === "free" && card.classList.contains("free")) {
+                    card.style.display = "flex";
+                }
+
+                else if (filter === "paid" && card.classList.contains("paid")) {
+                    card.style.display = "flex";
+                }
+
+                else {
+                    card.style.display = "none";
+                }
+
+            });
+
+        });
+
+    });
+
+});
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+# Maven/Java build outputs
+/target/
+/.mvn/
+
+# IDE/editor configs
+/.idea/
+/.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+*.tmp
+
+# Local env files (do not commit secrets)
+.env
+.env.*
+
+# Node/bundler (if added later)
+/node_modules/
+
+# Generated archives
+*.jar
+*.war
+
+# Duplicate project folder (not for source control)
+/bin/
+
+# VS Code
+.history/

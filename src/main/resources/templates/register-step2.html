@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Add child information - VOICE Membership">
+
+    <title>Child Information - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body style="background: var(--bg-bone);">
+
+<div class="checkout-container" data-testid="register-step2-container">
+
+    <div class="checkout-card">
+
+        <!-- Header -->
+        <div class="checkout-header">
+
+            <h1 class="checkout-title" data-testid="step2-title">
+                <i class="fas fa-child me-2"></i>
+                Child Information
+            </h1>
+
+            <p class="text-muted">
+                Step <span th:text="${step}">2</span>
+                of <span th:text="${totalSteps}">4</span>
+                — <span class="fw-medium" style="color: var(--success);">Optional</span>
+            </p>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator" data-testid="step-indicator">
+                <div class="step active">1</div>
+                <div class="step active">2</div>
+                <div class="step">3</div>
+                <div class="step">4</div>
+            </div>
+
+        </div>
+
+        <!-- Form -->
+        <form th:action="@{/register/step2}"
+              method="post"
+              id="childInfoForm"
+              data-testid="child-info-form">
+
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}"/>
+
+            <!-- Existing Children -->
+            <div th:each="child, iterStat : ${children}"
+                 class="child-form-section"
+                 th:data-testid="'child-section-' + ${iterStat.index}">
+
+                <h3>
+                    <i class="fas fa-user me-2"></i>
+                    Child <span th:text="${iterStat.index + 1}">1</span>
+                </h3>
+
+                <!-- Child Name -->
+                <div class="form-floating">
+                    <input type="text"
+                           class="form-control"
+                           th:id="'childName' + ${iterStat.index}"
+                           name="childName"
+                           th:value="${child.name}"
+                           placeholder="Child's Name"
+                           data-testid="child-name">
+                    <label>
+                        <i class="fas fa-user me-1"></i> Child's Name
+                    </label>
+                </div>
+
+                <div class="form-row">
+
+                    <!-- Age -->
+                    <div class="form-floating">
+                        <input type="number"
+                               class="form-control"
+                               name="childAge"
+                               min="0"
+                               max="18"
+                               th:value="${child.age}"
+                               placeholder="Age"
+                               data-testid="child-age">
+                        <label>Age (0-18)</label>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="form-floating">
+                        <input type="date"
+                               class="form-control"
+                               name="childDob"
+                               onchange="validateDateInput(this)"
+                               th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}"
+                               data-testid="child-dob">
+                        <label>Date of Birth</label>
+                    </div>
+
+                </div>
+
+                <!-- Hearing Loss Type -->
+                <div class="form-floating">
+                    <select class="form-control"
+                            name="hearingLossType"
+                            data-testid="hearing-loss-type">
+                        <option value="">Select Hearing Loss Type</option>
+                        <option value="Mild" th:selected="${child.hearingLossType == 'Mild'}">Mild</option>
+                        <option value="Moderate" th:selected="${child.hearingLossType == 'Moderate'}">Moderate</option>
+                        <option value="Severe" th:selected="${child.hearingLossType == 'Severe'}">Severe</option>
+                        <option value="Profound" th:selected="${child.hearingLossType == 'Profound'}">Profound</option>
+                    </select>
+                    <label>
+                        <i class="fas fa-ear-listen me-1"></i> Hearing Loss Type
+                    </label>
+                </div>
+
+                <!-- Equipment Type -->
+                <div class="form-floating">
+                    <input type="text"
+                           class="form-control"
+                           name="equipmentType"
+                           th:value="${child.equipmentType}"
+                           placeholder="Equipment"
+                           data-testid="equipment-type">
+                    <label>
+                        <i class="fas fa-headphones me-1"></i> Equipment Used
+                    </label>
+                </div>
+
+                <!-- Siblings Names -->
+                <div class="form-floating">
+                    <input type="text"
+                           class="form-control"
+                           name="siblingsNames"
+                           th:value="${child.siblingsNames}"
+                           placeholder="Siblings"
+                           data-testid="siblings-names">
+                    <label>
+                        <i class="fas fa-users me-1"></i> Siblings' Names
+                    </label>
+                </div>
+
+                <!-- Chapter Location -->
+                <div class="form-floating">
+                    <input type="text"
+                           class="form-control"
+                           name="chapterLocation"
+                           th:value="${child.chapterLocation}"
+                           placeholder="Chapter"
+                           data-testid="chapter-location">
+                    <label>
+                        <i class="fas fa-map-marker-alt me-1"></i> Chapter / Location
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Add Child Button -->
+            <button type="button"
+                    onclick="addChild()"
+                    class="btn btn-add-child"
+                    data-testid="add-child-btn">
+                <i class="fas fa-plus me-2"></i>
+                Add Another Child
+            </button>
+
+            <!-- Navigation Buttons -->
+            <div class="btn-group-custom">
+
+                <a th:href="@{/register}"
+                   class="btn btn-secondary-custom"
+                   data-testid="step2-back-btn">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary-custom"
+                        data-testid="step2-next-btn">
+                    Continue
+                    <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Validate date input - prevent future dates
+function validateDateInput(input) {
+    if (!input.value) {
+        input.classList.remove('date-input-error');
+        return true;
+    }
+
+    const selectedDate = new Date(input.value);
+    const today = new Date();
+
+    if (selectedDate > today) {
+        input.classList.add('date-input-error');
+        return false;
+    }
+
+    input.classList.remove('date-input-error');
+    return true;
+}
+
+// Add new child form section
+function addChild() {
+    const container = document.querySelector('#childInfoForm');
+    const count = document.querySelectorAll('.child-form-section').length;
+    
+    const section = document.createElement('div');
+    section.className = 'child-form-section';
+    section.setAttribute('data-testid', 'child-section-' + count);
+
+    section.innerHTML = `
+        <h3>
+            <i class="fas fa-user me-2"></i>
+            Child ${count + 1}
+        </h3>
+
+        <div class="form-floating">
+            <input type="text" class="form-control" name="childName" placeholder="Child's Name" data-testid="child-name">
+            <label><i class="fas fa-user me-1"></i> Child's Name</label>
+        </div>
+
+        <div class="form-row">
+            <div class="form-floating">
+                <input type="number" class="form-control" name="childAge" min="0" max="18" placeholder="Age" data-testid="child-age">
+                <label>Age (0-18)</label>
+            </div>
+            <div class="form-floating">
+                <input type="date" class="form-control" name="childDob" onchange="validateDateInput(this)" data-testid="child-dob">
+                <label>Date of Birth</label>
+            </div>
+        </div>
+
+        <div class="form-floating">
+            <select class="form-control" name="hearingLossType" data-testid="hearing-loss-type">
+                <option value="">Select Hearing Loss Type</option>
+                <option value="Mild">Mild</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Severe">Severe</option>
+                <option value="Profound">Profound</option>
+            </select>
+            <label><i class="fas fa-ear-listen me-1"></i> Hearing Loss Type</label>
+        </div>
+
+        <div class="form-floating">
+            <input type="text" class="form-control" name="equipmentType" placeholder="Equipment" data-testid="equipment-type">
+            <label><i class="fas fa-headphones me-1"></i> Equipment Used</label>
+        </div>
+
+        <div class="form-floating">
+            <input type="text" class="form-control" name="siblingsNames" placeholder="Siblings" data-testid="siblings-names">
+            <label><i class="fas fa-users me-1"></i> Siblings' Names</label>
+        </div>
+
+        <div class="form-floating">
+            <input type="text" class="form-control" name="chapterLocation" placeholder="Chapter" data-testid="chapter-location">
+            <label><i class="fas fa-map-marker-alt me-1"></i> Chapter / Location</label>
+        </div>
+    `;
+
+    container.insertBefore(section, container.querySelector('.btn-add-child'));
+}
+
+// Form validation before submit
+document.getElementById('childInfoForm').addEventListener('submit', function(e) {
+    let isValid = true;
+    
+    document.querySelectorAll('input[type="date"]').forEach(function(input) {
+        if (!validateDateInput(input)) {
+            isValid = false;
+        }
+    });
+
+    if (!isValid) {
+        e.preventDefault();
+        alert('Please correct the date fields. Dates cannot be in the future.');
+    }
+});
+</script>
+
+</body>
+</html>
