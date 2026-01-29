@@ -29,6 +29,7 @@
     <div class="container">
 
         <a class="navbar-brand" th:href="@{/}" data-testid="navbar-logo">
+            <!-- Logo without filter - shows original colors -->
             <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="40" onerror="this.style.display='none'">
         </a>
 
@@ -107,6 +108,7 @@
 
         <h1 data-testid="hero-title">Empowering Families of Children Who Are Deaf and Hard of Hearing</h1>
 
+        <!-- Improved tagline visibility with better color -->
         <p class="tagline" data-testid="hero-tagline">
             Join our supportive community and access resources, programs, and connections that make a real difference in your family's journey.
         </p>
@@ -150,6 +152,16 @@
     <div class="container">
 
         <h2 class="section-title" data-testid="benefits-title">Why Join VOICE?</h2>
+
+        <!-- NEW: Bullet Points Section -->
+        <ul class="why-join-bullets" data-testid="why-join-bullets">
+            <li><i class="fas fa-check-circle"></i> Community Support</li>
+            <li><i class="fas fa-check-circle"></i> Educational Resources</li>
+            <li><i class="fas fa-check-circle"></i> Advocacy Programs</li>
+            <li><i class="fas fa-check-circle"></i> Events &amp; Conferences</li>
+            <li><i class="fas fa-check-circle"></i> Parent Networking</li>
+            <li><i class="fas fa-check-circle"></i> Financial Assistance Info</li>
+        </ul>
 
         <div class="benefits-grid">
 
@@ -282,6 +294,31 @@
 
 </footer>
 
+<!-- ================= JOIN VOICE POPUP (Auto shows after 7s, once per session) ================= -->
+<div id="voicePopup" class="voice-popup-overlay" data-testid="voice-popup-overlay" th:if="${!isUserLoggedIn}">
+    <div class="voice-popup" data-testid="voice-popup">
+        <button type="button" class="voice-popup-close" onclick="closeVoicePopup()" data-testid="popup-close-btn" aria-label="Close popup">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="voice-popup-icon">
+            <i class="fas fa-hands-helping"></i>
+        </div>
+        
+        <h2>Join VOICE Today</h2>
+        <p>Become part of our supportive community. Access resources, connect with other families, and help advocate for children who are Deaf and Hard of Hearing.</p>
+        
+        <div class="voice-popup-buttons">
+            <a th:href="@{/register}" class="btn btn-primary-custom" data-testid="popup-create-account-btn">
+                <i class="fas fa-user-plus me-2"></i>Create Account
+            </a>
+            <a th:href="@{/login}" class="btn btn-secondary-custom" data-testid="popup-signin-btn">
+                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+            </a>
+        </div>
+    </div>
+</div>
+
 <!-- ================= JS ================= -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -289,6 +326,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ===== Membership Filter Logic =====
     const buttons = document.querySelectorAll(".filter-btn");
     const cards = document.querySelectorAll(".membership-card");
 
@@ -327,6 +365,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
+    // ===== Auto Popup Logic (once per session) =====
+    const popup = document.getElementById('voicePopup');
+    
+    if (popup) {
+        const popupShown = sessionStorage.getItem('voicePopupShown');
+        
+        if (!popupShown) {
+            // Show popup after 7 seconds
+            setTimeout(function() {
+                popup.classList.add('show');
+                sessionStorage.setItem('voicePopupShown', 'true');
+            }, 7000);
+        }
+    }
+
+});
+
+// Close popup function
+function closeVoicePopup() {
+    const popup = document.getElementById('voicePopup');
+    if (popup) {
+        popup.classList.remove('show');
+    }
+}
+
+// Close popup when clicking overlay (outside the popup box)
+document.addEventListener('click', function(e) {
+    const popup = document.getElementById('voicePopup');
+    if (popup && e.target === popup) {
+        closeVoicePopup();
+    }
+});
+
+// Close popup on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeVoicePopup();
+    }
 });
 </script>
 
