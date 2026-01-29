@@ -84,10 +84,21 @@
 
                 <div class="form-row">
 
-                    <!-- Age -->
+                    <!-- Date of Birth (Primary) -->
+                    <div class="form-floating">
+                        <input type="date"
+                               class="form-control child-dob"
+                               name="childDob"
+                               th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}"
+                               onchange="calculateAgeFromDob(this)"
+                               data-testid="child-dob">
+                        <label>Date of Birth</label>
+                    </div>
+
+                    <!-- Age (Auto-calculated or manual) -->
                     <div class="form-floating">
                         <input type="number"
-                               class="form-control"
+                               class="form-control child-age"
                                name="childAge"
                                min="0"
                                max="18"
@@ -97,72 +108,69 @@
                         <label>Age (0-18)</label>
                     </div>
 
-                    <!-- Date of Birth -->
+                </div>
+
+                <div class="form-row">
+
+                    <!-- Hearing Loss Type -->
                     <div class="form-floating">
-                        <input type="date"
+                        <select class="form-control"
+                                name="hearingLossType"
+                                data-testid="hearing-loss-type">
+                            <option value="">Select Type</option>
+                            <option value="Mild" th:selected="${child.hearingLossType == 'Mild'}">Mild</option>
+                            <option value="Moderate" th:selected="${child.hearingLossType == 'Moderate'}">Moderate</option>
+                            <option value="Severe" th:selected="${child.hearingLossType == 'Severe'}">Severe</option>
+                            <option value="Profound" th:selected="${child.hearingLossType == 'Profound'}">Profound</option>
+                        </select>
+                        <label>
+                            <i class="fas fa-ear-listen me-1"></i> Hearing Loss Type
+                        </label>
+                    </div>
+
+                    <!-- Equipment Type -->
+                    <div class="form-floating">
+                        <input type="text"
                                class="form-control"
-                               name="childDob"
-                               onchange="validateDateInput(this)"
-                               th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}"
-                               data-testid="child-dob">
-                        <label>Date of Birth</label>
+                               name="equipmentType"
+                               th:value="${child.equipmentType}"
+                               placeholder="Equipment"
+                               data-testid="equipment-type">
+                        <label>
+                            <i class="fas fa-headphones me-1"></i> Equipment Used
+                        </label>
                     </div>
 
                 </div>
 
-                <!-- Hearing Loss Type -->
-                <div class="form-floating">
-                    <select class="form-control"
-                            name="hearingLossType"
-                            data-testid="hearing-loss-type">
-                        <option value="">Select Hearing Loss Type</option>
-                        <option value="Mild" th:selected="${child.hearingLossType == 'Mild'}">Mild</option>
-                        <option value="Moderate" th:selected="${child.hearingLossType == 'Moderate'}">Moderate</option>
-                        <option value="Severe" th:selected="${child.hearingLossType == 'Severe'}">Severe</option>
-                        <option value="Profound" th:selected="${child.hearingLossType == 'Profound'}">Profound</option>
-                    </select>
-                    <label>
-                        <i class="fas fa-ear-listen me-1"></i> Hearing Loss Type
-                    </label>
-                </div>
+                <div class="form-row">
 
-                <!-- Equipment Type -->
-                <div class="form-floating">
-                    <input type="text"
-                           class="form-control"
-                           name="equipmentType"
-                           th:value="${child.equipmentType}"
-                           placeholder="Equipment"
-                           data-testid="equipment-type">
-                    <label>
-                        <i class="fas fa-headphones me-1"></i> Equipment Used
-                    </label>
-                </div>
+                    <!-- Siblings Names -->
+                    <div class="form-floating">
+                        <input type="text"
+                               class="form-control"
+                               name="siblingsNames"
+                               th:value="${child.siblingsNames}"
+                               placeholder="Siblings"
+                               data-testid="siblings-names">
+                        <label>
+                            <i class="fas fa-users me-1"></i> Siblings' Names
+                        </label>
+                    </div>
 
-                <!-- Siblings Names -->
-                <div class="form-floating">
-                    <input type="text"
-                           class="form-control"
-                           name="siblingsNames"
-                           th:value="${child.siblingsNames}"
-                           placeholder="Siblings"
-                           data-testid="siblings-names">
-                    <label>
-                        <i class="fas fa-users me-1"></i> Siblings' Names
-                    </label>
-                </div>
+                    <!-- Chapter Location -->
+                    <div class="form-floating">
+                        <input type="text"
+                               class="form-control"
+                               name="chapterLocation"
+                               th:value="${child.chapterLocation}"
+                               placeholder="Chapter"
+                               data-testid="chapter-location">
+                        <label>
+                            <i class="fas fa-map-marker-alt me-1"></i> Chapter / Location
+                        </label>
+                    </div>
 
-                <!-- Chapter Location -->
-                <div class="form-floating">
-                    <input type="text"
-                           class="form-control"
-                           name="chapterLocation"
-                           th:value="${child.chapterLocation}"
-                           placeholder="Chapter"
-                           data-testid="chapter-location">
-                    <label>
-                        <i class="fas fa-map-marker-alt me-1"></i> Chapter / Location
-                    </label>
                 </div>
 
             </div>
@@ -204,6 +212,61 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// Calculate age from Date of Birth
+function calculateAgeFromDob(dobInput) {
+    const section = dobInput.closest('.child-form-section');
+    if (!section) return;
+    
+    const ageInput = section.querySelector('.child-age');
+    if (!ageInput) return;
+    
+    if (!dobInput.value || dobInput.value === '') {
+        // If DOB is cleared, make age editable again
+        ageInput.removeAttribute('readonly');
+        ageInput.value = '';
+        dobInput.classList.remove('date-input-error');
+        return;
+    }
+    
+    // Parse date properly
+    const dobParts = dobInput.value.split('-');
+    const dobYear = parseInt(dobParts[0], 10);
+    const dobMonth = parseInt(dobParts[1], 10) - 1; // Month is 0-indexed
+    const dobDay = parseInt(dobParts[2], 10);
+    
+    const dob = new Date(dobYear, dobMonth, dobDay);
+    const today = new Date();
+    
+    // Validate: DOB cannot be in the future
+    if (dob > today) {
+        dobInput.classList.add('date-input-error');
+        ageInput.removeAttribute('readonly');
+        ageInput.value = '';
+        return;
+    }
+    
+    dobInput.classList.remove('date-input-error');
+    
+    // Calculate age accurately
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const dayDiff = today.getDate() - dob.getDate();
+    
+    // Adjust age if birthday hasn't occurred yet this year
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+    }
+    
+    // Ensure age is within valid range
+    const calculatedAge = Math.max(0, Math.min(18, age));
+    
+    // Set calculated age and make it read-only
+    ageInput.value = calculatedAge;
+    ageInput.setAttribute('readonly', 'readonly');
+    
+    console.log('DOB:', dobInput.value, 'Calculated Age:', calculatedAge);
+}
+
 // Validate date input - prevent future dates
 function validateDateInput(input) {
     if (!input.value) {
@@ -224,6 +287,8 @@ function validateDateInput(input) {
 }
 
 // Add new child form section
+let childCount = document.querySelectorAll('.child-form-section').length;
+
 function addChild() {
     const container = document.querySelector('#childInfoForm');
     const count = document.querySelectorAll('.child-form-section').length;
@@ -245,50 +310,61 @@ function addChild() {
 
         <div class="form-row">
             <div class="form-floating">
-                <input type="number" class="form-control" name="childAge" min="0" max="18" placeholder="Age" data-testid="child-age">
-                <label>Age (0-18)</label>
-            </div>
-            <div class="form-floating">
-                <input type="date" class="form-control" name="childDob" onchange="validateDateInput(this)" data-testid="child-dob">
+                <input type="date" class="form-control child-dob" name="childDob" onchange="calculateAgeFromDob(this)" data-testid="child-dob">
                 <label>Date of Birth</label>
             </div>
+            <div class="form-floating">
+                <input type="number" class="form-control child-age" name="childAge" min="0" max="18" placeholder="Age" data-testid="child-age">
+                <label>Age (0-18)</label>
+            </div>
         </div>
 
-        <div class="form-floating">
-            <select class="form-control" name="hearingLossType" data-testid="hearing-loss-type">
-                <option value="">Select Hearing Loss Type</option>
-                <option value="Mild">Mild</option>
-                <option value="Moderate">Moderate</option>
-                <option value="Severe">Severe</option>
-                <option value="Profound">Profound</option>
-            </select>
-            <label><i class="fas fa-ear-listen me-1"></i> Hearing Loss Type</label>
+        <div class="form-row">
+            <div class="form-floating">
+                <select class="form-control" name="hearingLossType" data-testid="hearing-loss-type">
+                    <option value="">Select Type</option>
+                    <option value="Mild">Mild</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Severe">Severe</option>
+                    <option value="Profound">Profound</option>
+                </select>
+                <label><i class="fas fa-ear-listen me-1"></i> Hearing Loss Type</label>
+            </div>
+            <div class="form-floating">
+                <input type="text" class="form-control" name="equipmentType" placeholder="Equipment" data-testid="equipment-type">
+                <label><i class="fas fa-headphones me-1"></i> Equipment Used</label>
+            </div>
         </div>
 
-        <div class="form-floating">
-            <input type="text" class="form-control" name="equipmentType" placeholder="Equipment" data-testid="equipment-type">
-            <label><i class="fas fa-headphones me-1"></i> Equipment Used</label>
-        </div>
-
-        <div class="form-floating">
-            <input type="text" class="form-control" name="siblingsNames" placeholder="Siblings" data-testid="siblings-names">
-            <label><i class="fas fa-users me-1"></i> Siblings' Names</label>
-        </div>
-
-        <div class="form-floating">
-            <input type="text" class="form-control" name="chapterLocation" placeholder="Chapter" data-testid="chapter-location">
-            <label><i class="fas fa-map-marker-alt me-1"></i> Chapter / Location</label>
+        <div class="form-row">
+            <div class="form-floating">
+                <input type="text" class="form-control" name="siblingsNames" placeholder="Siblings" data-testid="siblings-names">
+                <label><i class="fas fa-users me-1"></i> Siblings' Names</label>
+            </div>
+            <div class="form-floating">
+                <input type="text" class="form-control" name="chapterLocation" placeholder="Chapter" data-testid="chapter-location">
+                <label><i class="fas fa-map-marker-alt me-1"></i> Chapter / Location</label>
+            </div>
         </div>
     `;
 
     container.insertBefore(section, container.querySelector('.btn-add-child'));
 }
 
+// Initialize: Check existing DOB fields and calculate ages
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.child-dob').forEach(function(dobInput) {
+        if (dobInput.value) {
+            calculateAgeFromDob(dobInput);
+        }
+    });
+});
+
 // Form validation before submit
 document.getElementById('childInfoForm').addEventListener('submit', function(e) {
     let isValid = true;
     
-    document.querySelectorAll('input[type="date"]').forEach(function(input) {
+    document.querySelectorAll('.child-dob').forEach(function(input) {
         if (!validateDateInput(input)) {
             isValid = false;
         }

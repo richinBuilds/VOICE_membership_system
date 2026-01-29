@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Create your VOICE Membership account">
+    <meta name="description" content="Create your VOICE account - Step 1">
 
     <title>Create Account - VOICE Membership System</title>
 
@@ -20,61 +20,44 @@
 
 <body style="background: var(--bg-bone);">
 
-<div class="checkout-container" data-testid="register-container">
+<div class="checkout-container" data-testid="register-step1-container">
 
     <div class="checkout-card">
 
         <!-- Header -->
         <div class="checkout-header">
 
-            <a th:href="@{/}"
-               class="btn btn-link text-decoration-none mb-3 p-0"
-               style="color: var(--text-secondary);"
-               data-testid="back-to-home">
-                <i class="fas fa-arrow-left me-1"></i> Back to Home
-            </a>
-
-            <h1 class="checkout-title" data-testid="register-title">
+            <h1 class="checkout-title" data-testid="step1-title">
                 <i class="fas fa-user-plus me-2"></i>
-                Create Account
+                Create Your Account
             </h1>
 
             <p class="text-muted">
                 Step <span th:text="${step}">1</span>
                 of <span th:text="${totalSteps}">4</span>
-                — Personal Information
-            </p>
-
-            <p class="small text-muted">
-                <i class="fas fa-asterisk me-1" style="font-size: 0.6rem; color: var(--danger);"></i>
-                Required fields
+                — Your Details
             </p>
 
             <!-- Step Indicator -->
             <div class="step-indicator" data-testid="step-indicator">
-                <div class="step" th:classappend="${step >= 1} ? 'active' : ''">1</div>
-                <div class="step" th:classappend="${step >= 2} ? 'active' : ''">2</div>
-                <div class="step" th:classappend="${step >= 3} ? 'active' : ''">3</div>
-                <div class="step" th:classappend="${step >= 4} ? 'active' : ''">4</div>
+                <div class="step active">1</div>
+                <div class="step">2</div>
+                <div class="step">3</div>
+                <div class="step">4</div>
             </div>
 
         </div>
 
-        <!-- Success Alert -->
-        <div th:if="${success}"
-             class="alert success-alert mt-3"
-             role="alert"
-             data-testid="registration-success">
-            <i class="fas fa-check-circle me-2"></i>
-            Account created successfully!
-            <a th:href="@{/login}" class="fw-semibold ms-2">
-                Sign in now
-            </a>
+        <!-- Error Alert -->
+        <div th:if="${param.error}" class="alert alert-danger mb-3" role="alert" data-testid="registration-error">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Registration failed. Please try again.
         </div>
 
-        <!-- Registration Form -->
+        <!-- Form -->
         <form th:action="@{/register/step1}"
               method="post"
+              id="registerForm"
               th:object="${registerDto}"
               data-testid="register-form">
 
@@ -85,138 +68,155 @@
             <!-- Full Name -->
             <div class="form-floating">
                 <input type="text"
-                       th:field="*{name}"
                        class="form-control"
+                       th:class="${#fields.hasErrors('name')} ? 'form-control is-invalid' : 'form-control'"
                        id="name"
+                       th:field="*{name}"
                        placeholder="Full Name"
-                       autocomplete="name"
                        required
                        data-testid="register-name">
                 <label for="name">
                     <i class="fas fa-user me-1"></i> Full Name *
                 </label>
+                <div th:if="${#fields.hasErrors('name')}" class="invalid-feedback" th:errors="*{name}">
+                    Name is required
+                </div>
             </div>
 
             <!-- Email -->
             <div class="form-floating">
                 <input type="email"
-                       th:field="*{email}"
-                       th:classappend="${#fields.hasErrors('email')} ? ' is-invalid' : ''"
                        class="form-control"
+                       th:class="${#fields.hasErrors('email')} ? 'form-control is-invalid' : 'form-control'"
                        id="email"
-                       placeholder="Email"
-                       autocomplete="email"
+                       th:field="*{email}"
+                       placeholder="Email Address"
                        required
                        data-testid="register-email">
                 <label for="email">
                     <i class="fas fa-envelope me-1"></i> Email Address *
                 </label>
-                <div th:if="${#fields.hasErrors('email')}"
-                     class="invalid-feedback d-block"
-                     data-testid="email-error">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    <span th:errors="*{email}">Email error</span>
+                <div th:if="${#fields.hasErrors('email')}" class="invalid-feedback" th:errors="*{email}">
+                    Valid email is required
                 </div>
             </div>
 
-            <!-- Phone + Address Row -->
+            <!-- Password Row -->
             <div class="form-row">
 
+                <!-- Password -->
                 <div class="form-floating">
-                    <input type="tel"
-                           th:field="*{phone}"
+                    <input type="password"
                            class="form-control"
-                           id="phone"
-                           placeholder="Phone"
-                           autocomplete="tel"
+                           th:class="${#fields.hasErrors('password')} ? 'form-control is-invalid' : 'form-control'"
+                           id="password"
+                           th:field="*{password}"
+                           placeholder="Password"
                            required
-                           data-testid="register-phone">
-                    <label for="phone">
-                        <i class="fas fa-phone me-1"></i> Phone *
+                           minlength="8"
+                           data-testid="register-password">
+                    <label for="password">
+                        <i class="fas fa-lock me-1"></i> Password *
                     </label>
+                    <div th:if="${#fields.hasErrors('password')}" class="invalid-feedback" th:errors="*{password}">
+                        Password must be at least 8 characters
+                    </div>
                 </div>
 
+                <!-- Confirm Password -->
                 <div class="form-floating">
-                    <input type="text"
-                           th:field="*{address}"
+                    <input type="password"
                            class="form-control"
-                           id="address"
-                           placeholder="Address"
-                           autocomplete="street-address"
-                           data-testid="register-address">
-                    <label for="address">
-                        <i class="fas fa-map-marker-alt me-1"></i> Address
+                           th:class="${#fields.hasErrors('confirmPassword')} ? 'form-control is-invalid' : 'form-control'"
+                           id="confirmPassword"
+                           th:field="*{confirmPassword}"
+                           placeholder="Confirm Password"
+                           required
+                           data-testid="register-confirm-password">
+                    <label for="confirmPassword">
+                        <i class="fas fa-lock me-1"></i> Confirm Password *
                     </label>
+                    <div th:if="${#fields.hasErrors('confirmPassword')}" class="invalid-feedback" th:errors="*{confirmPassword}">
+                        Passwords must match
+                    </div>
                 </div>
 
+            </div>
+
+            <!-- Phone -->
+            <div class="form-floating">
+                <input type="tel"
+                       class="form-control"
+                       th:class="${#fields.hasErrors('phone')} ? 'form-control is-invalid' : 'form-control'"
+                       id="phone"
+                       th:field="*{phone}"
+                       placeholder="Phone Number"
+                       required
+                       data-testid="register-phone">
+                <label for="phone">
+                    <i class="fas fa-phone me-1"></i> Phone Number *
+                </label>
+                <div th:if="${#fields.hasErrors('phone')}" class="invalid-feedback" th:errors="*{phone}">
+                    Phone number is required
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="form-floating">
+                <input type="text"
+                       class="form-control"
+                       id="address"
+                       th:field="*{address}"
+                       placeholder="Address"
+                       data-testid="register-address">
+                <label for="address">
+                    <i class="fas fa-home me-1"></i> Address (Optional)
+                </label>
             </div>
 
             <!-- Postal Code -->
             <div class="form-floating">
                 <input type="text"
-                       th:field="*{postalCode}"
                        class="form-control"
+                       th:class="${#fields.hasErrors('postalCode')} ? 'form-control is-invalid' : 'form-control'"
                        id="postalCode"
-                       placeholder="A1A 1A1"
-                       autocomplete="postal-code"
-                       data-testid="register-postal">
+                       th:field="*{postalCode}"
+                       placeholder="Postal Code"
+                       pattern="[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]"
+                       data-testid="register-postal-code">
                 <label for="postalCode">
-                    <i class="fas fa-mail-bulk me-1"></i> Postal Code
+                    <i class="fas fa-map-marker-alt me-1"></i> Postal Code (e.g., A1A 1A1)
                 </label>
-            </div>
-
-            <!-- Password -->
-            <div class="form-floating">
-                <input type="password"
-                       th:field="*{password}"
-                       th:classappend="${#fields.hasErrors('password')} ? ' is-invalid' : ''"
-                       class="form-control"
-                       id="password"
-                       placeholder="Password"
-                       autocomplete="new-password"
-                       required
-                       data-testid="register-password">
-                <label for="password">
-                    <i class="fas fa-lock me-1"></i> Password *
-                </label>
-                <div th:if="${#fields.hasErrors('password')}"
-                     class="invalid-feedback d-block"
-                     data-testid="password-error">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    <span th:errors="*{password}">Password error</span>
+                <div th:if="${#fields.hasErrors('postalCode')}" class="invalid-feedback" th:errors="*{postalCode}">
+                    Valid Canadian postal code required
                 </div>
             </div>
 
-            <!-- Confirm Password -->
-            <div class="form-floating">
-                <input type="password"
-                       th:field="*{confirmPassword}"
-                       class="form-control"
-                       id="confirmPassword"
-                       placeholder="Confirm Password"
-                       autocomplete="new-password"
-                       required
-                       data-testid="register-confirm-password">
-                <label for="confirmPassword">
-                    <i class="fas fa-lock me-1"></i> Confirm Password *
-                </label>
-            </div>
+            <!-- Navigation Buttons -->
+            <div class="btn-group-custom">
 
-            <!-- Submit Button -->
-            <button type="submit"
-                    class="btn btn-primary-custom w-100 mt-3"
-                    data-testid="register-next-btn">
-                Continue to Next Step
-                <i class="fas fa-arrow-right ms-2"></i>
-            </button>
+                <a th:href="@{/}"
+                   class="btn btn-secondary-custom"
+                   data-testid="step1-back-btn">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Home
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary-custom"
+                        data-testid="step1-next-btn">
+                    Continue
+                    <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+
+            </div>
 
         </form>
 
-        <!-- Login Link -->
+        <!-- Sign In Link -->
         <div class="signup-link">
             <p class="mb-0">
                 Already have an account?
-                <a th:href="@{/login}" data-testid="login-link">Sign in</a>
+                <a th:href="@{/login}" class="auth-link" data-testid="signin-link">Sign In</a>
             </p>
         </div>
 
@@ -226,6 +226,41 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Form validation
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        document.getElementById('confirmPassword').classList.add('is-invalid');
+        alert('Passwords do not match. Please try again.');
+        return false;
+    }
+    
+    // Basic password strength check
+    if (password.length < 8) {
+        e.preventDefault();
+        document.getElementById('password').classList.add('is-invalid');
+        alert('Password must be at least 8 characters long.');
+        return false;
+    }
+});
+
+// Real-time password match check
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (confirmPassword && password !== confirmPassword) {
+        this.classList.add('is-invalid');
+    } else {
+        this.classList.remove('is-invalid');
+    }
+});
+</script>
 
 </body>
 </html>
