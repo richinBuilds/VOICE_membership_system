@@ -1,29 +1,77 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Something Went Wrong - VOICE</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background: #f8f9fa; }
-    .error-container { max-width: 720px; margin: 10vh auto; }
-    .card { border-radius: 16px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Something went wrong - VOICE Membership">
+
+    <title>Something Went Wrong - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body>
-  <div class="container error-container">
-    <div class="card shadow-sm">
-      <div class="card-body p-4 p-md-5 text-center">
-        <h1 class="display-6 fw-bold text-danger">Oops!</h1>
-        <p class="lead mb-3">An unexpected error occurred.</p>
-        <p class="text-muted" th:text="${errorMessage}">Please try again later. If the problem persists, contact support.</p>
-        <div class="mt-4 d-flex gap-2 justify-content-center">
-          <a href="/" class="btn btn-primary">Go to Home</a>
-          <a href="/profile" class="btn btn-outline-secondary">Back to Profile</a>
+
+<body style="background: var(--bg-bone);">
+
+<div class="auth-container" style="padding-top: 10vh;" data-testid="error-500-container">
+
+    <div class="auth-card text-center">
+
+        <!-- Icon -->
+        <div class="mb-4">
+            <i class="fas fa-exclamation-triangle fa-4x" style="color: var(--danger); opacity: 0.75;"></i>
         </div>
-      </div>
+
+        <!-- Title -->
+        <h1 class="display-5 fw-bold mb-3" style="color: var(--danger);" data-testid="error-title">
+            Oops!
+        </h1>
+
+        <h5 class="fw-semibold mb-3">Something Went Wrong</h5>
+
+        <p class="text-muted mb-2">
+            An unexpected error occurred. We're working to fix it.
+        </p>
+
+        <p class="text-muted mb-4" th:if="${errorMessage}" th:text="${errorMessage}">
+            Please try again later.
+        </p>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+
+            <a href="/"
+               class="btn btn-primary-custom"
+               data-testid="go-home-btn">
+                <i class="fas fa-home me-2"></i> Go to Home
+            </a>
+
+            <a href="/profile"
+               class="btn btn-secondary-custom"
+               data-testid="go-profile-btn">
+                <i class="fas fa-arrow-left me-2"></i> Back to Profile
+            </a>
+
+        </div>
+
+        <!-- Help Text -->
+        <p class="small text-muted mt-4 mb-0">
+            If the problem persists, please contact our support team.
+        </p>
+
     </div>
-  </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

@@ -1,283 +1,175 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - VOICE</title>
+
+    <title>Sign In - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .login-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            max-width: 450px;
-            width: 100%;
-            padding: 40px;
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .login-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .login-header p {
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            display: block;
-            font-size: 0.95rem;
-        }
-
-        .form-group input[type="email"],
-        .form-group input[type="password"] {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input[type="email"]:focus,
-        .form-group input[type="password"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .remember-forget-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #667eea;
-        }
-
-        .remember-me label {
-            margin: 0;
-            cursor: pointer;
-            font-weight: 500;
-            color: #555;
-            font-size: 0.95rem;
-        }
-
-        .forgot-password {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: color 0.3s ease;
-        }
-
-        .forgot-password:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 15px;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .login-btn:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #f5c6cb;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #c3e6cb;
-        }
-
-        .signup-link {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .signup-link p {
-            color: #666;
-            margin: 0;
-            font-size: 0.95rem;
-        }
-
-        .signup-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .signup-link a:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            margin-bottom: 20px;
-            transition: color 0.3s ease;
-        }
-
-        .back-link:hover {
-            color: #764ba2;
-        }
-
-        @media (max-width: 576px) {
-            .login-container {
-                padding: 30px 20px;
-            }
-
-            .login-header h1 {
-                font-size: 1.5rem;
-            }
-
-            .remember-forget-container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body>
-    <div class="login-container">
-        <a href="/" class="back-link">
-            <i class="fas fa-arrow-left"></i>
-            Back to Home
+
+<body class="auth-bg">
+
+<!-- ================= LOGIN CONTAINER ================= -->
+
+<div class="auth-container" data-testid="login-container">
+
+    <div class="auth-card">
+
+        <!-- Back -->
+        <a th:href="@{/}"
+           class="btn btn-link text-decoration-none mb-3 p-0"
+           style="color: var(--text-secondary);"
+           data-testid="back-to-home">
+            <i class="fas fa-arrow-left me-1"></i> Back to Home
         </a>
 
-        <div class="login-header">
-            <h1>Sign In</h1>
-            <p>Welcome back to VOICE</p>
+        <!-- ================= HEADER ================= -->
+
+        <div class="auth-header">
+
+            <img th:src="@{/images/logo.png}"
+                 alt="VOICE Logo"
+                 height="52"
+                 class="mb-3"
+                 onerror="this.style.display='none'"
+                 data-testid="login-logo">
+
+            <h1 data-testid="login-title">Welcome Back</h1>
+
+            <p>Sign in to your VOICE Membership account</p>
+
         </div>
 
-        <!-- Error Messages -->
-        <div th:if="${param.error}" class="error-message">
-            <i class="fas fa-exclamation-circle"></i>
-            Invalid email or password. Please try again.
+        <!-- ================= ALERTS ================= -->
+
+        <!-- Error -->
+        <div th:if="${param.error}"
+             class="alert alert-danger text-center"
+             data-testid="login-error">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Invalid email or password
         </div>
 
-        <div th:if="${param.logout}" class="success-message">
-            <i class="fas fa-check-circle"></i>
-            You have been successfully logged out.
+        <!-- Logout -->
+        <div th:if="${param.logout}"
+             class="alert alert-success text-center"
+             data-testid="logout-success">
+            <i class="fas fa-check-circle me-2"></i>
+            You have been logged out successfully
         </div>
 
-        <!-- Login Form -->
-        <form th:action="@{/login}" method="post">
-            <!-- Email Field -->
-            <div class="form-group">
-                <label for="username">Email Address</label>
-                <input type="email" id="username" name="username" placeholder="Enter your email" required>
+        <!-- Registered -->
+        <div th:if="${param.registered}"
+             class="alert alert-success text-center"
+             data-testid="register-success">
+            <i class="fas fa-check-circle me-2"></i>
+            Account created! Please sign in to continue
+        </div>
+
+        <!-- ================= FORM ================= -->
+
+        <form th:action="@{/login}" method="post" data-testid="login-form">
+
+            <!-- Email -->
+            <div class="form-floating mb-3">
+
+                <input type="email"
+                       class="form-control"
+                       id="username"
+                       name="username"
+                       placeholder="Email"
+                       required
+                       autocomplete="email"
+                       data-testid="login-email">
+
+                <label for="username">
+                    <i class="fas fa-envelope me-1"></i> Email Address
+                </label>
+
             </div>
 
-            <!-- Password Field -->
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            <!-- Password -->
+            <div class="form-floating mb-3">
+
+                <input type="password"
+                       class="form-control"
+                       id="password"
+                       name="password"
+                       placeholder="Password"
+                       required
+                       autocomplete="current-password"
+                       data-testid="login-password">
+
+                <label for="password">
+                    <i class="fas fa-lock me-1"></i> Password
+                </label>
+
             </div>
 
-            <!-- Remember Me & Forgot Password -->
-            <div class="remember-forget-container">
-                <div class="remember-me">
-                    <input type="checkbox" id="rememberMe" name="remember-me" value="true">
-                    <label for="rememberMe">Remember me</label>
+            <!-- Options -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div class="form-check">
+
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="rememberMe"
+                           name="remember-me"
+                           data-testid="remember-me">
+
+                    <label class="form-check-label" for="rememberMe">
+                        Remember me
+                    </label>
+
                 </div>
-                <a href="/forgot-password" class="forgot-password">
+
+                <a th:href="@{/forgot-password}"
+                   class="auth-link small"
+                   data-testid="forgot-password-link">
                     Forgot password?
                 </a>
+
             </div>
 
-            <!-- Sign In Button -->
-            <button type="submit" class="login-btn">
-                <i class="fas fa-sign-in-alt"></i> Sign In
+            <!-- Button -->
+            <button type="submit"
+                    class="btn btn-primary-custom w-100"
+                    data-testid="login-submit-btn">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                Sign In
             </button>
+
         </form>
 
-        <!-- Sign Up Link -->
-        <div class="signup-link">
-            <p>Don't have an account? <a href="/register">Create one now</a></p>
+        <!-- ================= REGISTER ================= -->
+
+        <div class="auth-links">
+
+            <p class="mb-0">
+                Don't have an account?
+                <a th:href="@{/register}" data-testid="register-link">
+                    Create one now
+                </a>
+            </p>
+
         </div>
+
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

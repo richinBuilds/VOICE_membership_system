@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete your membership payment - VOICE Membership">
+
+    <title>Checkout - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body style="background: var(--bg-bone);">
+
+<div class="checkout-container" data-testid="checkout-container">
+
+    <div class="checkout-card">
+
+        <!-- Header -->
+        <div class="checkout-header">
+            <h1 class="checkout-title" data-testid="checkout-title">
+                <i class="fas fa-credit-card me-2"></i> Secure Checkout
+            </h1>
+            <p class="text-muted">Complete your membership purchase securely</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div th:if="${error}"
+             class="alert alert-danger"
+             role="alert"
+             data-testid="checkout-error">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}">Payment error</span>
+        </div>
+
+        <div class="checkout-content">
+
+            <!-- Payment Form -->
+            <div class="payment-form" data-testid="payment-form-section">
+
+                <h3 class="mb-4" style="color: var(--primary);">
+                    <i class="fas fa-lock me-2"></i> Payment Information
+                </h3>
+
+                <form th:action="@{/register/checkout}"
+                      method="post"
+                      id="checkoutForm"
+                      data-testid="checkout-form">
+
+                    <input type="hidden"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}"/>
+
+                    <!-- Card Number -->
+                    <div class="form-floating">
+                        <input type="text"
+                               class="form-control"
+                               id="cardNumber"
+                               name="cardNumber"
+                               placeholder="1234 5678 9012 3456"
+                               maxlength="19"
+                               autocomplete="cc-number"
+                               required
+                               data-testid="card-number">
+                        <label for="cardNumber">
+                            <i class="fas fa-credit-card me-1"></i> Card Number
+                        </label>
+                    </div>
+
+                    <!-- Cardholder Name -->
+                    <div class="form-floating">
+                        <input type="text"
+                               class="form-control"
+                               id="cardHolderName"
+                               name="cardHolderName"
+                               placeholder="John Doe"
+                               autocomplete="cc-name"
+                               required
+                               data-testid="cardholder-name">
+                        <label for="cardHolderName">
+                            <i class="fas fa-user me-1"></i> Cardholder Name
+                        </label>
+                    </div>
+
+                    <!-- Expiry Date Row -->
+                    <div class="form-row">
+
+                        <div class="form-floating">
+                            <select class="form-control"
+                                    id="expiryMonth"
+                                    name="expiryMonth"
+                                    required
+                                    data-testid="expiry-month">
+                                <option value="">Month</option>
+                                <option th:each="i : ${#numbers.sequence(1, 12)}"
+                                        th:value="${i}"
+                                        th:text="${#strings.padLeft(i, 2, '0')}">
+                                </option>
+                            </select>
+                            <label for="expiryMonth">Expiry Month</label>
+                        </div>
+
+                        <div class="form-floating">
+                            <select class="form-control"
+                                    id="expiryYear"
+                                    name="expiryYear"
+                                    required
+                                    data-testid="expiry-year">
+                                <option value="">Year</option>
+                                <option th:each="i : ${#numbers.sequence(2024, 2035)}"
+                                        th:value="${i}"
+                                        th:text="${i}">
+                                </option>
+                            </select>
+                            <label for="expiryYear">Expiry Year</label>
+                        </div>
+
+                    </div>
+
+                    <!-- CVV -->
+                    <div class="form-floating">
+                        <input type="text"
+                               class="form-control"
+                               id="cvv"
+                               name="cvv"
+                               placeholder="123"
+                               maxlength="4"
+                               autocomplete="cc-csc"
+                               required
+                               data-testid="cvv">
+                        <label for="cvv">
+                            <i class="fas fa-lock me-1"></i> CVV
+                        </label>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="btn-group-checkout">
+
+                        <a th:href="@{/register/step4}"
+                           class="btn btn-secondary-custom"
+                           data-testid="checkout-back-btn">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </a>
+
+                        <button type="submit"
+                                id="payButton"
+                                class="btn btn-primary-custom"
+                                data-testid="checkout-submit-btn">
+                            <i class="fas fa-check me-1"></i> Complete Payment
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary" data-testid="order-summary">
+
+                <h3 class="mb-4">
+                    <i class="fas fa-receipt me-2"></i> Order Summary
+                </h3>
+
+                <div class="summary-item" th:if="${membership}">
+                    <span>Membership</span>
+                    <span th:text="${membership.name}">Plan Name</span>
+                </div>
+
+                <div class="summary-item" th:if="${membership}">
+                    <span>Monthly Price</span>
+                    <span>$<span th:text="${membership.price}">0</span></span>
+                </div>
+
+                <div class="summary-total">
+                    <span>Total Due Today</span>
+                    <span>$<span th:text="${totalAmount}" data-testid="total-amount">0</span></span>
+                </div>
+
+                <div class="mt-4 pt-4 border-top border-light">
+                    <p class="small opacity-75 mb-2">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Your payment is secure and encrypted.
+                    </p>
+                    <p class="small opacity-75 mb-0">
+                        <i class="fas fa-lock me-2"></i>
+                        We never store your full card details.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Format card number with spaces
+document.getElementById('cardNumber').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+    let formatted = value.match(/.{1,4}/g);
+    e.target.value = formatted ? formatted.join(' ') : value;
+});
+
+// CVV - numbers only
+document.getElementById('cvv').addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '');
+});
+
+// Prevent double form submission
+const form = document.getElementById('checkoutForm');
+const payBtn = document.getElementById('payButton');
+
+if (form && payBtn) {
+    form.addEventListener('submit', function() {
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+    });
+}
+</script>
+
+</body>
+</html>

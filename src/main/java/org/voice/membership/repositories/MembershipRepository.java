@@ -1,3 +1,9 @@
+/**
+ Data access layer for Membership entity.
+ Provides database queries for membership operations.
+ Finds active memberships and orders them by display order for UI presentation.
+ Used to load membership options during registration and landing page display.
+ */
 package org.voice.membership.repositories;
 
 import org.voice.membership.entities.Membership;

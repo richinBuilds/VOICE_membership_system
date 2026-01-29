@@ -1,8 +1,11 @@
 package org.voice.membership.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,6 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "users")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class User {
 
     @Id
@@ -26,4 +30,16 @@ public class User {
     private String postalCode;
     private String role;
     private Date creation;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Child> children;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "membership_id")
+    private Membership membership;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private Cart cart;
 }
