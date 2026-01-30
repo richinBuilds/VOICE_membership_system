@@ -337,4 +337,74 @@ public class ProfileController {
             return "redirect:/profile";
         }
     }
+
+    // Upgrade Membership
+    @GetMapping("/upgrade-membership")
+    public String upgradeMembershipPage(Model model, Principal principal) {
+        try {
+            User user = userRepository.findByEmail(principal.getName());
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            // Check if user has free membership
+            Membership membership = user.getMembership();
+            if (membership == null || !membership.isFree()) {
+                // User is already paid or has no membership, redirect to profile
+                return "redirect:/profile?error=not_eligible_for_upgrade";
+            }
+
+            // Get all paid membership options
+            List<Membership> paidMemberships = membershipRepository.findByIsFree(false);
+            
+            model.addAttribute("user", user);
+            model.addAttribute("currentMembership", membership);
+            model.addAttribute("paidMemberships", paidMemberships);
+            model.addAttribute("userName", user.getName());
+
+            return "upgrade-membership";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/profile?error=upgrade_load_failed";
+        }
+    }
+
+    @PostMapping("/upgrade-membership/select")
+    public String selectUpgradeMembership(@RequestParam("membershipId") Integer membershipId, 
+                                         Model model,
+                                         Principal principal) {
+        try {
+            User user = userRepository.findByEmail(principal.getName());
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            // Verify user has free membership
+            Membership currentMembership = user.getMembership();
+            if (currentMembership == null || !currentMembership.isFree()) {
+                return "redirect:/profile?error=not_eligible_for_upgrade";
+            }
+
+            // Get the paid membership
+            Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
+            if (paidMembershipOpt.isEmpty() || paidMembershipOpt.get().isFree()) {
+                return "redirect:/profile/upgrade-membership?error=invalid_membership";
+            }
+
+            Membership paidMembership = paidMembershipOpt.get();
+            
+            // Store in session or model for checkout
+            model.addAttribute("user", user);
+            model.addAttribute("upgradeMembership", paidMembership);
+            model.addAttribute("userName", user.getName());
+            model.addAttribute("membershipName", paidMembership.getName());
+            model.addAttribute("membershipPrice", paidMembership.getPrice());
+            model.addAttribute("membershipDescription", paidMembership.getDescription());
+
+            return "upgrade-checkout";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/profile/upgrade-membership?error=selection_failed";
+        }
+    }
 }

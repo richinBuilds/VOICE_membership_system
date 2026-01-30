@@ -1,7 +1,7 @@
 package org.voice.membership.dtos;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.Data;
 import java.util.Date;
 
@@ -13,7 +13,7 @@ public class ChildDto {
 
     private Integer age;
 
-    @NotNull(message = "Date of birth is required")
+    @PastOrPresent(message = "Date of birth must be in the past or today")
     private Date dateOfBirth;
 
     private String hearingLossType;

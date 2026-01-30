@@ -30,6 +30,12 @@ public class User {
     private String postalCode;
     private String role;
     private Date creation;
+    
+    @Column(name = "membership_start_date")
+    private Date membershipStartDate;
+    
+    @Column(name = "membership_expiry_date")
+    private Date membershipExpiryDate;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
