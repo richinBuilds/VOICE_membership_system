@@ -32,7 +32,7 @@ public class AdminUserInitializer implements CommandLineRunner {
             User admin = User.builder()
                     .name("Admin")
                     .email(adminEmail)
-                    .password(passwordEncoder.encode("Dasnadas36!"))
+                    .password(passwordEncoder.encode("Caspstone36!"))
                     .phone("N/A")
                     .address("N/A")
                     .postalCode("N/A")
@@ -46,7 +46,7 @@ public class AdminUserInitializer implements CommandLineRunner {
             log.info("Admin user already exists");
 
             // Update password and role to ensure correct credentials
-            existingAdmin.setPassword(passwordEncoder.encode("Dasnadas36!"));
+            existingAdmin.setPassword(passwordEncoder.encode("Caspstone36!"));
             existingAdmin.setRole(Role.ADMIN.name());
             existingAdmin.setName("Admin");
             userRepository.save(existingAdmin);
