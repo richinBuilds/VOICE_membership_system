@@ -59,7 +59,7 @@
 <div class="admin-header">
     <div class="container">
         <h1><i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard</h1>
-        <p class="mb-0">Welcome back, <span th:text="${adminName}">Admin</span>!</p>
+        <p class="mb-0" style="color: var(--bg-white);">Welcome back, <span th:text="${adminName}">Admin</span>!</p>
     </div>
 </div>
 
@@ -104,10 +104,10 @@
                 <i class="fas fa-list me-2"></i> All Users
             </h3>
             <div>
-                <a th:href="@{/admin/export-users}" class="btn btn-success me-2">
+                <a th:href="@{/admin/export-users}" class="btn btn-primary-custom me-2">
                     <i class="fas fa-file-excel me-2"></i>Export to Excel
                 </a>
-                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false">
+                <button class="btn btn-primary-custom" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false">
                     <i class="fas fa-filter me-2"></i>Filters
                 </button>
             </div>
@@ -157,10 +157,10 @@
                             </div>
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">
+                            <button type="submit" class="btn btn-primary-custom me-2">
                                 <i class="fas fa-search me-1"></i>Apply Filters
                             </button>
-                            <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary">
+                            <a th:href="@{/admin/dashboard}" class="btn btn-primary-custom">
                                 <i class="fas fa-times me-1"></i>Clear
                             </a>
                         </div>
@@ -202,7 +202,7 @@
                         </td>
                         <td>
                             <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
-                                <span class="badge bg-info text-dark" th:text="${#lists.size(user.children)} + ' child(ren)'">
+                                <span class="badge bg-secondary" th:text="${#lists.size(user.children)} + ' child(ren)'">
                                     2 child(ren)
                                 </span>
                                 <div class="mt-1">
@@ -220,12 +220,14 @@
                         </td>
                         <td>
                             <span class="badge" 
-                                  th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : 'bg-primary'}"
+                                  th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : ''}"
+                                  th:style="${user.role == 'USER' ? 'background: var(--primary); color: var(--bg-white);' : ''}"
                                   th:text="${user.role}">USER</span>
                         </td>
                         <td th:text="${#dates.format(user.creation, 'yyyy-MM-dd')}">2024-01-01</td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary view-user-btn" 
+                                    style="border-color: var(--primary); color: var(--primary);"
                                     th:attr="data-user-id=${user.id}"
                                     title="View Details">
                                 <i class="fas fa-eye"></i>
@@ -350,7 +352,7 @@ function generateUserDetailsHTML(user) {
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small">Role</label>
                             <div>
-                                <span class="badge ${user.role === 'ADMIN' ? 'bg-danger' : 'bg-primary'}">
+                                <span class="badge ${user.role === 'ADMIN' ? 'bg-danger' : ''}" style="${user.role === 'USER' ? 'background: var(--primary); color: var(--bg-white);' : ''}">
                                     ${user.role}
                                 </span>
                             </div>
@@ -391,7 +393,7 @@ function generateUserDetailsHTML(user) {
                 <div class="card-header text-white" style="background-color: var(--primary);">
                     <h6 class="mb-0">
                         <i class="fas fa-child me-2"></i>Children Information
-                        <span class="badge bg-light text-dark ms-2">${user.children ? user.children.length : 0}</span>
+                        <span class="badge bg-light ms-2" style="color: #000000 !important;">${user.children ? user.children.length : 0}</span>
                     </h6>
                 </div>
                 <div class="card-body">

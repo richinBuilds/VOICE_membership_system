@@ -16,18 +16,25 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
+    
+    <style>
+        body {
+            background: #09637E;
+            min-height: 100vh;
+        }
+    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body>
 
 <div class="checkout-container" data-testid="register-step1-container">
 
-    <div class="checkout-card">
+    <div class="auth-card">
 
         <!-- Header -->
-        <div class="checkout-header">
+        <div class="auth-header">
 
-            <h1 class="checkout-title" data-testid="step1-title">
+            <h1 data-testid="step1-title">
                 <i class="fas fa-user-plus me-2"></i>
                 Create Your Account
             </h1>

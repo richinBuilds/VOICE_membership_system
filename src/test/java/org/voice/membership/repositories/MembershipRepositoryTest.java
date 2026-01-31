@@ -51,9 +51,9 @@ class MembershipRepositoryTest {
                 .build();
     }
 
+    // Test 1: Find only active memberships (exclude inactive ones)
     @Test
     void findByActiveTrue_ShouldReturnOnlyActiveMemberships() {
-        // Given
         Membership inactiveMembership = Membership.builder()
                 .name("Inactive")
                 .description("Inactive membership")
@@ -68,51 +68,44 @@ class MembershipRepositoryTest {
         entityManager.persist(inactiveMembership);
         entityManager.flush();
 
-        // When
         List<Membership> activeMemberships = membershipRepository.findByActiveTrue();
 
-        // Then
         assertThat(activeMemberships).hasSize(2);
         assertThat(activeMemberships).extracting(Membership::getName)
                 .containsExactlyInAnyOrder("Free", "Premium");
     }
 
+    // Test 2: Save membership to database
     @Test
     void save_ShouldPersistMembership() {
-        // When
         Membership saved = membershipRepository.save(freeMembership);
 
-        // Then
         assertThat(saved).isNotNull();
         assertThat(saved.getId()).isGreaterThan(0);
         assertThat(entityManager.find(Membership.class, saved.getId())).isEqualTo(saved);
     }
 
+    // Test 3: Count total number of memberships in database
     @Test
     void count_ShouldReturnTotalMemberships() {
-        // Given
         entityManager.persist(freeMembership);
         entityManager.persist(premiumMembership);
         entityManager.flush();
 
-        // When
         long count = membershipRepository.count();
 
-        // Then
         assertThat(count).isEqualTo(2);
     }
 
+    // Test 4: Find membership by ID from database
     @Test
     void findById_WithExistingId_ShouldReturnMembership() {
-        // Given
         entityManager.persist(freeMembership);
         entityManager.flush();
         int membershipId = freeMembership.getId();
 
-        // When
         Membership found = membershipRepository.findById(membershipId).orElse(null);
 
-        // Then
         assertThat(found).isNotNull();
         assertThat(found.getName()).isEqualTo("Free");
         assertThat(found.isFree()).isTrue();

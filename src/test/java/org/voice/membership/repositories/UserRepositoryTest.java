@@ -46,7 +46,7 @@ class UserRepositoryTest {
 
         testUser2 = User.builder()
                 .name("Jane Smith")
-                .email("Jane@Example.com") // Mixed case
+                .email("Jane@Example.com")
                 .password("password456")
                 .phone("0987654321")
                 .address("456 Oak Ave")
@@ -56,6 +56,7 @@ class UserRepositoryTest {
                 .build();
     }
 
+    // Test 1: Find user by exact email address
     @Test
     void findByEmail_WithExactMatch_ShouldReturnUser() {
         // Given
@@ -71,6 +72,7 @@ class UserRepositoryTest {
         assertThat(found.getEmail()).isEqualTo("john@example.com");
     }
 
+    // Test 2: Search for non-existent email returns null
     @Test
     void findByEmail_WithNonExistentEmail_ShouldReturnNull() {
         // Given
@@ -84,6 +86,7 @@ class UserRepositoryTest {
         assertThat(found).isNull();
     }
 
+    // Test 3: Find user by email (case-insensitive)
     @Test
     void findByEmailIgnoreCase_WithDifferentCase_ShouldReturnUser() {
         // Given
@@ -98,6 +101,7 @@ class UserRepositoryTest {
         assertThat(found.getName()).isEqualTo("Jane Smith");
     }
 
+    // Test 4: Find all users with matching email (case-insensitive)
     @Test
     void findAllByEmailIgnoreCase_WithDuplicateEmails_ShouldReturnAllMatches() {
         // Given
@@ -114,6 +118,7 @@ class UserRepositoryTest {
         assertThat(found.get(0).getName()).isEqualTo("Jane Smith");
     }
 
+    // Test 5: Save user to database
     @Test
     void save_ShouldPersistUser() {
         // When
@@ -125,6 +130,7 @@ class UserRepositoryTest {
         assertThat(entityManager.find(User.class, saved.getId())).isEqualTo(saved);
     }
 
+    // Test 6: Retrieve all users from database
     @Test
     void findAll_ShouldReturnAllUsers() {
         // Given
@@ -141,6 +147,7 @@ class UserRepositoryTest {
                 .containsExactlyInAnyOrder("John Doe", "Jane Smith");
     }
 
+    // Test 7: Delete user from database
     @Test
     void delete_ShouldRemoveUser() {
         // Given
@@ -157,6 +164,7 @@ class UserRepositoryTest {
         assertThat(found).isNull();
     }
 
+    // Test 8: Find user by ID from database
     @Test
     void findById_WithExistingId_ShouldReturnUser() {
         // Given

@@ -16,9 +16,16 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
+    
+    <style>
+        body {
+            background: #09637E;
+            min-height: 100vh;
+        }
+    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body>
 
 <div class="checkout-container" data-testid="checkout-container">
 
@@ -46,7 +53,7 @@
             <!-- Payment Form -->
             <div class="payment-form" data-testid="payment-form-section">
 
-                <h3 class="mb-4" style="color: var(--primary);">
+                <h3 class="mb-4" style="color: var(--primary); font-size: 1.25rem;">
                     <i class="fas fa-lock me-2"></i> Payment Information
                 </h3>
 
@@ -166,7 +173,7 @@
             <!-- Order Summary -->
             <div class="order-summary" data-testid="order-summary">
 
-                <h3 class="mb-4">
+                <h3 class="mb-4" style="font-size: 1.25rem;">
                     <i class="fas fa-receipt me-2"></i> Order Summary
                 </h3>
 
@@ -186,11 +193,11 @@
                 </div>
 
                 <div class="mt-4 pt-4 border-top border-light">
-                    <p class="small opacity-75 mb-2">
+                    <p class="small mb-2" style="color: var(--bg-white);">
                         <i class="fas fa-shield-alt me-2"></i>
                         Your payment is secure and encrypted.
                     </p>
-                    <p class="small opacity-75 mb-0">
+                    <p class="small mb-0" style="color: var(--bg-white);">
                         <i class="fas fa-lock me-2"></i>
                         We never store your full card details.
                     </p>

@@ -63,7 +63,7 @@ class ChildRepositoryTest {
                 .build();
     }
 
-    // Save Child to Database
+    // Test 1: Save child to database
     @Test
     void save_ShouldPersistChild() {
         Child saved = childRepository.save(child1);
@@ -72,6 +72,7 @@ class ChildRepositoryTest {
         assertThat(saved.getUser()).isEqualTo(testUser);
     }
 
+    // Test 2: Find child by ID from database
     @Test
     void findById_WithExistingId_ShouldReturnChild() {
         entityManager.persist(child1);
@@ -84,6 +85,7 @@ class ChildRepositoryTest {
         assertThat(found.getHearingLossType()).isEqualTo("Profound");
     }
 
+    // Test 3: Delete child from database
     @Test
     void delete_ShouldRemoveChild() {
         entityManager.persist(child1);
@@ -96,6 +98,7 @@ class ChildRepositoryTest {
         assertThat(found).isNull();
     }
 
+    // Test 4: Retrieve all children from database
     @Test
     void findAll_ShouldReturnAllChildren() {
         entityManager.persist(child1);
@@ -108,6 +111,7 @@ class ChildRepositoryTest {
                 .containsExactlyInAnyOrder("Child One", "Child Two");
     }
 
+    // Test 5: Cascade delete - deleting parent user automatically deletes children
     @Test
     void cascadeDelete_WhenUserDeleted_ShouldDeleteChildren() {
         childRepository.save(child1);

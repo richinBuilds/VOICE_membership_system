@@ -36,138 +36,118 @@ class StrongPasswordValidatorTest {
         }
     }
 
+    // Test 1: Valid strong password passes validation
     @Test
     void validate_WithValidPassword_ShouldPass() {
-        // Given
         TestDto dto = new TestDto("ValidPass123!");
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isEmpty();
     }
 
+    // Test 2: Multiple valid password formats pass validation
     @ParameterizedTest
     @ValueSource(strings = {
-            "Abcd123!", // Valid: uppercase, lowercase, digit, special
-            "MyP@ssw0rd", // Valid
-            "SecureP4ss!", // Valid
-            "C0mpl3x!Pass" // Valid
+            "Abcd123!",
+            "MyP@ssw0rd",
+            "SecureP4ss!",
+            "C0mpl3x!Pass"
     })
     void validate_WithValidPasswords_ShouldPass(String password) {
-        // Given
         TestDto dto = new TestDto(password);
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isEmpty();
     }
 
+    // Test 3: Password too short (less than 8 characters) fails
     @Test
     void validate_WithShortPassword_ShouldFail() {
-        // Given
         TestDto dto = new TestDto("Short1!");
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 
+    // Test 4: Password without uppercase letter fails
     @Test
     void validate_WithNoUppercase_ShouldFail() {
-        // Given
         TestDto dto = new TestDto("lowercase123!");
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 
+    // Test 5: Password without lowercase letter fails
     @Test
     void validate_WithNoLowercase_ShouldFail() {
-        // Given
         TestDto dto = new TestDto("UPPERCASE123!");
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 
+    // Test 6: Password without number fails
     @Test
     void validate_WithNoDigit_ShouldFail() {
-        // Given
         TestDto dto = new TestDto("NoDigitPass!");
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 
+    // Test 7: Password without special character fails
     @Test
     void validate_WithNoSpecialCharacter_ShouldFail() {
-        // Given
         TestDto dto = new TestDto("NoSpecial123");
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 
+    // Test 8: Null password fails validation
     @Test
     void validate_WithNullPassword_ShouldFail() {
-        // Given
         TestDto dto = new TestDto(null);
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 
+    // Test 9: Empty password fails validation
     @Test
     void validate_WithEmptyPassword_ShouldFail() {
-        // Given
         TestDto dto = new TestDto("");
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 
+    // Test 10: Multiple weak password formats all fail validation
     @ParameterizedTest
     @ValueSource(strings = {
-            "weak", // Too short
-            "12345678", // Only digits
-            "password", // Only lowercase
-            "PASSWORD", // Only uppercase
-            "Pass1234", // No special char
-            "Pass!@#$", // No digit
-            "pass123!" // No uppercase
+            "weak",
+            "12345678",
+            "password",
+            "PASSWORD",
+            "Pass1234",
+            "Pass!@#$",
+            "pass123!"
     })
     void validate_WithInvalidPasswords_ShouldFail(String password) {
-        // Given
         TestDto dto = new TestDto(password);
 
-        // When
         Set<ConstraintViolation<TestDto>> violations = validator.validate(dto);
 
-        // Then
         assertThat(violations).isNotEmpty();
     }
 }

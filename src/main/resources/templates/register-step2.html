@@ -16,9 +16,16 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
+    
+    <style>
+        body {
+            background: #09637E;
+            min-height: 100vh;
+        }
+    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body>
 
 <div class="checkout-container" data-testid="register-step2-container">
 
@@ -35,7 +42,7 @@
             <p class="text-muted">
                 Step <span th:text="${step}">2</span>
                 of <span th:text="${totalSteps}">4</span>
-                — <span class="fw-medium" style="color: var(--success);">Optional</span>
+                — <span class="fw-medium" style="color: var(--primary);">Optional</span>
             </p>
 
             <!-- Step Indicator -->
