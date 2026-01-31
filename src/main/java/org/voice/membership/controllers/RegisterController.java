@@ -18,8 +18,10 @@ import org.voice.membership.dtos.*;
 import org.voice.membership.entities.*;
 import org.voice.membership.repositories.*;
 import org.voice.membership.services.UserService;
+import org.voice.membership.services.EmailSenderService;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -49,6 +51,9 @@ public class RegisterController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private EmailSenderService emailSenderService;
 
     // Step 1: User Details
     @GetMapping
@@ -213,6 +218,13 @@ public class RegisterController {
             return "redirect:/register/step3";
         }
 
+        // Enforce single membership selection
+        // If user already selected a membership and selects a different one, replace it
+        if (registrationData.getSelectedMembershipId() != null) {
+            System.out.println("Replacing previous membership selection: " + 
+                registrationData.getSelectedMembershipId() + " with " + membershipId);
+        }
+
         registrationData.setSelectedMembershipId(membershipId);
         registrationData.setCartMembershipId(membershipId);
         session.setAttribute("registrationData", registrationData);
@@ -257,6 +269,7 @@ public class RegisterController {
             MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
                     .getAttribute("registrationData");
             if (registrationData == null) {
+                System.out.println("DEBUG: No registrationData in session");
                 return "redirect:/register";
             }
 
@@ -270,24 +283,30 @@ public class RegisterController {
 
             // Proceed to checkout or complete registration
             if (registrationData.getCartMembershipId() == null) {
+                System.out.println("DEBUG: cartMembershipId is null");
                 return "redirect:/register/step3";
             }
 
             Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
             if (membershipOpt.isEmpty()) {
+                System.out.println("DEBUG: Membership not found for id: " + registrationData.getCartMembershipId());
                 return "redirect:/register/step3";
             }
 
             Membership membership = membershipOpt.get();
+            System.out.println("DEBUG: Membership found: " + membership.getName() + ", isFree: " + membership.isFree());
 
             if (membership.isFree()) {
                 // Free membership - complete registration directly
+                System.out.println("DEBUG: Redirecting to complete registration (free)");
                 return completeRegistration(session);
             } else {
                 // Paid membership - go to checkout
+                System.out.println("DEBUG: Redirecting to /register/checkout");
                 return "redirect:/register/checkout";
             }
         } catch (Exception e) {
+            System.err.println("DEBUG: Exception in handleStep4: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/register/step4?error=processing_failed";
         }
@@ -296,26 +315,32 @@ public class RegisterController {
     // Checkout for paid memberships
     @GetMapping("/checkout")
     public String showCheckout(Model model, HttpSession session) {
+        System.out.println("DEBUG: showCheckout() called - GET /register/checkout");
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
         if (registrationData == null) {
+            System.out.println("DEBUG: No registrationData in session at checkout");
             return "redirect:/register";
         }
 
         if (registrationData.getCartMembershipId() == null) {
+            System.out.println("DEBUG: cartMembershipId is null at checkout");
             return "redirect:/register/step3";
         }
 
         Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
         if (membershipOpt.isEmpty()) {
+            System.out.println("DEBUG: Membership not found at checkout");
             return "redirect:/register/step3";
         }
 
         Membership membership = membershipOpt.get();
         if (membership.isFree()) {
             // Free membership shouldn't reach checkout
+            System.out.println("DEBUG: Free membership reached checkout, redirecting");
             return completeRegistration(session);
         }
 
+        System.out.println("DEBUG: Rendering checkout template with membership: " + membership.getName());
         model.addAttribute("membership", membership);
         model.addAttribute("totalAmount", membership.getPrice());
         return "checkout";
@@ -401,7 +426,24 @@ public class RegisterController {
             if (registrationData.getSelectedMembershipId() != null) {
                 Optional<Membership> membershipOpt = membershipRepository
                         .findById(registrationData.getSelectedMembershipId());
-                membershipOpt.ifPresent(user::setMembership);
+                if (membershipOpt.isPresent()) {
+                    Membership membership = membershipOpt.get();
+                    user.setMembership(membership);
+                    
+                    // Set membership dates for paid memberships
+                    if (!membership.isFree()) {
+                        Date now = new Date();
+                        user.setMembershipStartDate(now);
+                        
+                        // Set expiry to 1 year from now
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        cal.setTime(now);
+                        cal.add(java.util.Calendar.YEAR, 1);
+                        user.setMembershipExpiryDate(cal.getTime());
+                        
+                        System.out.println("Paid membership registered with dates: " + now + " to " + cal.getTime());
+                    }
+                }
             }
 
             user = userRepository.save(user);
@@ -434,12 +476,28 @@ public class RegisterController {
                 Optional<Membership> membershipOpt = membershipRepository
                         .findById(registrationData.getSelectedMembershipId());
                 if (membershipOpt.isPresent() && !membershipOpt.get().isFree()) {
-                    Cart cart = Cart.builder()
-                            .user(user)
-                            .createdAt(new Date())
-                            .updatedAt(new Date())
-                            .build();
-                    cart = cartRepository.save(cart);
+                    // Ensure only ONE membership in cart
+                    // Check if cart already exists for this user
+                    Optional<Cart> existingCartOpt = cartRepository.findByUserId(user.getId());
+                    
+                    Cart cart;
+                    if (existingCartOpt.isPresent()) {
+                        // Clear existing cart items to enforce single membership
+                        Cart existingCart = existingCartOpt.get();
+                        cartItemRepository.deleteByCartId(existingCart.getId());
+                        cart = existingCart;
+                        cart.setUpdatedAt(new Date());
+                        cart = cartRepository.save(cart);
+                        System.out.println("Cleared existing cart items to enforce single membership selection");
+                    } else {
+                        // Create new cart
+                        cart = Cart.builder()
+                                .user(user)
+                                .createdAt(new Date())
+                                .updatedAt(new Date())
+                                .build();
+                        cart = cartRepository.save(cart);
+                    }
 
                     Membership membership = membershipOpt.get();
                     CartItem cartItem = CartItem.builder()
@@ -450,6 +508,8 @@ public class RegisterController {
                             .totalPrice(membership.getPrice())
                             .build();
                     cartItemRepository.save(cartItem);
+                    
+                    System.out.println("Added single membership to cart: " + membership.getName());
                 }
             }
 
@@ -481,4 +541,147 @@ public class RegisterController {
             return "redirect:/register?error=registration_failed";
         }
     }
+
+    // Upgrade Membership Checkout
+    @GetMapping("/upgrade-checkout")
+    public String showUpgradeCheckout(Model model, Principal principal) {
+        try {
+            User user = userRepository.findByEmail(principal.getName());
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            // Verify user has free membership
+            Membership currentMembership = user.getMembership();
+            if (currentMembership == null || !currentMembership.isFree()) {
+                return "redirect:/profile?error=not_eligible_for_upgrade";
+            }
+
+            model.addAttribute("user", user);
+            model.addAttribute("userName", user.getName());
+            model.addAttribute("userEmail", user.getEmail());
+            
+            return "upgrade-checkout";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/profile?error=checkout_load_failed";
+        }
+    }
+
+    @PostMapping("/upgrade-checkout")
+    public String handleUpgradeCheckout(@RequestParam("membershipId") Integer membershipId,
+                                       @RequestParam("cardNumber") String cardNumber,
+                                       @RequestParam("cardHolderName") String cardHolderName,
+                                       @RequestParam("expiryMonth") String expiryMonth,
+                                       @RequestParam("expiryYear") String expiryYear,
+                                       @RequestParam("cvv") String cvv,
+                                       Model model,
+                                       Principal principal) {
+        try {
+            User user = userRepository.findByEmail(principal.getName());
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            // Verify user has free membership
+            Membership currentMembership = user.getMembership();
+            if (currentMembership == null || !currentMembership.isFree()) {
+                return "redirect:/profile?error=not_eligible_for_upgrade";
+            }
+
+            // Validate membership exists and is paid
+            Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
+            if (paidMembershipOpt.isEmpty() || paidMembershipOpt.get().isFree()) {
+                return "redirect:/profile?error=invalid_membership";
+            }
+
+            // Basic payment validation
+            if (cardNumber == null || cardNumber.trim().isEmpty() ||
+                    cardHolderName == null || cardHolderName.trim().isEmpty() ||
+                    expiryMonth == null || expiryMonth.trim().isEmpty() ||
+                    expiryYear == null || expiryYear.trim().isEmpty() ||
+                    cvv == null || cvv.trim().isEmpty()) {
+                model.addAttribute("error", "All payment fields are required");
+                model.addAttribute("user", user);
+                model.addAttribute("userName", user.getName());
+                model.addAttribute("upgradeMembership", paidMembershipOpt.get());
+                return "upgrade-checkout";
+            }
+
+            // Process payment (in production, use proper payment gateway)
+            // For now, just update the user membership
+            System.out.println("=== PAYMENT PROCESSING ===");
+            System.out.println("User: " + user.getEmail());
+            System.out.println("Current Membership: " + currentMembership.getName());
+            System.out.println("New Membership: " + paidMembershipOpt.get().getName());
+
+            Membership paidMembership = paidMembershipOpt.get();
+            
+            // Replace unpaid/free membership with paid membership
+            user.setMembership(paidMembership);
+            
+            // Set membership start date to now
+            Date now = new Date();
+            user.setMembershipStartDate(now);
+            
+            // Set membership expiry date (1 year from now)
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTime(now);
+            cal.add(java.util.Calendar.YEAR, 1);
+            Date expiryDate = cal.getTime();
+            user.setMembershipExpiryDate(expiryDate);
+            
+            // Save user with updated membership and dates
+            userRepository.save(user);
+            
+            System.out.println("=== MEMBERSHIP UPDATED ===");
+            System.out.println("Status: Paid/Active");
+            System.out.println("Start Date: " + now);
+            System.out.println("Expiry Date: " + expiryDate);
+            
+            // Send confirmation email
+            try {
+                java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMMM dd, yyyy");
+                emailSenderService.sendMembershipUpgradeConfirmation(
+                    user.getEmail(),
+                    user.getName(),
+                    paidMembership.getName(),
+                    dateFormat.format(expiryDate)
+                );
+                System.out.println("Confirmation email sent to: " + user.getEmail());
+            } catch (Exception emailEx) {
+                System.err.println("Warning: Failed to send confirmation email: " + emailEx.getMessage());
+                // Continue even if email fails
+            }
+
+            // Redirect to success page or profile with message
+            return "redirect:/profile?upgrade=success";
+        } catch (Exception e) {
+            System.err.println("=== UPGRADE PAYMENT ERROR ===");
+            System.err.println("Error in upgrade checkout: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Rainy day scenario: System error while saving membership data
+            model.addAttribute("error", "An error occurred processing your payment. Please try again or contact support if the issue persists.");
+            
+            try {
+                User user = userRepository.findByEmail(principal.getName());
+                if (user != null) {
+                    model.addAttribute("user", user);
+                    model.addAttribute("userName", user.getName());
+                    
+                    // Reload the membership for display
+                    Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
+                    paidMembershipOpt.ifPresent(membership -> 
+                        model.addAttribute("upgradeMembership", membership)
+                    );
+                }
+            } catch (Exception ex2) {
+                System.err.println("Error loading user for error page: " + ex2.getMessage());
+            }
+            
+            return "upgrade-checkout";
+        }
+    }
 }
+

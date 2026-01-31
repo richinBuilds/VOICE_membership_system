@@ -90,9 +90,14 @@
                                class="form-control child-dob"
                                name="childDob"
                                th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}"
-                               onchange="calculateAgeFromDob(this)"
+                               th:max="${#dates.format(new java.util.Date(), 'yyyy-MM-dd')}"
+                               th:min="1910-01-01"
+                               onchange="validateDobAndCalculateAge(this)"
                                data-testid="child-dob">
-                        <label>Date of Birth</label>
+                        <label>Date of Birth (Optional)</label>
+                        <div class="invalid-feedback d-block" id="dobError" style="display: none;">
+                            Please select a valid date of birth (between 1910 and today)
+                        </div>
                     </div>
 
                     <!-- Age (Auto-calculated or manual) -->
@@ -212,20 +217,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Calculate age from Date of Birth
-function calculateAgeFromDob(dobInput) {
+// Validate DOB and Calculate age from Date of Birth
+function validateDobAndCalculateAge(dobInput) {
+    const dobError = document.getElementById('dobError');
     const section = dobInput.closest('.child-form-section');
-    if (!section) return;
+    if (!section) return true;
     
     const ageInput = section.querySelector('.child-age');
-    if (!ageInput) return;
+    if (!ageInput) return true;
     
+    // If DOB is cleared, make age editable again - this is valid since DOB is optional
     if (!dobInput.value || dobInput.value === '') {
-        // If DOB is cleared, make age editable again
         ageInput.removeAttribute('readonly');
         ageInput.value = '';
-        dobInput.classList.remove('date-input-error');
-        return;
+        dobInput.classList.remove('date-input-error', 'is-invalid');
+        if (dobError) dobError.style.display = 'none';
+        return true;
     }
     
     // Parse date properly
@@ -234,18 +241,34 @@ function calculateAgeFromDob(dobInput) {
     const dobMonth = parseInt(dobParts[1], 10) - 1; // Month is 0-indexed
     const dobDay = parseInt(dobParts[2], 10);
     
+    // Validate year is reasonable (between 1910 and current year)
+    const currentYear = new Date().getFullYear();
+    if (dobYear < 1910 || dobYear > currentYear) {
+        dobInput.classList.add('date-input-error', 'is-invalid');
+        if (dobError) {
+            dobError.textContent = 'Please select a valid year (1910 to ' + currentYear + ')';
+            dobError.style.display = 'block';
+        }
+        ageInput.removeAttribute('readonly');
+        ageInput.value = '';
+        return false;
+    }
+    
     const dob = new Date(dobYear, dobMonth, dobDay);
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Clear time for accurate comparison
     
     // Validate: DOB cannot be in the future
     if (dob > today) {
-        dobInput.classList.add('date-input-error');
+        dobInput.classList.add('date-input-error', 'is-invalid');
+        if (dobError) {
+            dobError.textContent = 'Date of birth cannot be in the future';
+            dobError.style.display = 'block';
+        }
         ageInput.removeAttribute('readonly');
         ageInput.value = '';
-        return;
+        return false;
     }
-    
-    dobInput.classList.remove('date-input-error');
     
     // Calculate age accurately
     let age = today.getFullYear() - dob.getFullYear();
@@ -257,34 +280,41 @@ function calculateAgeFromDob(dobInput) {
         age--;
     }
     
-    // Ensure age is within valid range
+    // Validate reasonable age range (0-120 years old)
+    if (age < 0 || age > 120) {
+        dobInput.classList.add('date-input-error', 'is-invalid');
+        if (dobError) {
+            dobError.textContent = 'Invalid date of birth. Age must be between 0 and 120 years';
+            dobError.style.display = 'block';
+        }
+        ageInput.removeAttribute('readonly');
+        ageInput.value = '';
+        return false;
+    }
+    
+    dobInput.classList.remove('date-input-error', 'is-invalid');
+    if (dobError) dobError.style.display = 'none';
+    
+    // Ensure age is within valid range for children
     const calculatedAge = Math.max(0, Math.min(18, age));
     
-    // Set calculated age and make it read-only
+    // Set calculated age but allow manual override - don't set readonly
     ageInput.value = calculatedAge;
-    ageInput.setAttribute('readonly', 'readonly');
+    ageInput.removeAttribute('readonly');
     
-    console.log('DOB:', dobInput.value, 'Calculated Age:', calculatedAge);
+    return true;
 }
 
-// Validate date input - prevent future dates
+// Validate date input - prevent future dates and invalid years
 function validateDateInput(input) {
     if (!input.value) {
-        input.classList.remove('date-input-error');
+        input.classList.remove('date-input-error', 'is-invalid');
         return true;
     }
 
-    const selectedDate = new Date(input.value);
-    const today = new Date();
-
-    if (selectedDate > today) {
-        input.classList.add('date-input-error');
-        return false;
-    }
-
-    input.classList.remove('date-input-error');
-    return true;
+    return validateDobAndCalculateAge(input);
 }
+
 
 // Add new child form section
 let childCount = document.querySelectorAll('.child-form-section').length;
@@ -355,7 +385,7 @@ function addChild() {
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.child-dob').forEach(function(dobInput) {
         if (dobInput.value) {
-            calculateAgeFromDob(dobInput);
+            validateDobAndCalculateAge(dobInput);
         }
     });
 });
@@ -365,14 +395,15 @@ document.getElementById('childInfoForm').addEventListener('submit', function(e) 
     let isValid = true;
     
     document.querySelectorAll('.child-dob').forEach(function(input) {
-        if (!validateDateInput(input)) {
+        // Only validate DOB if it has a value (optional field)
+        if (input.value && !validateDateInput(input)) {
             isValid = false;
         }
     });
 
     if (!isValid) {
         e.preventDefault();
-        alert('Please correct the date fields. Dates cannot be in the future.');
+        alert('Please correct the date fields. Ensure dates are valid and not in the future.');
     }
 });
 </script>

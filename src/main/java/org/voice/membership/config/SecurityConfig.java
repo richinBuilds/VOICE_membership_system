@@ -39,14 +39,15 @@ public class SecurityConfig {
                                                 .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
 
                                                 // ✅ User pages - allow both USER and ADMIN roles
-                                                .requestMatchers("/profile")
+                                                .requestMatchers("/profile/**")
                                                 .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
 
                                                 .anyRequest().authenticated())
 
                                 .formLogin(form -> form
                                                 .loginPage("/login")
-                                                .successHandler(authenticationSuccessHandler()))
+                                                .successHandler(authenticationSuccessHandler())
+                                                .permitAll())
                                 .logout(config -> config
                                                 // Allow both GET and POST for logout to support links and forms
                                                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
