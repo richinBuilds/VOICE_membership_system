@@ -197,7 +197,7 @@ public class ProfileController {
             // Create a new empty child object
             Child newChild = new Child();
             model.addAttribute("child", newChild);
-            model.addAttribute("isNew", true);
+            model.addAttribute("isEdit", false);
             return "editChild";
         } catch (Exception e) {
             System.err.println("Error loading add child form: " + e.getMessage());
@@ -262,7 +262,7 @@ public class ProfileController {
             }
 
             model.addAttribute("child", childOpt.get());
-            model.addAttribute("isNew", false);
+            model.addAttribute("isEdit", true);
             return "editChild";
         } catch (Exception e) {
             System.err.println("Error loading edit child form: " + e.getMessage());
