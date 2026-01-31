@@ -16,18 +16,25 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
+    
+    <style>
+        body {
+            background: #09637E;
+            min-height: 100vh;
+        }
+    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body>
 
 <div class="checkout-container" data-testid="register-step1-container">
 
-    <div class="checkout-card">
+    <div class="auth-card">
 
         <!-- Header -->
-        <div class="checkout-header">
+        <div class="auth-header">
 
-            <h1 class="checkout-title" data-testid="step1-title">
+            <h1 data-testid="step1-title">
                 <i class="fas fa-user-plus me-2"></i>
                 Create Your Account
             </h1>
@@ -150,14 +157,18 @@
                        th:class="${#fields.hasErrors('phone')} ? 'form-control is-invalid' : 'form-control'"
                        id="phone"
                        th:field="*{phone}"
-                       placeholder="Phone Number"
+                       placeholder="(123) 456-7890"
+                       pattern="^\\(?([0-9]{3})\\)?[-.\\s]?([0-9]{3})[-.\\s]?([0-9]{4})$"
+                       title="Canadian phone number: (XXX) XXX-XXXX or XXX-XXX-XXXX or 10 digits"
+                       maxlength="15"
+                       inputmode="tel"
                        required
                        data-testid="register-phone">
                 <label for="phone">
                     <i class="fas fa-phone me-1"></i> Phone Number *
                 </label>
                 <div th:if="${#fields.hasErrors('phone')}" class="invalid-feedback" th:errors="*{phone}">
-                    Phone number is required
+                    Invalid Canadian phone number format
                 </div>
             </div>
 
@@ -230,8 +241,27 @@
 <script>
 // Form validation
 document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const phone = document.getElementById('phone').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validate phone number - Canadian format
+    const phoneRegex = /^(\()?([0-9]{3})(\))?([-.\s])?([0-9]{3})([-.\s])?([0-9]{4})$/;
+    if (!phoneRegex.test(phone)) {
+        e.preventDefault();
+        document.getElementById('phone').classList.add('is-invalid');
+        alert('Invalid Canadian phone number format. Use: (XXX) XXX-XXXX or XXX-XXX-XXXX or 10 digits');
+        return false;
+    }
+    
+    // Verify phone contains exactly 10 digits
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+        e.preventDefault();
+        document.getElementById('phone').classList.add('is-invalid');
+        alert('Phone number must contain exactly 10 digits');
+        return false;
+    }
     
     if (password !== confirmPassword) {
         e.preventDefault();
@@ -246,6 +276,35 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
         document.getElementById('password').classList.add('is-invalid');
         alert('Password must be at least 8 characters long.');
         return false;
+    }
+});
+
+// Real-time phone validation
+document.getElementById('phone').addEventListener('blur', function() {
+    const phone = this.value;
+    const phoneRegex = /^(\()?([0-9]{3})(\))?([-.\s])?([0-9]{3})([-.\s])?([0-9]{4})$/;
+    
+    if (phone && !phoneRegex.test(phone)) {
+        this.classList.add('is-invalid');
+    } else {
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Phone number auto-formatting
+document.getElementById('phone').addEventListener('input', function() {
+    let value = this.value.replace(/\D/g, '');
+    
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    
+    if (value.length >= 6) {
+        this.value = '(' + value.slice(0, 3) + ') ' + value.slice(3, 6) + '-' + value.slice(6);
+    } else if (value.length >= 3) {
+        this.value = '(' + value.slice(0, 3) + ') ' + value.slice(3);
+    } else if (value.length > 0) {
+        this.value = value;
     }
 });
 

@@ -15,12 +15,15 @@ import org.voice.membership.repositories.UserRepository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * End-to-end integration tests for User Registration workflow
- * Tests complete registration flow from start to finish
+ * Smoke tests for page accessibility
+ * Tests that all major pages load without errors
+ * 
+ * NOTE: These are basic smoke tests to ensure pages are accessible.
+ * For detailed functionality testing, see controller tests.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class UserRegistrationIntegrationTest {
+class PageAccessibilitySmokeTest {
 
     @LocalServerPort
     private int port;

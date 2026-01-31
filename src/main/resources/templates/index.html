@@ -153,15 +153,32 @@
 
         <h2 class="section-title" data-testid="benefits-title">Why Join VOICE?</h2>
 
-        <!-- NEW: Bullet Points Section -->
-        <ul class="why-join-bullets" data-testid="why-join-bullets">
-            <li><i class="fas fa-check-circle"></i> Community Support</li>
-            <li><i class="fas fa-check-circle"></i> Educational Resources</li>
-            <li><i class="fas fa-check-circle"></i> Advocacy Programs</li>
-            <li><i class="fas fa-check-circle"></i> Events &amp; Conferences</li>
-            <li><i class="fas fa-check-circle"></i> Parent Networking</li>
-            <li><i class="fas fa-check-circle"></i> Financial Assistance Info</li>
-        </ul>
+        <!-- 10 Great Reasons to Be a Member -->
+        <div class="reasons-content" data-testid="reasons-content">
+            <h3 style="text-align: center; margin-bottom: 2rem;">10 Great Reasons to Be a Member</h3>
+            
+            <div style="max-width: 900px; margin: 0 auto; text-align: left;">
+                <p><strong>1. Connection:</strong> You are connected to a larger group banded together to produce positive results for children experiencing hearing loss in our province.</p>
+
+                <p><strong>2. Annual Educational Conference:</strong> The annual Conference provides quality education and networking for those who have experienced hearing loss in their lives, or the lives of others, and you receive a SIGNIFICANT discount by being a member. You can contribute to the content of the conference, participate as a volunteer, or attend to enhance your professional development.</p>
+
+                <p><strong>3. Public Policy / Advocacy:</strong> You can contribute to the strong advocacy program centered on assuring that the voices of those who are experiencing hearing loss are being heard.</p>
+
+                <p><strong>4. Free Financial & Informational Services:</strong> VOICE provides their members with the opportunity to access Financial Aid such as Funds dedicated to helping families provide their children with hearing technology, as well as various scholarships to assist in educational endeavours. VOICE keeps members in touch with each other and current issues through our web site and email updates of emerging issues relevant to hearing loss. You remain informed about hearing loss in our region in a way that saves you time.</p>
+
+                <p><strong>5. Networking:</strong> You have many opportunities to network with like-minded individuals and professionals in our region, building your contacts, sharing ideas, best practices and solutions to enhance your learning, find opportunities to connect, and more. Networking events range from Annual Conferences to workshops, and activities for your children.</p>
+
+                <p><strong>6. Affiliation:</strong> You will have affiliation with a local chapter and dozens of professionals in your region.</p>
+
+                <p><strong>7. Discounts on Educational Offerings:</strong> You receive reduced registration fees at all VOICE events and workshops.</p>
+
+                <p><strong>8. Leadership Opportunities:</strong> You are provided opportunities to learn and practice leadership by becoming an integral part of VOICE whether that be getting involved in your chapter, starting a new chapter, volunteering at events or hosting your own events!</p>
+
+                <p><strong>9. Recognition:</strong> You can be recognized or can recognize your colleagues for their achievements in the hearing loss community, whether that be at VOICE or another affiliated organization.</p>
+
+                <p><strong>10. Empowerment:</strong> You are part of a larger community. You are empowered to get involved in issues that affect your personal and professional communities and your quality of life.</p>
+            </div>
+        </div>
 
         <div class="benefits-grid">
 
@@ -197,81 +214,47 @@
 
         <h2 class="section-title" data-testid="membership-title">Choose Your Membership</h2>
 
-        <!-- FILTER BUTTONS -->
-        <div class="membership-filters text-center" data-testid="membership-filters">
-
-            <!-- Free -->
-            <a th:href="${isUserLoggedIn} ? '#membership' : '/login'"
-               class="filter-btn btn-membership-free"
-               data-testid="filter-free-btn">
-                Free Membership
-            </a>
-
-            <!-- Paid -->
-            <a th:href="${isUserLoggedIn} ? '#membership' : '/login'"
-               class="filter-btn btn-membership-paid"
-               data-testid="filter-paid-btn">
-                Paid Membership
-            </a>
-
-        </div>
-
-
         <!-- MEMBERSHIP GRID -->
         <div class="membership-grid" data-testid="membership-grid">
 
-            <div class="membership-card"
-                 th:each="membership, stat : ${memberships}"
-                 th:classappend="${membership.isFree} ? ' free' : ' paid'"
-                 th:data-testid="'membership-card-' + ${stat.index}">
-
+            <!-- Free Membership Card -->
+            <div class="membership-card" data-testid="membership-card-free">
                 <div class="membership-header">
-
-                    <h3 th:text="${membership.name}">
-                        Membership Name
-                    </h3>
-
-                    <div class="membership-price"
-                         th:if="${membership.isFree}">
-                        Free
-                    </div>
-
-                    <div class="membership-price"
-                         th:unless="${membership.isFree}">
-                        $<span th:text="${membership.price}">0</span>/month
-                    </div>
-
+                    <h3>Free Membership</h3>
+                    <div class="membership-price">Free</div>
                 </div>
-
                 <div class="membership-body">
-
-                    <p class="membership-description"
-                       th:text="${membership.description}">
-                        Description
+                    <p class="membership-description">
+                        Access to basic community resources and support
                     </p>
-
-                    <ul class="membership-features"
-                        th:if="${membership.features != null}">
-
-                        <li th:each="feature : ${#strings.arraySplit(membership.features,'\n')}"
-                            th:text="${feature.trim()}">
-                        </li>
-
+                    <ul class="membership-features">
+                        <li>Community forum access</li>
+                        <li>Monthly newsletter</li>
+                        <li>Basic resource library</li>
+                        <li>Event notifications</li>
                     </ul>
-
                 </div>
+            </div>
 
-                <div class="membership-footer">
-
-                    <a th:href="@{/register}"
-                       class="membership-btn"
-                       th:text="${membership.isFree ? 'Get Started Free' : 'Subscribe Now'}"
-                       th:data-testid="'membership-cta-' + ${stat.index}">
-                        Subscribe
-                    </a>
-
+            <!-- Paid Membership Card -->
+            <div class="membership-card" data-testid="membership-card-paid">
+                <div class="membership-header">
+                    <h3>Paid Membership</h3>
+                    <div class="membership-price">From $20</div>
                 </div>
-
+                <div class="membership-body">
+                    <p class="membership-description">
+                        Full access to all resources, events, and exclusive support
+                    </p>
+                    <ul class="membership-features">
+                        <li>All free membership benefits</li>
+                        <li>Priority event registration</li>
+                        <li>Exclusive workshops and webinars</li>
+                        <li>One-on-one support sessions</li>
+                        <li>Advanced resource library</li>
+                        <li>Family networking opportunities</li>
+                    </ul>
+                </div>
             </div>
 
         </div>

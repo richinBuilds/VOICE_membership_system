@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Upgrade Your Membership - VOICE Membership System">
+
+    <title>Upgrade Membership - VOICE Membership System</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body style="background: var(--bg-bone);">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg" data-testid="upgrade-navbar">
+    <div class="container">
+
+        <a class="navbar-brand" th:href="@{/}" data-testid="navbar-brand">
+            <img th:src="@{/images/logo.png}" 
+                 alt="VOICE Logo"
+                 onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#nav"
+                aria-controls="nav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/profile}" data-testid="nav-profile">
+                        <i class="fas fa-user me-1"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit"
+                                class="btn btn-primary-custom btn-sm ms-2"
+                                data-testid="logout-btn">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </button>
+                    </form>
+                </li>
+
+            </ul>
+        </div>
+
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="checkout-container" data-testid="upgrade-membership-container">
+
+    <!-- Welcome Header -->
+    <div class="dashboard-header" data-testid="upgrade-header">
+
+        <div class="welcome-greeting">
+
+            <div class="greeting-avatar">
+                <i class="fas fa-crown"></i>
+            </div>
+
+            <div>
+                <h4 th:text="'Welcome, ' + ${userName}" data-testid="welcome-message">
+                    Welcome, User
+                </h4>
+                <p class="text-muted mb-0">
+                    Upgrade to Premium Membership
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Error Alert -->
+    <div th:if="${param.error}"
+         class="alert alert-danger"
+         role="alert"
+         data-testid="upgrade-error">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${param.error}">Error message</span>
+    </div>
+
+    <!-- Current Membership -->
+    <div class="info-card" data-testid="current-membership-card">
+        <h5 class="mb-3">
+            <i class="fas fa-star me-2" style="color: #FFD700;"></i>
+            Current Membership
+        </h5>
+        <div class="fs-5 fw-bold" th:text="${currentMembership.getName()}" data-testid="current-membership-type">
+            Free Membership
+        </div>
+        <p class="text-muted mt-2" th:text="${currentMembership.getDescription()}">
+            Enjoy basic benefits as a free member
+        </p>
+    </div>
+
+    <!-- Paid Membership Options -->
+    <div class="info-card" data-testid="membership-options">
+        <h5 class="mb-4">
+            <i class="fas fa-crown me-2" style="color: var(--primary);"></i>
+            Available Premium Plans
+        </h5>
+
+        <div class="row g-3">
+
+            <div th:each="membership : ${paidMemberships}" 
+                 class="col-md-6 col-lg-4"
+                 data-testid="membership-option">
+
+                <div class="card h-100 membership-card-option">
+
+                    <!-- Header -->
+                    <div class="card-header" style="background: var(--primary); color: white;">
+                        <h6 class="mb-0" th:text="${membership.getName()}">Premium Plan</h6>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="card-body">
+
+                        <!-- Price -->
+                        <div class="price-section mb-3">
+                            <span class="price" 
+                                  th:text="'$' + ${membership.getPrice()}"
+                                  data-testid="membership-price">
+                                $20.00
+                            </span>
+                            <span class="text-muted">/year</span>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="card-text text-muted" 
+                           th:text="${membership.getDescription()}"
+                           data-testid="membership-description">
+                            Description of membership benefits
+                        </p>
+
+                        <!-- Features (if available) -->
+                        <div th:if="${membership.features != null and !#strings.isEmpty(membership.features)}" class="features-section">
+                            <p class="small text-muted mb-2">Features:</p>
+                            <p class="small mb-0" th:text="${membership.features}">Feature list</p>
+                        </div>
+
+                    </div>
+
+                    <!-- Footer with Action Button -->
+                    <div class="card-footer">
+                        <form th:action="@{/profile/upgrade-membership/select}"
+                              method="post"
+                              class="d-grid">
+                            <input type="hidden"
+                                th:name="${_csrf.parameterName}"
+                                th:value="${_csrf.token}"/>
+                            <input type="hidden" 
+                                   name="membershipId" 
+                                   th:value="${membership.getId()}">
+                            <button type="submit"
+                                    class="btn btn-primary-custom"
+                                    data-testid="select-membership-btn">
+                                <i class="fas fa-arrow-right me-2"></i> Select & Continue
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+        <a th:href="@{/profile}"
+           class="btn btn-secondary"
+           data-testid="back-to-dashboard-btn">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="text-center py-4">
+    <small style="color: var(--bg-white);">VOICE Membership System</small>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<style>
+    .membership-card-option {
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+
+    .membership-card-option:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .price-section {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+
+    .price {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: var(--primary);
+    }
+
+    .features-section {
+        border-top: 1px solid #eee;
+        padding-top: 1rem;
+    }
+</style>
+
+</body>
+
+</html>

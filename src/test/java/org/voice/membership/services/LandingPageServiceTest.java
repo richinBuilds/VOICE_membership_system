@@ -95,123 +95,105 @@ class LandingPageServiceTest {
                 .build();
     }
 
+    // Test 1: Get all active membership plans
     @Test
     void getActiveMemberships_ShouldReturnListOfMemberships() {
-        // Given
         when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc())
                 .thenReturn(Arrays.asList(freeMembership, premiumMembership));
 
-        // When
         List<Membership> result = landingPageService.getActiveMemberships();
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result).hasSize(2);
         assertThat(result).contains(freeMembership, premiumMembership);
         verify(membershipRepository).findByActiveTrueOrderByDisplayOrderAsc();
     }
 
+    // Test 2: Get all active membership benefits
     @Test
     void getActiveBenefits_ShouldReturnListOfBenefits() {
-        // Given
         when(membershipBenefitRepository.findByActiveTrueOrderByDisplayOrderAsc()).thenReturn(benefits);
 
-        // When
         List<MembershipBenefit> result = landingPageService.getActiveBenefits();
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getTitle()).isEqualTo("Community Network");
         verify(membershipBenefitRepository).findByActiveTrueOrderByDisplayOrderAsc();
     }
 
+    // Test 3: Get landing page tagline text
     @Test
     void getTagline_ShouldReturnTaglineString() {
-        // Given
         when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.of(landingPageContent));
 
-        // When
         String result = landingPageService.getTagline();
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result).isEqualTo("Empowering Families with Deaf Children");
         verify(landingPageContentRepository).findByKey("tagline");
     }
 
+    // Test 4: Create default memberships if none exist
     @Test
     void initializeDefaultMemberships_WhenNoMembershipsExist_ShouldCreateMemberships() {
-        // Given
         when(membershipRepository.count()).thenReturn(0L);
         when(membershipRepository.save(any(Membership.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // When
         landingPageService.initializeDefaultMemberships();
 
-        // Then
         verify(membershipRepository, times(2)).save(any(Membership.class));
     }
 
+    // Test 5: Skip creating memberships if they already exist
     @Test
     void initializeDefaultMemberships_WhenMembershipsExist_ShouldNotCreateMemberships() {
-        // Given
         when(membershipRepository.count()).thenReturn(2L);
 
-        // When
         landingPageService.initializeDefaultMemberships();
 
-        // Then
         verify(membershipRepository, never()).save(any(Membership.class));
     }
 
+    // Test 6: Create default benefits if none exist
     @Test
     void initializeDefaultBenefits_WhenNoBenefitsExist_ShouldCreateBenefits() {
-        // Given
         when(membershipBenefitRepository.count()).thenReturn(0L);
         when(membershipBenefitRepository.save(any(MembershipBenefit.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // When
         landingPageService.initializeDefaultBenefits();
 
-        // Then
         verify(membershipBenefitRepository, times(5)).save(any(MembershipBenefit.class));
     }
 
+    // Test 7: Skip creating benefits if they already exist
     @Test
     void initializeDefaultBenefits_WhenBenefitsExist_ShouldNotCreateBenefits() {
-        // Given
         when(membershipBenefitRepository.count()).thenReturn(6L);
 
-        // When
         landingPageService.initializeDefaultBenefits();
 
-        // Then
         verify(membershipBenefitRepository, never()).save(any(MembershipBenefit.class));
     }
 
+    // Test 8: Create default landing page content if none exists
     @Test
     void initializeDefaultContent_WhenNoContentExists_ShouldCreateContent() {
-        // Given
         when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.empty());
         when(landingPageContentRepository.save(any(LandingPageContent.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // When
         landingPageService.initializeDefaultContent();
 
-        // Then
         verify(landingPageContentRepository).save(any(LandingPageContent.class));
     }
 
+    // Test 9: Skip creating content if it already exists
     @Test
     void initializeDefaultContent_WhenContentExists_ShouldNotCreateContent() {
-        // Given
         when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.of(landingPageContent));
 
-        // When
         landingPageService.initializeDefaultContent();
 
-        // Then
         verify(landingPageContentRepository, never()).save(any(LandingPageContent.class));
     }
 }

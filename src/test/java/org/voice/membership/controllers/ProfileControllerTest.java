@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.voice.membership.entities.Child;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.ChildRepository;
+import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 import java.util.Date;
 
@@ -39,6 +40,9 @@ class ProfileControllerTest {
 
     @Autowired
     private ChildRepository childRepository;
+
+    @Autowired
+    private MembershipRepository membershipRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -137,6 +141,75 @@ class ProfileControllerTest {
     void profile_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
         mockMvc.perform(get("/profile"))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    // View upgrade membership page with free membership
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void upgradeMembershipPage_WithFreeMembership_ShouldShowUpgradeOptions() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership freeMembership = new org.voice.membership.entities.Membership();
+        freeMembership.setName("Free Membership");
+        freeMembership.setPrice(java.math.BigDecimal.ZERO);
+        freeMembership.setActive(true);
+        freeMembership.setFree(true);
+        freeMembership.setDisplayOrder(1);
+        freeMembership = membershipRepository.save(freeMembership);
+
+        user.setMembership(freeMembership);
+        userRepository.save(user);
+
+        org.voice.membership.entities.Membership paidMembership = new org.voice.membership.entities.Membership();
+        paidMembership.setName("Premium Membership");
+        paidMembership.setPrice(new java.math.BigDecimal("50.00"));
+        paidMembership.setActive(true);
+        paidMembership.setFree(false);
+        paidMembership.setDisplayOrder(2);
+        membershipRepository.save(paidMembership);
+
+        mockMvc.perform(get("/profile/upgrade-membership"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("upgrade-membership"))
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attributeExists("currentMembership"))
+                .andExpect(model().attributeExists("paidMemberships"));
+    }
+
+    // Select upgrade membership with valid paid membership
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void selectUpgradeMembership_WithValidMembership_ShouldShowCheckout() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership freeMembership = new org.voice.membership.entities.Membership();
+        freeMembership.setName("Free Membership");
+        freeMembership.setPrice(java.math.BigDecimal.ZERO);
+        freeMembership.setActive(true);
+        freeMembership.setFree(true);
+        freeMembership.setDisplayOrder(1);
+        freeMembership = membershipRepository.save(freeMembership);
+
+        user.setMembership(freeMembership);
+        userRepository.save(user);
+
+        org.voice.membership.entities.Membership paidMembership = new org.voice.membership.entities.Membership();
+        paidMembership.setName("Premium Membership");
+        paidMembership.setPrice(new java.math.BigDecimal("50.00"));
+        paidMembership.setActive(true);
+        paidMembership.setFree(false);
+        paidMembership.setDisplayOrder(2);
+        paidMembership = membershipRepository.save(paidMembership);
+
+        mockMvc.perform(post("/profile/upgrade-membership/select")
+                .with(csrf())
+                .param("membershipId", String.valueOf(paidMembership.getId())))
+                .andExpect(status().isOk())
+                .andExpect(view().name("upgrade-checkout"))
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attributeExists("upgradeMembership"))
+                .andExpect(model().attributeExists("membershipName"))
+                .andExpect(model().attributeExists("membershipPrice"));
     }
 
     // ==============================Negative Tests==============================
@@ -239,6 +312,128 @@ class ProfileControllerTest {
     void deleteChild_WithoutCSRF_ShouldReturnForbidden() throws Exception {
         mockMvc.perform(post("/profile/child/delete/" + testChild.getId()))
                 .andExpect(status().isForbidden());
+    }
+
+    // View upgrade membership page with paid membership
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void upgradeMembershipPage_WithPaidMembership_ShouldRedirectToProfile() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership paidMembership = new org.voice.membership.entities.Membership();
+        paidMembership.setName("Premium Membership");
+        paidMembership.setPrice(new java.math.BigDecimal("50.00"));
+        paidMembership.setActive(true);
+        paidMembership.setFree(false);
+        paidMembership.setDisplayOrder(2);
+        paidMembership = membershipRepository.save(paidMembership);
+
+        user.setMembership(paidMembership);
+        userRepository.save(user);
+
+        mockMvc.perform(get("/profile/upgrade-membership"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile?error=not_eligible_for_upgrade"));
+    }
+
+    // View upgrade membership page without membership
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void upgradeMembershipPage_WithoutMembership_ShouldRedirectToProfile() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+        user.setMembership(null);
+        userRepository.save(user);
+        mockMvc.perform(get("/profile/upgrade-membership"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile?error=not_eligible_for_upgrade"));
+    }
+
+    // View upgrade membership page with paid membership
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void selectUpgradeMembership_WithPaidMembership_ShouldRedirectToProfile() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership existingPaidMembership = new org.voice.membership.entities.Membership();
+        existingPaidMembership.setName("Existing Premium");
+        existingPaidMembership.setPrice(new java.math.BigDecimal("40.00"));
+        existingPaidMembership.setActive(true);
+        existingPaidMembership.setFree(false);
+        existingPaidMembership.setDisplayOrder(2);
+        existingPaidMembership = membershipRepository.save(existingPaidMembership);
+
+        user.setMembership(existingPaidMembership);
+        userRepository.save(user);
+
+        org.voice.membership.entities.Membership paidMembership = new org.voice.membership.entities.Membership();
+        paidMembership.setName("Premium Membership");
+        paidMembership.setPrice(new java.math.BigDecimal("50.00"));
+        paidMembership.setActive(true);
+        paidMembership.setFree(false);
+        paidMembership.setDisplayOrder(3);
+        paidMembership = membershipRepository.save(paidMembership);
+
+        mockMvc.perform(post("/profile/upgrade-membership/select")
+                .with(csrf())
+                .param("membershipId", String.valueOf(paidMembership.getId())))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile?error=not_eligible_for_upgrade"));
+    }
+
+    // View upgrade membership page with invalid membership ID
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void selectUpgradeMembership_WithInvalidMembershipId_ShouldRedirectWithError() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership freeMembership = new org.voice.membership.entities.Membership();
+        freeMembership.setName("Free Membership");
+        freeMembership.setPrice(java.math.BigDecimal.ZERO);
+        freeMembership.setActive(true);
+        freeMembership.setFree(true);
+        freeMembership.setDisplayOrder(1);
+        freeMembership = membershipRepository.save(freeMembership);
+
+        user.setMembership(freeMembership);
+        userRepository.save(user);
+
+        mockMvc.perform(post("/profile/upgrade-membership/select")
+                .with(csrf())
+                .param("membershipId", "99999"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile/upgrade-membership?error=invalid_membership"));
+    }
+
+    // View upgrade membership page with free membership
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void selectUpgradeMembership_WithFreeMembershipId_ShouldRedirectWithError() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership freeMembership = new org.voice.membership.entities.Membership();
+        freeMembership.setName("Free Membership");
+        freeMembership.setPrice(java.math.BigDecimal.ZERO);
+        freeMembership.setActive(true);
+        freeMembership.setFree(true);
+        freeMembership.setDisplayOrder(1);
+        freeMembership = membershipRepository.save(freeMembership);
+
+        user.setMembership(freeMembership);
+        userRepository.save(user);
+
+        org.voice.membership.entities.Membership anotherFreeMembership = new org.voice.membership.entities.Membership();
+        anotherFreeMembership.setName("Another Free Membership");
+        anotherFreeMembership.setPrice(java.math.BigDecimal.ZERO);
+        anotherFreeMembership.setActive(true);
+        anotherFreeMembership.setFree(true);
+        anotherFreeMembership.setDisplayOrder(2);
+        anotherFreeMembership = membershipRepository.save(anotherFreeMembership);
+
+        mockMvc.perform(post("/profile/upgrade-membership/select")
+                .with(csrf())
+                .param("membershipId", String.valueOf(anotherFreeMembership.getId())))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile/upgrade-membership?error=invalid_membership"));
     }
 
 }
