@@ -57,7 +57,9 @@ class ProfileControllerTest {
 
         // Create real test user
         testUser = new User();
-        testUser.setName("Test User");
+        testUser.setFirstName("Test");
+        testUser.setMiddleName(null);
+        testUser.setLastName("User");
         testUser.setEmail("test@example.com");
         testUser.setPassword(passwordEncoder.encode("password"));
         testUser.setPhone("1234567890");
@@ -106,7 +108,9 @@ class ProfileControllerTest {
     void editProfile_PostRequest_WithValidData_ShouldUpdateProfile() throws Exception {
         mockMvc.perform(post("/profile/edit")
                 .with(csrf())
-                .param("name", "Updated Name")
+                .param("firstName", "Updated")
+                .param("middleName", "")
+                .param("lastName", "Name")
                 .param("email", "test@example.com")
                 .param("phone", "9876543210")
                 .param("address", "456 New St")
@@ -228,7 +232,9 @@ class ProfileControllerTest {
     @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteChild_BelongingToAnotherUser_ShouldRedirectWithError() throws Exception {
         User otherUser = new User();
-        otherUser.setName("Other User");
+        otherUser.setFirstName("Other");
+        otherUser.setMiddleName(null);
+        otherUser.setLastName("User");
         otherUser.setEmail("other@example.com");
         otherUser.setPassword(passwordEncoder.encode("password"));
         otherUser.setPhone("9999999999");
@@ -257,7 +263,9 @@ class ProfileControllerTest {
     void editProfile_WithInvalidPostalCode_ShouldShowValidationError() throws Exception {
         mockMvc.perform(post("/profile/edit")
                 .with(csrf())
-                .param("name", "Updated Name")
+                .param("firstName", "Updated")
+                .param("middleName", "")
+                .param("lastName", "Name")
                 .param("email", "test@example.com")
                 .param("phone", "9876543210")
                 .param("postalCode", "12345"))
@@ -272,7 +280,9 @@ class ProfileControllerTest {
     void editProfile_WithMissingRequiredFields_ShouldShowValidationError() throws Exception {
         mockMvc.perform(post("/profile/edit")
                 .with(csrf())
-                .param("name", "")
+                .param("firstName", "")
+                .param("middleName", "")
+                .param("lastName", "")
                 .param("email", "")
                 .param("phone", ""))
                 .andExpect(status().isOk())
@@ -284,7 +294,9 @@ class ProfileControllerTest {
     @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_WithDuplicateEmail_ShouldShowValidationError() throws Exception {
         User otherUser = new User();
-        otherUser.setName("Other User");
+        otherUser.setFirstName("Other");
+        otherUser.setMiddleName(null);
+        otherUser.setLastName("User");
         otherUser.setEmail("other@example.com");
         otherUser.setPassword(passwordEncoder.encode("password"));
         otherUser.setPhone("9999999999");
@@ -296,7 +308,10 @@ class ProfileControllerTest {
 
         mockMvc.perform(post("/profile/edit")
                 .with(csrf())
-                .param("name", "Test User")
+                .param("firstName", "Test")
+                .param("middleName", "")
+                .param("lastName", "User")
+                .param("lastName", "User")
                 .param("email", "other@example.com")
                 .param("phone", "1234567890")
                 .param("address", "123 Test St")

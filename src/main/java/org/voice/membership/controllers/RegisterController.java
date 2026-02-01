@@ -51,7 +51,7 @@ public class RegisterController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private EmailSenderService emailSenderService;
 
@@ -221,8 +221,8 @@ public class RegisterController {
         // Enforce single membership selection
         // If user already selected a membership and selects a different one, replace it
         if (registrationData.getSelectedMembershipId() != null) {
-            System.out.println("Replacing previous membership selection: " + 
-                registrationData.getSelectedMembershipId() + " with " + membershipId);
+            System.out.println("Replacing previous membership selection: " +
+                    registrationData.getSelectedMembershipId() + " with " + membershipId);
         }
 
         registrationData.setSelectedMembershipId(membershipId);
@@ -412,7 +412,9 @@ public class RegisterController {
 
             // Create user
             User user = User.builder()
-                    .name(userDetails.getName())
+                    .firstName(userDetails.getFirstName())
+                    .middleName(userDetails.getMiddleName())
+                    .lastName(userDetails.getLastName())
                     .email(userDetails.getEmail())
                     .password(passwordEncoder.encode(userDetails.getPassword()))
                     .phone(userDetails.getPhone())
@@ -429,18 +431,18 @@ public class RegisterController {
                 if (membershipOpt.isPresent()) {
                     Membership membership = membershipOpt.get();
                     user.setMembership(membership);
-                    
+
                     // Set membership dates for paid memberships
                     if (!membership.isFree()) {
                         Date now = new Date();
                         user.setMembershipStartDate(now);
-                        
+
                         // Set expiry to 1 year from now
                         java.util.Calendar cal = java.util.Calendar.getInstance();
                         cal.setTime(now);
                         cal.add(java.util.Calendar.YEAR, 1);
                         user.setMembershipExpiryDate(cal.getTime());
-                        
+
                         System.out.println("Paid membership registered with dates: " + now + " to " + cal.getTime());
                     }
                 }
@@ -479,7 +481,7 @@ public class RegisterController {
                     // Ensure only ONE membership in cart
                     // Check if cart already exists for this user
                     Optional<Cart> existingCartOpt = cartRepository.findByUserId(user.getId());
-                    
+
                     Cart cart;
                     if (existingCartOpt.isPresent()) {
                         // Clear existing cart items to enforce single membership
@@ -508,7 +510,7 @@ public class RegisterController {
                             .totalPrice(membership.getPrice())
                             .build();
                     cartItemRepository.save(cartItem);
-                    
+
                     System.out.println("Added single membership to cart: " + membership.getName());
                 }
             }
@@ -558,9 +560,13 @@ public class RegisterController {
             }
 
             model.addAttribute("user", user);
-            model.addAttribute("userName", user.getName());
+            String fullName = user.getFirstName() +
+                    (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
+                    +
+                    " " + user.getLastName();
+            model.addAttribute("userName", fullName);
             model.addAttribute("userEmail", user.getEmail());
-            
+
             return "upgrade-checkout";
         } catch (Exception e) {
             e.printStackTrace();
@@ -570,13 +576,13 @@ public class RegisterController {
 
     @PostMapping("/upgrade-checkout")
     public String handleUpgradeCheckout(@RequestParam("membershipId") Integer membershipId,
-                                       @RequestParam("cardNumber") String cardNumber,
-                                       @RequestParam("cardHolderName") String cardHolderName,
-                                       @RequestParam("expiryMonth") String expiryMonth,
-                                       @RequestParam("expiryYear") String expiryYear,
-                                       @RequestParam("cvv") String cvv,
-                                       Model model,
-                                       Principal principal) {
+            @RequestParam("cardNumber") String cardNumber,
+            @RequestParam("cardHolderName") String cardHolderName,
+            @RequestParam("expiryMonth") String expiryMonth,
+            @RequestParam("expiryYear") String expiryYear,
+            @RequestParam("cvv") String cvv,
+            Model model,
+            Principal principal) {
         try {
             User user = userRepository.findByEmail(principal.getName());
             if (user == null) {
@@ -603,7 +609,12 @@ public class RegisterController {
                     cvv == null || cvv.trim().isEmpty()) {
                 model.addAttribute("error", "All payment fields are required");
                 model.addAttribute("user", user);
-                model.addAttribute("userName", user.getName());
+                String fullName = user.getFirstName() +
+                        (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName()
+                                : "")
+                        +
+                        " " + user.getLastName();
+                model.addAttribute("userName", fullName);
                 model.addAttribute("upgradeMembership", paidMembershipOpt.get());
                 return "upgrade-checkout";
             }
@@ -616,38 +627,42 @@ public class RegisterController {
             System.out.println("New Membership: " + paidMembershipOpt.get().getName());
 
             Membership paidMembership = paidMembershipOpt.get();
-            
+
             // Replace unpaid/free membership with paid membership
             user.setMembership(paidMembership);
-            
+
             // Set membership start date to now
             Date now = new Date();
             user.setMembershipStartDate(now);
-            
+
             // Set membership expiry date (1 year from now)
             java.util.Calendar cal = java.util.Calendar.getInstance();
             cal.setTime(now);
             cal.add(java.util.Calendar.YEAR, 1);
             Date expiryDate = cal.getTime();
             user.setMembershipExpiryDate(expiryDate);
-            
+
             // Save user with updated membership and dates
             userRepository.save(user);
-            
+
             System.out.println("=== MEMBERSHIP UPDATED ===");
             System.out.println("Status: Paid/Active");
             System.out.println("Start Date: " + now);
             System.out.println("Expiry Date: " + expiryDate);
-            
+
             // Send confirmation email
             try {
                 java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMMM dd, yyyy");
+                String fullName = user.getFirstName() +
+                        (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName()
+                                : "")
+                        +
+                        " " + user.getLastName();
                 emailSenderService.sendMembershipUpgradeConfirmation(
-                    user.getEmail(),
-                    user.getName(),
-                    paidMembership.getName(),
-                    dateFormat.format(expiryDate)
-                );
+                        user.getEmail(),
+                        fullName,
+                        paidMembership.getName(),
+                        dateFormat.format(expiryDate));
                 System.out.println("Confirmation email sent to: " + user.getEmail());
             } catch (Exception emailEx) {
                 System.err.println("Warning: Failed to send confirmation email: " + emailEx.getMessage());
@@ -660,28 +675,32 @@ public class RegisterController {
             System.err.println("=== UPGRADE PAYMENT ERROR ===");
             System.err.println("Error in upgrade checkout: " + e.getMessage());
             e.printStackTrace();
-            
+
             // Rainy day scenario: System error while saving membership data
-            model.addAttribute("error", "An error occurred processing your payment. Please try again or contact support if the issue persists.");
-            
+            model.addAttribute("error",
+                    "An error occurred processing your payment. Please try again or contact support if the issue persists.");
+
             try {
                 User user = userRepository.findByEmail(principal.getName());
                 if (user != null) {
                     model.addAttribute("user", user);
-                    model.addAttribute("userName", user.getName());
-                    
+                    String fullName = user.getFirstName() +
+                            (user.getMiddleName() != null && !user.getMiddleName().isEmpty()
+                                    ? " " + user.getMiddleName()
+                                    : "")
+                            +
+                            " " + user.getLastName();
+                    model.addAttribute("userName", fullName);
+
                     // Reload the membership for display
                     Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
-                    paidMembershipOpt.ifPresent(membership -> 
-                        model.addAttribute("upgradeMembership", membership)
-                    );
+                    paidMembershipOpt.ifPresent(membership -> model.addAttribute("upgradeMembership", membership));
                 }
             } catch (Exception ex2) {
                 System.err.println("Error loading user for error page: " + ex2.getMessage());
             }
-            
+
             return "upgrade-checkout";
         }
     }
 }
-

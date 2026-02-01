@@ -46,7 +46,9 @@ class UserServiceTest {
     void setUp() {
         testUser = User.builder()
                 .id(1)
-                .name("Test User")
+                .firstName("Test")
+                .middleName(null)
+                .lastName("User")
                 .email("test@example.com")
                 .password("encodedPassword123")
                 .phone("1234567890")
@@ -137,7 +139,9 @@ class UserServiceTest {
     void loadUserByUsername_WithAdminRole_ShouldReturnAdminUser() {
         User adminUser = User.builder()
                 .id(2)
-                .name("Admin")
+                .firstName("Admin")
+                .middleName(null)
+                .lastName("User")
                 .email("admin@example.com")
                 .password("adminPassword")
                 .role(Role.ADMIN.name())

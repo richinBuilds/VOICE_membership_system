@@ -56,7 +56,15 @@ public class AdminController {
         String adminEmail = auth.getName();
         User admin = userRepository.findByEmail(adminEmail);
 
-        model.addAttribute("adminName", admin != null ? admin.getName() : "Admin");
+        String adminName = "Admin";
+        if (admin != null) {
+            adminName = admin.getFirstName() +
+                    (admin.getMiddleName() != null && !admin.getMiddleName().isEmpty() ? " " + admin.getMiddleName()
+                            : "")
+                    +
+                    " " + admin.getLastName();
+        }
+        model.addAttribute("adminName", adminName);
         model.addAttribute("adminEmail", adminEmail);
 
         // Get all users
@@ -201,7 +209,9 @@ public class AdminController {
 
         Map<String, Object> userDetails = new HashMap<>();
         userDetails.put("id", user.getId());
-        userDetails.put("name", user.getName());
+        userDetails.put("firstName", user.getFirstName());
+        userDetails.put("middleName", user.getMiddleName());
+        userDetails.put("lastName", user.getLastName());
         userDetails.put("email", user.getEmail());
         userDetails.put("phone", user.getPhone());
         userDetails.put("address", user.getAddress());
@@ -232,7 +242,8 @@ public class AdminController {
 
         // Users sheet headers
         Row userHeaderRow = usersSheet.createRow(0);
-        String[] userColumns = { "ID", "Name", "Email", "Phone", "Address", "Postal Code", "Role", "Registration Date",
+        String[] userColumns = { "ID", "First Name", "Middle Name", "Last Name", "Email", "Phone", "Address",
+                "Postal Code", "Role", "Registration Date",
                 "Number of Children" };
 
         for (int i = 0; i < userColumns.length; i++) {
@@ -249,14 +260,16 @@ public class AdminController {
             Row row = usersSheet.createRow(userRowNum++);
 
             row.createCell(0).setCellValue(user.getId());
-            row.createCell(1).setCellValue(user.getName() != null ? user.getName() : "");
-            row.createCell(2).setCellValue(user.getEmail() != null ? user.getEmail() : "");
-            row.createCell(3).setCellValue(user.getPhone() != null ? user.getPhone() : "");
-            row.createCell(4).setCellValue(user.getAddress() != null ? user.getAddress() : "");
-            row.createCell(5).setCellValue(user.getPostalCode() != null ? user.getPostalCode() : "");
-            row.createCell(6).setCellValue(user.getRole() != null ? user.getRole() : "USER");
-            row.createCell(7).setCellValue(user.getCreation() != null ? dateFormat.format(user.getCreation()) : "");
-            row.createCell(8).setCellValue(user.getChildren() != null ? user.getChildren().size() : 0);
+            row.createCell(1).setCellValue(user.getFirstName() != null ? user.getFirstName() : "");
+            row.createCell(2).setCellValue(user.getMiddleName() != null ? user.getMiddleName() : "");
+            row.createCell(3).setCellValue(user.getLastName() != null ? user.getLastName() : "");
+            row.createCell(4).setCellValue(user.getEmail() != null ? user.getEmail() : "");
+            row.createCell(5).setCellValue(user.getPhone() != null ? user.getPhone() : "");
+            row.createCell(6).setCellValue(user.getAddress() != null ? user.getAddress() : "");
+            row.createCell(7).setCellValue(user.getPostalCode() != null ? user.getPostalCode() : "");
+            row.createCell(8).setCellValue(user.getRole() != null ? user.getRole() : "USER");
+            row.createCell(9).setCellValue(user.getCreation() != null ? dateFormat.format(user.getCreation()) : "");
+            row.createCell(10).setCellValue(user.getChildren() != null ? user.getChildren().size() : 0);
         }
 
         // Auto-size columns for users sheet
@@ -271,7 +284,8 @@ public class AdminController {
         Row childHeaderRow = childrenSheet.createRow(0);
         String[] childColumns = { "Child ID", "Child Name", "Age", "Date of Birth", "Hearing Loss Type",
                 "Equipment Type", "Chapter Location", "Siblings Names",
-                "Parent ID", "Parent Name", "Parent Email", "Parent Phone" };
+                "Parent ID", "Parent First Name", "Parent Middle Name", "Parent Last Name", "Parent Email",
+                "Parent Phone" };
 
         for (int i = 0; i < childColumns.length; i++) {
             Cell cell = childHeaderRow.createCell(i);
@@ -301,9 +315,11 @@ public class AdminController {
                             .setCellValue(child.getChapterLocation() != null ? child.getChapterLocation() : "");
                     row.createCell(7).setCellValue(child.getSiblingsNames() != null ? child.getSiblingsNames() : "");
                     row.createCell(8).setCellValue(user.getId());
-                    row.createCell(9).setCellValue(user.getName() != null ? user.getName() : "");
-                    row.createCell(10).setCellValue(user.getEmail() != null ? user.getEmail() : "");
-                    row.createCell(11).setCellValue(user.getPhone() != null ? user.getPhone() : "");
+                    row.createCell(9).setCellValue(user.getFirstName() != null ? user.getFirstName() : "");
+                    row.createCell(10).setCellValue(user.getMiddleName() != null ? user.getMiddleName() : "");
+                    row.createCell(11).setCellValue(user.getLastName() != null ? user.getLastName() : "");
+                    row.createCell(12).setCellValue(user.getEmail() != null ? user.getEmail() : "");
+                    row.createCell(13).setCellValue(user.getPhone() != null ? user.getPhone() : "");
                 }
             }
         }

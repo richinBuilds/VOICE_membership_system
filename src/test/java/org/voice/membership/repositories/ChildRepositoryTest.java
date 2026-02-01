@@ -36,7 +36,9 @@ class ChildRepositoryTest {
     @BeforeEach
     void setUp() {
         testUser = User.builder()
-                .name("Parent User")
+                .firstName("Parent")
+                .middleName(null)
+                .lastName("User")
                 .email("parent@example.com")
                 .password("password123")
                 .phone("1234567890")

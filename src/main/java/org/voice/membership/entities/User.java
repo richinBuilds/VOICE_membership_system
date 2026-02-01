@@ -21,7 +21,15 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private String name;
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "middle_name")
+    private String middleName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
     private String email;
     private String password;
     private String phone;
@@ -30,10 +38,10 @@ public class User {
     private String postalCode;
     private String role;
     private Date creation;
-    
+
     @Column(name = "membership_start_date")
     private Date membershipStartDate;
-    
+
     @Column(name = "membership_expiry_date")
     private Date membershipExpiryDate;
 

@@ -5,17 +5,23 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Data;
-/**
 
- Carries user profile update information from the form to the controller.
- Contains validated fields: name, email, phone, address, postal code.
- Used for updating user profile information on the dashboard.
+/**
+ * 
+ * Carries user profile update information from the form to the controller.
+ * Contains validated fields: name, email, phone, address, postal code.
+ * Used for updating user profile information on the dashboard.
  */
 @Data
 @Builder
 public class UpdateUserRequest {
-    @NotEmpty
-    private String name;
+    @NotEmpty(message = "First name is required")
+    private String firstName;
+
+    private String middleName;
+
+    @NotEmpty(message = "Last name is required")
+    private String lastName;
 
     @NotEmpty
     @Email

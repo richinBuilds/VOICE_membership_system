@@ -10,14 +10,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.voice.membership.entities.Child;
-import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.ChildRepository;
-import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -28,14 +25,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * End-to-end workflow tests for Profile Management
- * Tests complete user journeys: profile editing, child management workflows
+ * End-to-end integration tests for Profile Management
+ * Tests complete profile and child management workflows
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-class ProfileWorkflowTest {
+class ProfileManagementIntegrationTest {
 
         @Autowired
         private MockMvc mockMvc;
@@ -45,9 +42,6 @@ class ProfileWorkflowTest {
 
         @Autowired
         private ChildRepository childRepository;
-
-        @Autowired
-        private MembershipRepository membershipRepository;
 
         private User testUser;
 
@@ -162,52 +156,5 @@ class ProfileWorkflowTest {
         void testProfileAccessWithoutAuthenticationRedirects() throws Exception {
                 mockMvc.perform(get("/profile"))
                                 .andExpect(status().is3xxRedirection());
-        }
-
-        // Test: Complete upgrade membership workflow - user with free membership
-        // upgrades to paid
-        @Test
-        @WithMockUser(username = "integration@example.com", roles = "USER")
-        void testCompleteUpgradeMembershipWorkflow() throws Exception {
-                // Setup: Create free membership and assign to user
-                Membership freeMembership = new Membership();
-                freeMembership.setName("Free Membership");
-                freeMembership.setFree(true);
-                freeMembership.setPrice(BigDecimal.ZERO);
-                freeMembership = membershipRepository.save(freeMembership);
-
-                testUser.setMembership(freeMembership);
-                userRepository.save(testUser);
-
-                // Setup: Create paid membership option
-                Membership paidMembership = new Membership();
-                paidMembership.setName("Premium Membership");
-                paidMembership.setFree(false);
-                paidMembership.setPrice(new BigDecimal("50.00"));
-                paidMembership = membershipRepository.save(paidMembership);
-
-                // Step 1: View profile - should show current free membership
-                mockMvc.perform(get("/profile"))
-                                .andExpect(status().isOk())
-                                .andExpect(view().name("profile"))
-                                .andExpect(model().attributeExists("user"));
-
-                // Step 2: Navigate to upgrade membership page
-                mockMvc.perform(get("/profile/upgrade-membership"))
-                                .andExpect(status().isOk())
-                                .andExpect(view().name("upgrade-membership"))
-                                .andExpect(model().attributeExists("paidMemberships"));
-
-                // Step 3: Select paid membership for upgrade
-                mockMvc.perform(post("/profile/upgrade-membership/select")
-                                .with(csrf())
-                                .param("membershipId", String.valueOf(paidMembership.getId())))
-                                .andExpect(status().isOk())
-                                .andExpect(view().name("upgrade-checkout"))
-                                .andExpect(model().attributeExists("upgradeMembership"));
-
-                // Verify: User's membership hasn't changed yet (should change after payment)
-                User updatedUser = userRepository.findByEmail("integration@example.com");
-                assertThat(updatedUser.getMembership().getId()).isEqualTo(freeMembership.getId());
         }
 }

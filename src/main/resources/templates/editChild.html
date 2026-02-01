@@ -100,6 +100,25 @@
             <!-- Age + Date of Birth Row -->
             <div class="form-row">
 
+                <!-- Date of Birth (Primary) -->
+                <div class="form-floating">
+                    <input type="date"
+                           class="form-control"
+                           id="dateOfBirth"
+                           name="dateOfBirth"
+                           th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}"
+                           th:max="${#dates.format(new java.util.Date(), 'yyyy-MM-dd')}"
+                           onchange="validateDobAndCalculateAge(this)"
+                           data-testid="child-dob">
+                    <label for="dateOfBirth">
+                        <i class="fas fa-calendar me-1"></i> Date of Birth (Optional)
+                    </label>
+                    <div class="invalid-feedback d-block" id="dobError" style="display: none;">
+                        Child must be 18 years or younger
+                    </div>
+                </div>
+
+                <!-- Age (Auto-calculated or manual) -->
                 <div class="form-floating">
                     <input type="number"
                            class="form-control"
@@ -111,18 +130,6 @@
                            max="18"
                            data-testid="child-age">
                     <label for="age">Age (0-18)</label>
-                </div>
-
-                <div class="form-floating">
-                    <input type="date"
-                           class="form-control"
-                           id="dateOfBirth"
-                           name="dateOfBirth"
-                           th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}"
-                           data-testid="child-dob">
-                    <label for="dateOfBirth">
-                        <i class="fas fa-calendar me-1"></i> Date of Birth
-                    </label>
                 </div>
 
             </div>
@@ -216,16 +223,99 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Validate date - prevent future dates
-document.getElementById('dateOfBirth').addEventListener('change', function() {
-    const selectedDate = new Date(this.value);
+// Calculate age from date of birth and validate
+function validateDobAndCalculateAge(dobInput) {
+    const dobValue = dobInput.value;
+    const dobError = document.getElementById('dobError');
+    const ageInput = document.getElementById('age');
+    
+    if (!dobValue) {
+        dobInput.classList.remove('date-input-error', 'is-invalid');
+        if (dobError) dobError.style.display = 'none';
+        return true;
+    }
+    
+    const selectedDate = new Date(dobValue);
     const today = new Date();
     
+    // Calculate minimum date (18 years ago from today)
+    const minDate = new Date();
+    minDate.setFullYear(today.getFullYear() - 18);
+    
+    // Validate date is not in the future
     if (selectedDate > today) {
-        alert('Date of birth cannot be in the future.');
-        this.value = '';
+        dobInput.classList.add('date-input-error', 'is-invalid');
+        if (dobError) {
+            dobError.textContent = 'Date of birth cannot be in the future.';
+            dobError.style.display = 'block';
+        }
+        return false;
+    }
+    
+    // Validate child is not older than 18 years
+    if (selectedDate < minDate) {
+        dobInput.classList.add('date-input-error', 'is-invalid');
+        if (dobError) {
+            dobError.textContent = 'Child must be 18 years or younger.';
+            dobError.style.display = 'block';
+        }
+        return false;
+    }
+    
+    // Calculate age
+    let age = today.getFullYear() - selectedDate.getFullYear();
+    const monthDiff = today.getMonth() - selectedDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < selectedDate.getDate())) {
+        age--;
+    }
+    
+    dobInput.classList.remove('date-input-error', 'is-invalid');
+    if (dobError) dobError.style.display = 'none';
+    
+    // Ensure age is within valid range for children
+    const calculatedAge = Math.max(0, Math.min(18, age));
+    
+    // Set calculated age but allow manual override
+    if (ageInput) {
+        ageInput.value = calculatedAge;
+        ageInput.removeAttribute('readonly');
+    }
+    
+    return true;
+}
+
+// Validate date input - prevent future dates and invalid years
+function validateDateInput(input) {
+    if (!input.value) {
+        input.classList.remove('date-input-error', 'is-invalid');
+        return true;
+    }
+
+    return validateDobAndCalculateAge(input);
+}
+
+// Initialize: Check existing DOB field and calculate age
+document.addEventListener('DOMContentLoaded', function() {
+    const dobInput = document.getElementById('dateOfBirth');
+    if (dobInput && dobInput.value) {
+        validateDobAndCalculateAge(dobInput);
     }
 });
+
+// Form validation before submit
+const childForm = document.querySelector('[data-testid="child-form"]');
+if (childForm) {
+    childForm.addEventListener('submit', function(e) {
+        const dobInput = document.getElementById('dateOfBirth');
+        
+        // Only validate DOB if it has a value (optional field)
+        if (dobInput && dobInput.value && !validateDateInput(dobInput)) {
+            e.preventDefault();
+            alert('Please correct the date field. Ensure the date is valid and not in the future.');
+        }
+    });
+}
 </script>
 
 </body>

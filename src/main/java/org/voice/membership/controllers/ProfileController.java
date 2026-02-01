@@ -31,12 +31,15 @@ import java.util.List;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
-/**
 
- Handles user dashboard and profile management.
- Manages user profile viewing, editing, and child account operations.
- Displays user membership information, manages child information (add, edit, delete).
- Provides endpoints for profile updates and child management on the user dashboard.
+/**
+ * 
+ * Handles user dashboard and profile management.
+ * Manages user profile viewing, editing, and child account operations.
+ * Displays user membership information, manages child information (add, edit,
+ * delete).
+ * Provides endpoints for profile updates and child management on the user
+ * dashboard.
  */
 @Controller
 @AllArgsConstructor
@@ -60,7 +63,11 @@ public class ProfileController {
 
             // Add user information to model
             model.addAttribute("user", user);
-            model.addAttribute("userName", user.getName());
+            String fullName = user.getFirstName() +
+                    (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
+                    +
+                    " " + user.getLastName();
+            model.addAttribute("userName", fullName);
             model.addAttribute("userEmail", user.getEmail());
             model.addAttribute("userPhone", user.getPhone() != null ? user.getPhone() : "Not provided");
             model.addAttribute("userAddress", user.getAddress() != null ? user.getAddress() : "Not provided");
@@ -82,11 +89,12 @@ public class ProfileController {
             Membership membership = user.getMembership();
             if (membership != null) {
                 model.addAttribute("membershipType", membership.getName());
-                
-                // For paid members, set status to "Paid" and calculate expiry date (1 year from creation)
+
+                // For paid members, set status to "Paid" and calculate expiry date (1 year from
+                // creation)
                 if (!membership.isFree()) {
                     model.addAttribute("membershipStatus", "Paid");
-                    
+
                     // Calculate expiry date: 1 year from user creation date
                     if (user.getCreation() != null) {
                         Calendar cal = Calendar.getInstance();
@@ -98,7 +106,7 @@ public class ProfileController {
                     } else {
                         model.addAttribute("membershipExpiryDate", "-");
                     }
-                    
+
                     // Don't show benefits for paid members
                     model.addAttribute("showBenefits", false);
                 } else {
@@ -106,7 +114,8 @@ public class ProfileController {
                     model.addAttribute("membershipStatus", "Free");
                     model.addAttribute("membershipExpiryDate", "No expiry");
                     model.addAttribute("showBenefits", true);
-                    model.addAttribute("membershipBenefit", membership.getDescription() != null ? membership.getDescription() : "-");
+                    model.addAttribute("membershipBenefit",
+                            membership.getDescription() != null ? membership.getDescription() : "-");
                 }
             } else {
                 // No membership assigned
@@ -127,7 +136,9 @@ public class ProfileController {
     public String editProfile(Model model, Principal principal) {
         User user = userRepository.findByEmail(principal.getName());
         UpdateUserRequest updateUserRequest = UpdateUserRequest.builder()
-                .name(user.getName())
+                .firstName(user.getFirstName())
+                .middleName(user.getMiddleName())
+                .lastName(user.getLastName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
@@ -149,7 +160,13 @@ public class ProfileController {
                 return "editProfile";
             }
 
-            user.setName(updateUserRequest.getName());
+            user.setFirstName(updateUserRequest.getFirstName());
+            user.setMiddleName(updateUserRequest.getMiddleName());
+            user.setFirstName(updateUserRequest.getFirstName());
+            user.setMiddleName(updateUserRequest.getMiddleName());
+            user.setFirstName(updateUserRequest.getFirstName());
+            user.setMiddleName(updateUserRequest.getMiddleName());
+            user.setLastName(updateUserRequest.getLastName());
             // If email changed, update and refresh session principal
             String oldEmail = user.getEmail();
             String newEmail = updateUserRequest.getEmail();
@@ -208,13 +225,13 @@ public class ProfileController {
 
     @PostMapping("/child/add")
     public String saveChild(@RequestParam("name") String name,
-                           @RequestParam(value = "age", required = false) Integer age,
-                           @RequestParam(value = "dateOfBirth", required = false) String dateOfBirthStr,
-                           @RequestParam(value = "hearingLossType", required = false) String hearingLossType,
-                           @RequestParam(value = "equipmentType", required = false) String equipmentType,
-                           @RequestParam(value = "siblingsNames", required = false) String siblingsNames,
-                           @RequestParam(value = "chapterLocation", required = false) String chapterLocation,
-                           Principal principal) {
+            @RequestParam(value = "age", required = false) Integer age,
+            @RequestParam(value = "dateOfBirth", required = false) String dateOfBirthStr,
+            @RequestParam(value = "hearingLossType", required = false) String hearingLossType,
+            @RequestParam(value = "equipmentType", required = false) String equipmentType,
+            @RequestParam(value = "siblingsNames", required = false) String siblingsNames,
+            @RequestParam(value = "chapterLocation", required = false) String chapterLocation,
+            Principal principal) {
         try {
             User user = userRepository.findByEmail(principal.getName());
             if (user == null) {
@@ -273,14 +290,14 @@ public class ProfileController {
 
     @PostMapping("/child/edit/{id}")
     public String updateChild(@PathVariable("id") int id,
-                            @RequestParam("name") String name,
-                            @RequestParam(value = "age", required = false) Integer age,
-                            @RequestParam(value = "dateOfBirth", required = false) String dateOfBirthStr,
-                            @RequestParam(value = "hearingLossType", required = false) String hearingLossType,
-                            @RequestParam(value = "equipmentType", required = false) String equipmentType,
-                            @RequestParam(value = "siblingsNames", required = false) String siblingsNames,
-                            @RequestParam(value = "chapterLocation", required = false) String chapterLocation,
-                            Principal principal) {
+            @RequestParam("name") String name,
+            @RequestParam(value = "age", required = false) Integer age,
+            @RequestParam(value = "dateOfBirth", required = false) String dateOfBirthStr,
+            @RequestParam(value = "hearingLossType", required = false) String hearingLossType,
+            @RequestParam(value = "equipmentType", required = false) String equipmentType,
+            @RequestParam(value = "siblingsNames", required = false) String siblingsNames,
+            @RequestParam(value = "chapterLocation", required = false) String chapterLocation,
+            Principal principal) {
         try {
             User user = userRepository.findByEmail(principal.getName());
             if (user == null) {
@@ -356,11 +373,15 @@ public class ProfileController {
 
             // Get all paid membership options
             List<Membership> paidMemberships = membershipRepository.findByIsFree(false);
-            
+
             model.addAttribute("user", user);
             model.addAttribute("currentMembership", membership);
             model.addAttribute("paidMemberships", paidMemberships);
-            model.addAttribute("userName", user.getName());
+            String fullName = user.getFirstName() +
+                    (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
+                    +
+                    " " + user.getLastName();
+            model.addAttribute("userName", fullName);
 
             return "upgrade-membership";
         } catch (Exception e) {
@@ -370,9 +391,9 @@ public class ProfileController {
     }
 
     @PostMapping("/upgrade-membership/select")
-    public String selectUpgradeMembership(@RequestParam("membershipId") Integer membershipId, 
-                                         Model model,
-                                         Principal principal) {
+    public String selectUpgradeMembership(@RequestParam("membershipId") Integer membershipId,
+            Model model,
+            Principal principal) {
         try {
             User user = userRepository.findByEmail(principal.getName());
             if (user == null) {
@@ -392,11 +413,15 @@ public class ProfileController {
             }
 
             Membership paidMembership = paidMembershipOpt.get();
-            
+
             // Store in session or model for checkout
             model.addAttribute("user", user);
             model.addAttribute("upgradeMembership", paidMembership);
-            model.addAttribute("userName", user.getName());
+            String fullName = user.getFirstName() +
+                    (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
+                    +
+                    " " + user.getLastName();
+            model.addAttribute("userName", fullName);
             model.addAttribute("membershipName", paidMembership.getName());
             model.addAttribute("membershipPrice", paidMembership.getPrice());
             model.addAttribute("membershipDescription", paidMembership.getDescription());
