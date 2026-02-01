@@ -34,7 +34,9 @@ class UserRepositoryTest {
     @BeforeEach
     void setUp() {
         testUser1 = User.builder()
-                .name("John Doe")
+                .firstName("John")
+                .middleName(null)
+                .lastName("Doe")
                 .email("john@example.com")
                 .password("password123")
                 .phone("1234567890")
@@ -45,7 +47,9 @@ class UserRepositoryTest {
                 .build();
 
         testUser2 = User.builder()
-                .name("Jane Smith")
+                .firstName("Jane")
+                .middleName(null)
+                .lastName("Smith")
                 .email("Jane@Example.com")
                 .password("password456")
                 .phone("0987654321")
@@ -59,72 +63,61 @@ class UserRepositoryTest {
     // Test 1: Find user by exact email address
     @Test
     void findByEmail_WithExactMatch_ShouldReturnUser() {
-        // Given
         entityManager.persist(testUser1);
         entityManager.flush();
 
-        // When
         User found = userRepository.findByEmail("john@example.com");
 
-        // Then
         assertThat(found).isNotNull();
-        assertThat(found.getName()).isEqualTo("John Doe");
+        assertThat(found.getFirstName()).isEqualTo("John");
+        assertThat(found.getLastName()).isEqualTo("Doe");
         assertThat(found.getEmail()).isEqualTo("john@example.com");
     }
 
     // Test 2: Search for non-existent email returns null
     @Test
     void findByEmail_WithNonExistentEmail_ShouldReturnNull() {
-        // Given
         entityManager.persist(testUser1);
         entityManager.flush();
 
-        // When
         User found = userRepository.findByEmail("nonexistent@example.com");
 
-        // Then
         assertThat(found).isNull();
     }
 
     // Test 3: Find user by email (case-insensitive)
     @Test
     void findByEmailIgnoreCase_WithDifferentCase_ShouldReturnUser() {
-        // Given
         entityManager.persist(testUser2);
         entityManager.flush();
 
-        // When
         User found = userRepository.findByEmailIgnoreCase("jane@example.com");
 
-        // Then
         assertThat(found).isNotNull();
-        assertThat(found.getName()).isEqualTo("Jane Smith");
+        assertThat(found.getFirstName()).isEqualTo("Jane");
+        assertThat(found.getLastName()).isEqualTo("Smith");
     }
 
     // Test 4: Find all users with matching email (case-insensitive)
     @Test
     void findAllByEmailIgnoreCase_WithDuplicateEmails_ShouldReturnAllMatches() {
-        // Given
         entityManager.persist(testUser1);
         entityManager.persist(testUser2);
         entityManager.flush();
 
-        // When
         List<User> found = userRepository.findAllByEmailIgnoreCase("JANE@EXAMPLE.COM");
 
-        // Then
         assertThat(found).isNotEmpty();
         assertThat(found).hasSize(1);
-        assertThat(found.get(0).getName()).isEqualTo("Jane Smith");
+        assertThat(found.get(0).getFirstName()).isEqualTo("Jane");
+        assertThat(found.get(0).getLastName()).isEqualTo("Smith");
     }
 
     // Test 5: Save user to database
     @Test
     void save_ShouldPersistUser() {
-        // When
         User saved = userRepository.save(testUser1);
 
-        // Then
         assertThat(saved).isNotNull();
         assertThat(saved.getId()).isGreaterThan(0);
         assertThat(entityManager.find(User.class, saved.getId())).isEqualTo(saved);
@@ -133,33 +126,27 @@ class UserRepositoryTest {
     // Test 6: Retrieve all users from database
     @Test
     void findAll_ShouldReturnAllUsers() {
-        // Given
         entityManager.persist(testUser1);
         entityManager.persist(testUser2);
         entityManager.flush();
-
-        // When
         List<User> users = userRepository.findAll();
 
-        // Then
         assertThat(users).hasSize(2);
-        assertThat(users).extracting(User::getName)
-                .containsExactlyInAnyOrder("John Doe", "Jane Smith");
+        assertThat(users).extracting(User::getFirstName)
+                .containsExactlyInAnyOrder("John", "Jane");
+        assertThat(users).extracting(User::getLastName)
+                .containsExactlyInAnyOrder("Doe", "Smith");
     }
 
     // Test 7: Delete user from database
     @Test
     void delete_ShouldRemoveUser() {
-        // Given
         entityManager.persist(testUser1);
         entityManager.flush();
         int userId = testUser1.getId();
-
-        // When
         userRepository.delete(testUser1);
         entityManager.flush();
 
-        // Then
         User found = entityManager.find(User.class, userId);
         assertThat(found).isNull();
     }
@@ -167,15 +154,11 @@ class UserRepositoryTest {
     // Test 8: Find user by ID from database
     @Test
     void findById_WithExistingId_ShouldReturnUser() {
-        // Given
         entityManager.persist(testUser1);
         entityManager.flush();
         int userId = testUser1.getId();
-
-        // When
         User found = userRepository.findById(userId).orElse(null);
 
-        // Then
         assertThat(found).isNotNull();
         assertThat(found.getId()).isEqualTo(userId);
     }

@@ -22,6 +22,29 @@
             background: #09637E;
             min-height: 100vh;
         }
+        .address-autocomplete-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%;
+            margin-top: 2px;
+        }
+        .address-autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .address-autocomplete-item:hover {
+            background-color: #f5f5f5;
+        }
+        .address-autocomplete-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -72,21 +95,52 @@
                    th:name="${_csrf.parameterName}"
                    th:value="${_csrf.token}"/>
 
-            <!-- Full Name -->
+            <!-- First Name -->
             <div class="form-floating">
                 <input type="text"
                        class="form-control"
-                       th:class="${#fields.hasErrors('name')} ? 'form-control is-invalid' : 'form-control'"
-                       id="name"
-                       th:field="*{name}"
-                       placeholder="Full Name"
+                       th:class="${#fields.hasErrors('firstName')} ? 'form-control is-invalid' : 'form-control'"
+                       id="firstName"
+                       th:field="*{firstName}"
+                       placeholder="First Name"
                        required
-                       data-testid="register-name">
-                <label for="name">
-                    <i class="fas fa-user me-1"></i> Full Name *
+                       data-testid="register-firstName">
+                <label for="firstName">
+                    <i class="fas fa-user me-1"></i> First Name *
                 </label>
-                <div th:if="${#fields.hasErrors('name')}" class="invalid-feedback" th:errors="*{name}">
-                    Name is required
+                <div th:if="${#fields.hasErrors('firstName')}" class="invalid-feedback" th:errors="*{firstName}">
+                    First name is required
+                </div>
+            </div>
+
+            <!-- Middle Name -->
+            <div class="form-floating">
+                <input type="text"
+                       class="form-control"
+                       id="middleName"
+                       th:field="*{middleName}"
+                       placeholder="Middle Name"
+                       data-testid="register-middleName">
+                <label for="middleName">
+                    <i class="fas fa-user me-1"></i> Middle Name (Optional)
+                </label>
+            </div>
+
+            <!-- Last Name -->
+            <div class="form-floating">
+                <input type="text"
+                       class="form-control"
+                       th:class="${#fields.hasErrors('lastName')} ? 'form-control is-invalid' : 'form-control'"
+                       id="lastName"
+                       th:field="*{lastName}"
+                       placeholder="Last Name"
+                       required
+                       data-testid="register-lastName">
+                <label for="lastName">
+                    <i class="fas fa-user me-1"></i> Last Name *
+                </label>
+                <div th:if="${#fields.hasErrors('lastName')}" class="invalid-feedback" th:errors="*{lastName}">
+                    Last name is required
                 </div>
             </div>
 
@@ -173,16 +227,18 @@
             </div>
 
             <!-- Address -->
-            <div class="form-floating">
+            <div class="form-floating" style="position: relative;">
                 <input type="text"
                        class="form-control"
                        id="address"
                        th:field="*{address}"
                        placeholder="Address"
+                       autocomplete="off"
                        data-testid="register-address">
                 <label for="address">
                     <i class="fas fa-home me-1"></i> Address (Optional)
                 </label>
+                <div id="address-dropdown" class="address-autocomplete-dropdown" style="display: none;"></div>
             </div>
 
             <!-- Postal Code -->
@@ -196,7 +252,7 @@
                        pattern="[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]"
                        data-testid="register-postal-code">
                 <label for="postalCode">
-                    <i class="fas fa-map-marker-alt me-1"></i> Postal Code (e.g., A1A 1A1)
+                    <i class="fas fa-map-marker-alt me-1"></i> Postal Code (Optional)
                 </label>
                 <div th:if="${#fields.hasErrors('postalCode')}" class="invalid-feedback" th:errors="*{postalCode}">
                     Valid Canadian postal code required
@@ -319,6 +375,97 @@ document.getElementById('confirmPassword').addEventListener('input', function() 
         this.classList.remove('is-invalid');
     }
 });
+
+// Postal Code auto-formatting (Canadian format: A1A 1A1)
+document.getElementById('postalCode').addEventListener('input', function() {
+    let value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    if (value.length > 6) {
+        value = value.slice(0, 6);
+    }
+    
+    if (value.length >= 4) {
+        this.value = value.slice(0, 3) + ' ' + value.slice(3);
+    } else {
+        this.value = value;
+    }
+});
+
+// OpenStreetMap Nominatim Address Autocomplete (Free)
+const addressInput = document.getElementById('address');
+const dropdown = document.getElementById('address-dropdown');
+let debounceTimer;
+
+if (addressInput) {
+    addressInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(debounceTimer);
+        
+        if (query.length < 3) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        
+        // Debounce API calls
+        debounceTimer = setTimeout(() => {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ca&addressdetails=1&limit=5`, {
+                headers: {
+                    'User-Agent': 'VOICE-Membership-System'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                dropdown.innerHTML = '';
+                
+                if (data.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                data.forEach(place => {
+                    const item = document.createElement('div');
+                    item.className = 'address-autocomplete-item';
+                    
+                    // Format address without postal code
+                    let addressParts = [];
+                    if (place.address) {
+                        const addr = place.address;
+                        if (addr.house_number) addressParts.push(addr.house_number);
+                        if (addr.road) addressParts.push(addr.road);
+                        if (addr.city || addr.town || addr.village) {
+                            addressParts.push(addr.city || addr.town || addr.village);
+                        }
+                        if (addr.state) addressParts.push(addr.state);
+                    }
+                    
+                    const displayAddress = addressParts.length > 0 ? addressParts.join(', ') : place.display_name.split(',').slice(0, 3).join(',');
+                    item.textContent = displayAddress;
+                    
+                    item.addEventListener('click', function() {
+                        addressInput.value = displayAddress;
+                        dropdown.style.display = 'none';
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Address lookup error:', error);
+                dropdown.style.display = 'none';
+            });
+        }, 300);
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!addressInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
 </script>
 
 </body>

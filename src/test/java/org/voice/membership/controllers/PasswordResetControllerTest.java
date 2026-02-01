@@ -44,7 +44,9 @@ class PasswordResetControllerTest {
         testUser = new User();
         testUser.setEmail("test@example.com");
         testUser.setPassword(passwordEncoder.encode("OldPassword123!"));
-        testUser.setName("Test User");
+        testUser.setFirstName("Test");
+        testUser.setMiddleName(null);
+        testUser.setLastName("User");
         testUser.setRole("USER");
         testUser = userRepository.save(testUser);
     }

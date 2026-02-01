@@ -10,8 +10,13 @@ import org.voice.membership.validation.StrongPassword;
 @Data
 public class RegisterDto {
 
-    @NotEmpty
-    private String name;
+    @NotEmpty(message = "First name is required")
+    private String firstName;
+
+    private String middleName;
+
+    @NotEmpty(message = "Last name is required")
+    private String lastName;
 
     @NotEmpty
     @Email

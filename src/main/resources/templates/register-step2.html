@@ -98,12 +98,11 @@
                                name="childDob"
                                th:value="${child.dateOfBirth != null ? #dates.format(child.dateOfBirth, 'yyyy-MM-dd') : ''}"
                                th:max="${#dates.format(new java.util.Date(), 'yyyy-MM-dd')}"
-                               th:min="1910-01-01"
                                onchange="validateDobAndCalculateAge(this)"
                                data-testid="child-dob">
                         <label>Date of Birth (Optional)</label>
                         <div class="invalid-feedback d-block" id="dobError" style="display: none;">
-                            Please select a valid date of birth (between 1910 and today)
+                            Child must be 18 years or younger
                         </div>
                     </div>
 
@@ -248,12 +247,20 @@ function validateDobAndCalculateAge(dobInput) {
     const dobMonth = parseInt(dobParts[1], 10) - 1; // Month is 0-indexed
     const dobDay = parseInt(dobParts[2], 10);
     
-    // Validate year is reasonable (between 1910 and current year)
-    const currentYear = new Date().getFullYear();
-    if (dobYear < 1910 || dobYear > currentYear) {
+    const dob = new Date(dobYear, dobMonth, dobDay);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Clear time for accurate comparison
+    
+    // Calculate minimum date (18 years ago from today)
+    const minDate = new Date();
+    minDate.setFullYear(today.getFullYear() - 18);
+    minDate.setHours(0, 0, 0, 0);
+    
+    // Validate: DOB cannot be in the future
+    if (dob > today) {
         dobInput.classList.add('date-input-error', 'is-invalid');
         if (dobError) {
-            dobError.textContent = 'Please select a valid year (1910 to ' + currentYear + ')';
+            dobError.textContent = 'Date of birth cannot be in the future';
             dobError.style.display = 'block';
         }
         ageInput.removeAttribute('readonly');
@@ -261,15 +268,11 @@ function validateDobAndCalculateAge(dobInput) {
         return false;
     }
     
-    const dob = new Date(dobYear, dobMonth, dobDay);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Clear time for accurate comparison
-    
-    // Validate: DOB cannot be in the future
-    if (dob > today) {
+    // Validate: Child must be 18 years or younger
+    if (dob < minDate) {
         dobInput.classList.add('date-input-error', 'is-invalid');
         if (dobError) {
-            dobError.textContent = 'Date of birth cannot be in the future';
+            dobError.textContent = 'Child must be 18 years or younger';
             dobError.style.display = 'block';
         }
         ageInput.removeAttribute('readonly');

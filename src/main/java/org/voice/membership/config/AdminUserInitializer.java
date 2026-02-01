@@ -30,7 +30,9 @@ public class AdminUserInitializer implements CommandLineRunner {
         if (existingAdmin == null) {
             // Create admin user
             User admin = User.builder()
-                    .name("Admin")
+                    .firstName("Admin")
+                    .middleName(null)
+                    .lastName("User")
                     .email(adminEmail)
                     .password(passwordEncoder.encode("Caspstone36!"))
                     .phone("N/A")
@@ -48,7 +50,9 @@ public class AdminUserInitializer implements CommandLineRunner {
             // Update password and role to ensure correct credentials
             existingAdmin.setPassword(passwordEncoder.encode("Caspstone36!"));
             existingAdmin.setRole(Role.ADMIN.name());
-            existingAdmin.setName("Admin");
+            existingAdmin.setFirstName("Admin");
+            existingAdmin.setMiddleName(null);
+            existingAdmin.setLastName("User");
             userRepository.save(existingAdmin);
             log.info("Admin credentials updated successfully. Email: {}", adminEmail);
         }

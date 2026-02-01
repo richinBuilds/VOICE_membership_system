@@ -23,14 +23,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * End-to-end workflow tests for Authentication
- * Tests complete user journeys: login workflows, password reset workflows
+ * End-to-end integration tests for Authentication workflows
+ * Tests login, logout, and password reset flows
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-class AuthenticationWorkflowTest {
+class AuthenticationIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

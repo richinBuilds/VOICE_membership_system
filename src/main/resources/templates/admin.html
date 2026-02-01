@@ -187,7 +187,7 @@
                 <tbody>
                     <tr th:each="user : ${users}">
                         <td th:text="${user.id}">1</td>
-                        <td th:text="${user.name}">John Doe</td>
+                        <td th:text="${user.firstName + (user.middleName != null && !user.middleName.isEmpty() ? ' ' + user.middleName : '') + ' ' + user.lastName}">John Doe</td>
                         <td th:text="${user.email}">user@example.com</td>
                         <td th:text="${user.phone}">123-456-7890</td>
                         <td>
@@ -232,9 +232,7 @@
                                     title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-secondary" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
+
                         </td>
                     </tr>
                 </tbody>
@@ -337,9 +335,17 @@ function generateUserDetailsHTML(user) {
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small">Full Name</label>
-                            <div class="fw-bold">${user.name || 'N/A'}</div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">First Name</label>
+                            <div class="fw-bold">${user.firstName || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Middle Name</label>
+                            <div class="fw-bold">${user.middleName || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Last Name</label>
+                            <div class="fw-bold">${user.lastName || 'N/A'}</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small">Email</label>
