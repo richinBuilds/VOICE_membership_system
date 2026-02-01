@@ -142,6 +142,8 @@ public class ProfileController {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
+                .city(user.getCity())
+                .province(user.getProvince())
                 .postalCode(user.getPostalCode())
                 .build();
         model.addAttribute("updateUserRequest", updateUserRequest);
@@ -184,6 +186,8 @@ public class ProfileController {
             }
             user.setPhone(updateUserRequest.getPhone());
             user.setAddress(updateUserRequest.getAddress());
+            user.setCity(updateUserRequest.getCity());
+            user.setProvince(updateUserRequest.getProvince());
             user.setPostalCode(updateUserRequest.getPostalCode());
             userRepository.save(user);
             if (newEmail != null && !newEmail.equalsIgnoreCase(oldEmail)) {

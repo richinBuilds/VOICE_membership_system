@@ -118,10 +118,39 @@
             <div class="card card-body bg-light">
                 <form id="filterForm" th:action="@{/admin/dashboard}" method="get">
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Address</label>
                             <input type="text" class="form-control" name="address" 
                                    th:value="${address}" placeholder="Search by address...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" 
+                                   th:value="${city}" placeholder="Search by city...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Province</label>
+                            <select class="form-select" name="province">
+                                <option value="">All Provinces</option>
+                                <option value="Alberta" th:selected="${province == 'Alberta'}">Alberta</option>
+                                <option value="British Columbia" th:selected="${province == 'British Columbia'}">British Columbia</option>
+                                <option value="Manitoba" th:selected="${province == 'Manitoba'}">Manitoba</option>
+                                <option value="New Brunswick" th:selected="${province == 'New Brunswick'}">New Brunswick</option>
+                                <option value="Newfoundland and Labrador" th:selected="${province == 'Newfoundland and Labrador'}">Newfoundland and Labrador</option>
+                                <option value="Northwest Territories" th:selected="${province == 'Northwest Territories'}">Northwest Territories</option>
+                                <option value="Nova Scotia" th:selected="${province == 'Nova Scotia'}">Nova Scotia</option>
+                                <option value="Nunavut" th:selected="${province == 'Nunavut'}">Nunavut</option>
+                                <option value="Ontario" th:selected="${province == 'Ontario'}">Ontario</option>
+                                <option value="Prince Edward Island" th:selected="${province == 'Prince Edward Island'}">Prince Edward Island</option>
+                                <option value="Quebec" th:selected="${province == 'Quebec'}">Quebec</option>
+                                <option value="Saskatchewan" th:selected="${province == 'Saskatchewan'}">Saskatchewan</option>
+                                <option value="Yukon" th:selected="${province == 'Yukon'}">Yukon</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Chapter / Location</label>
+                            <input type="text" class="form-control" name="chapterLocation" 
+                                   th:value="${chapterLocation}" placeholder="Search by chapter...">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Child Age Range</label>
@@ -178,6 +207,8 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Address</th>
+                        <th>City</th>
+                        <th>Province</th>
                         <th>Children</th>
                         <th>Role</th>
                         <th>Registration Date</th>
@@ -198,6 +229,17 @@
                             </small>
                             <small class="text-muted" th:if="${user.address == null or #strings.isEmpty(user.address)}">
                                 N/A
+                            </small>
+                        </td>
+                        <td>
+                            <small th:if="${user.city != null and !#strings.isEmpty(user.city)}" th:text="${user.city}">Toronto</small>
+                            <small class="text-muted" th:if="${user.city == null or #strings.isEmpty(user.city)}">N/A</small>
+                        </td>
+                        <td>
+                            <small th:if="${user.province != null and !#strings.isEmpty(user.province)}" th:text="${user.province}">Ontario</small>
+                            <small class="text-muted" th:if="${user.province == null or #strings.isEmpty(user.province)}">N/A</small>
+                        </td>
+                        <td>
                             </small>
                         </td>
                         <td>

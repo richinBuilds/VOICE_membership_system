@@ -871,6 +871,12 @@ a:hover {
     min-height: 50px;
 }
 
+/* Fix for select dropdown spacing */
+.form-floating > .form-select {
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+}
+
 .form-floating > .form-control:focus,
 .form-floating > .form-select:focus {
     border-color: var(--primary);
@@ -890,6 +896,8 @@ a:hover {
     color: var(--text-muted);
     font-weight: 500;
     font-size: 0.9rem;
+    padding: 0.5rem 0.875rem;
+    pointer-events: none;
 }
 
 .form-row {

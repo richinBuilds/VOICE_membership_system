@@ -209,6 +209,47 @@
                 <div id="address-dropdown" class="address-autocomplete-dropdown" style="display: none;"></div>
             </div>
 
+            <!-- City -->
+            <div class="form-floating">
+                <input type="text"
+                       th:field="*{city}"
+                       class="form-control"
+                       id="city"
+                       placeholder="City"
+                       autocomplete="address-level2"
+                       data-testid="edit-city">
+                <label for="city">
+                    <i class="fas fa-city me-1"></i> City
+                </label>
+            </div>
+
+            <!-- Province -->
+            <div class="form-floating">
+                <select th:field="*{province}"
+                        class="form-select"
+                        id="province"
+                        autocomplete="address-level1"
+                        data-testid="edit-province">
+                    <option value="">Select Province</option>
+                    <option value="Alberta">Alberta</option>
+                    <option value="British Columbia">British Columbia</option>
+                    <option value="Manitoba">Manitoba</option>
+                    <option value="New Brunswick">New Brunswick</option>
+                    <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                    <option value="Northwest Territories">Northwest Territories</option>
+                    <option value="Nova Scotia">Nova Scotia</option>
+                    <option value="Nunavut">Nunavut</option>
+                    <option value="Ontario">Ontario</option>
+                    <option value="Prince Edward Island">Prince Edward Island</option>
+                    <option value="Quebec">Quebec</option>
+                    <option value="Saskatchewan">Saskatchewan</option>
+                    <option value="Yukon">Yukon</option>
+                </select>
+                <label for="province">
+                    <i class="fas fa-map me-1"></i> Province
+                </label>
+            </div>
+
             <!-- Postal Code -->
             <div class="form-floating">
                 <input type="text"

@@ -44,6 +44,9 @@ public class AdminController {
             Model model,
             Principal principal,
             @RequestParam(required = false) String address,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String chapterLocation,
             @RequestParam(required = false) Integer minAge,
             @RequestParam(required = false) Integer maxAge,
             @RequestParam(required = false) String hearingLossType,
@@ -71,15 +74,17 @@ public class AdminController {
         List<User> allUsers = userRepository.findAll();
 
         // Apply filters
-        List<User> filteredUsers = filterUsers(allUsers, address, minAge, maxAge,
-                hearingLossType, equipmentType,
-                startDate, endDate);
+        List<User> filteredUsers = filterUsers(allUsers, address, city, province, chapterLocation,
+                minAge, maxAge, hearingLossType, equipmentType, startDate, endDate);
 
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("users", filteredUsers);
 
         // Add filter values back to model for form persistence
         model.addAttribute("address", address);
+        model.addAttribute("city", city);
+        model.addAttribute("province", province);
+        model.addAttribute("chapterLocation", chapterLocation);
         model.addAttribute("minAge", minAge);
         model.addAttribute("maxAge", maxAge);
         model.addAttribute("hearingLossType", hearingLossType);
@@ -90,11 +95,15 @@ public class AdminController {
         return "admin";
     }
 
-    private List<User> filterUsers(List<User> users, String address, Integer minAge, Integer maxAge,
+    private List<User> filterUsers(List<User> users, String address, String city, String province,
+            String chapterLocation, Integer minAge, Integer maxAge,
             String hearingLossType, String equipmentType,
             String startDate, String endDate) {
         return users.stream()
                 .filter(user -> filterByAddress(user, address))
+                .filter(user -> filterByCity(user, city))
+                .filter(user -> filterByProvince(user, province))
+                .filter(user -> filterByChapterLocation(user, chapterLocation))
                 .filter(user -> filterByChildAge(user, minAge, maxAge))
                 .filter(user -> filterByHearingLossType(user, hearingLossType))
                 .filter(user -> filterByEquipmentType(user, equipmentType))
@@ -112,6 +121,38 @@ public class AdminController {
 
         return (userAddress != null && userAddress.toLowerCase().contains(searchTerm)) ||
                 (userPostalCode != null && userPostalCode.toLowerCase().contains(searchTerm));
+    }
+
+    private boolean filterByCity(User user, String city) {
+        if (city == null || city.trim().isEmpty()) {
+            return true;
+        }
+        String userCity = user.getCity();
+        return userCity != null && userCity.toLowerCase().contains(city.toLowerCase());
+    }
+
+    private boolean filterByProvince(User user, String province) {
+        if (province == null || province.trim().isEmpty()) {
+            return true;
+        }
+        String userProvince = user.getProvince();
+        return userProvince != null && userProvince.equalsIgnoreCase(province);
+    }
+
+    private boolean filterByChapterLocation(User user, String chapterLocation) {
+        if (chapterLocation == null || chapterLocation.trim().isEmpty()) {
+            return true;
+        }
+
+        List<Child> children = user.getChildren();
+        if (children == null || children.isEmpty()) {
+            return false;
+        }
+
+        return children.stream().anyMatch(child -> {
+            String childChapter = child.getChapterLocation();
+            return childChapter != null && childChapter.toLowerCase().contains(chapterLocation.toLowerCase());
+        });
     }
 
     private boolean filterByChildAge(User user, Integer minAge, Integer maxAge) {

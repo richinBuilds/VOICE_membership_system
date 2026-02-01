@@ -34,6 +34,8 @@ public class User {
     private String password;
     private String phone;
     private String address;
+    private String city;
+    private String province;
     @Column(name = "postal_code")
     private String postalCode;
     private String role;

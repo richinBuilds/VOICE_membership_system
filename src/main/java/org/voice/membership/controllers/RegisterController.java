@@ -419,6 +419,8 @@ public class RegisterController {
                     .password(passwordEncoder.encode(userDetails.getPassword()))
                     .phone(userDetails.getPhone())
                     .address(userDetails.getAddress())
+                    .city(userDetails.getCity())
+                    .province(userDetails.getProvince())
                     .postalCode(userDetails.getPostalCode())
                     .role(Role.USER.name())
                     .creation(new Date())

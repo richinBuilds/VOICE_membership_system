@@ -33,6 +33,10 @@ public class UpdateUserRequest {
 
     private String address;
 
+    private String city;
+
+    private String province;
+
     @Pattern(regexp = "^[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]$", message = "Valid Canadian postal code, e.g., A1A 1A1")
     private String postalCode;
 }
