@@ -42,7 +42,6 @@ class AdminControllerTest {
         void setUp() {
                 userRepository.deleteAll();
 
-                // Create REAL test data in the database
                 adminUser = User.builder()
                                 .firstName("Admin")
                                 .middleName(null)
@@ -70,7 +69,6 @@ class AdminControllerTest {
         }
 
         // ========================== Positive Test Cases ==========================
-        // Admin Access Test
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void adminDashboard_WithAdminRole_ShouldReturnDashboard() throws Exception {
@@ -81,18 +79,17 @@ class AdminControllerTest {
                                 .andExpect(model().attributeExists("totalUsers"));
         }
 
-        // Get User Details - Valid ID
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void getUserDetails_WithValidId_ShouldReturnUserDetails() throws Exception {
                 mockMvc.perform(get("/admin/user/" + regularUser.getId()))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.id").value(regularUser.getId()))
-                                .andExpect(jsonPath("$.name").value("Regular User"))
+                                .andExpect(jsonPath("$.firstName").value("Regular"))
+                                .andExpect(jsonPath("$.lastName").value("User"))
                                 .andExpect(jsonPath("$.email").value("user@example.com"));
         }
 
-        // Address Filter
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void adminDashboard_WithAddressFilter_ShouldFilterUsers() throws Exception {
@@ -103,7 +100,6 @@ class AdminControllerTest {
                                 .andExpect(model().attributeExists("users"));
         }
 
-        // Export Users to Excel
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void exportUsers_ShouldDownloadExcelFile() throws Exception {
@@ -114,14 +110,12 @@ class AdminControllerTest {
         }
 
         // ========================== Negative Test Cases ==========================
-        // Unauthenticated Access
         @Test
         void adminDashboard_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
                 mockMvc.perform(get("/admin/dashboard"))
                                 .andExpect(status().is3xxRedirection());// redirect to login page
         }
 
-        // Get User Details - Invalid ID
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void getUserDetails_WithInvalidId_ShouldReturnNotFound() throws Exception {
@@ -129,7 +123,6 @@ class AdminControllerTest {
                                 .andExpect(status().isNotFound());
         }
 
-        // Regular User Blocked
         @Test
         @WithMockUser(username = "user@example.com", roles = "USER")
         void adminDashboard_WithUserRole_ShouldBeForbidden() throws Exception {
@@ -137,3 +130,4 @@ class AdminControllerTest {
                                 .andExpect(status().isForbidden());
         }
 }
+

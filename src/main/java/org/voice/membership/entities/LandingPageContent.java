@@ -3,6 +3,10 @@ package org.voice.membership.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * JPA entity that stores configurable text content for the landing page.
+ * Key/value pairs allow the tagline and other messages to be managed in DB.
+ */
 @Getter
 @Setter
 @Entity
@@ -24,3 +28,4 @@ public class LandingPageContent {
 
     private boolean active;
 }
+

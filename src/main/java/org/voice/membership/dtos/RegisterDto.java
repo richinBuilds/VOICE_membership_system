@@ -8,6 +8,10 @@ import lombok.Data;
 import org.voice.membership.validation.StrongPassword;
 
 @Data
+/**
+ * Carries user registration details from the signup form.
+ * Includes basic contact info and strong password validation constraints.
+ */
 public class RegisterDto {
 
     @NotEmpty(message = "First name is required")

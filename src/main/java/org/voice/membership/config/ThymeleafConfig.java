@@ -8,6 +8,11 @@ import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 import org.thymeleaf.extras.java8time.dialect.Java8TimeDialect;
 
 @Configuration
+/**
+ * Configures Thymeleaf template resolution and additional dialects.
+ * Sets template location, encoding, and enables Spring Security and time
+ * support.
+ */
 public class ThymeleafConfig {
     @Bean
     public ClassLoaderTemplateResolver templateResolver() {

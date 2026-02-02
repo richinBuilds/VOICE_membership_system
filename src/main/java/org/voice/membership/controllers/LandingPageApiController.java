@@ -11,14 +11,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/landing-page")
+/**
+ * Exposes REST endpoints for landing page data and initialization.
+ * Returns memberships, benefits, tagline, and basic health information.
+ */
 public class LandingPageApiController {
 
     @Autowired
     private LandingPageService landingPageService;
 
-    /**
-     * Get all landing page data as JSON
-     */
     @GetMapping("/data")
     public Map<String, Object> getLandingPageData() {
         Map<String, Object> data = new HashMap<>();
@@ -26,7 +27,6 @@ public class LandingPageApiController {
         data.put("memberships", landingPageService.getActiveMemberships());
         data.put("benefits", landingPageService.getActiveBenefits());
 
-        // Add login status for modal logic
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
         boolean isAuthenticated = auth != null && auth.isAuthenticated() &&
@@ -36,9 +36,6 @@ public class LandingPageApiController {
         return data;
     }
 
-    /**
-     * Health check endpoint
-     */
     @GetMapping("/health")
     public Map<String, String> health() {
         Map<String, String> response = new HashMap<>();
@@ -47,9 +44,6 @@ public class LandingPageApiController {
         return response;
     }
 
-    /**
-     * Initialize default content endpoint
-     */
     @GetMapping("/initialize")
     public Map<String, String> initialize() {
         try {

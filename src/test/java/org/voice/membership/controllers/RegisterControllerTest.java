@@ -73,6 +73,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "123 Main St")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "A1A 1A1"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/register/step2"));
@@ -91,6 +93,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/register/step2"))
@@ -120,6 +124,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -152,6 +158,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -203,6 +211,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -245,6 +255,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -286,6 +298,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -333,7 +347,8 @@ class RegisterControllerTest {
                                 .param("password", "ValidPass123!")
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
-                                .param("address", "456 Oak Ave")
+                                .param("address", "456 Oak Ave").param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -381,6 +396,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -427,6 +444,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 
@@ -462,6 +481,9 @@ class RegisterControllerTest {
                 existingUser.setEmail("existing@example.com");
                 existingUser.setPassword(passwordEncoder.encode("password"));
                 existingUser.setPhone("9999999999");
+                existingUser.setAddress("123 Existing St");
+                existingUser.setCity("Ottawa");
+                existingUser.setProvince("ON");
                 existingUser.setPostalCode("A1A 1A1");
                 existingUser.setRole("USER");
                 existingUser.setCreation(new Date());
@@ -477,6 +499,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "123 Main St")
+                                .param("city", "Ottawa")
+                                .param("province", "ON")
                                 .param("postalCode", "A1A 1A1"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("register"))
@@ -496,6 +520,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "DifferentPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "123 Main St")
+                                .param("city", "Ottawa")
+                                .param("province", "ON")
                                 .param("postalCode", "A1A 1A1"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("register"))
@@ -550,6 +576,8 @@ class RegisterControllerTest {
                                 .param("confirmPassword", "weak")
                                 .param("phone", "1234567890")
                                 .param("address", "123 Main St")
+                                .param("city", "Ottawa")
+                                .param("province", "ON")
                                 .param("postalCode", "A1A 1A1"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("register"))
@@ -579,12 +607,16 @@ class RegisterControllerTest {
         void showStep4_WithoutMembershipSelection_ShouldRedirectToStep3() throws Exception {
                 MvcResult result = mockMvc.perform(post("/register/step1")
                                 .with(csrf())
-                                .param("name", "Jane Doe")
+                                .param("firstName", "Jane")
+                                .param("middleName", "")
+                                .param("lastName", "Doe")
                                 .param("email", "jane@example.com")
                                 .param("password", "ValidPass123!")
                                 .param("confirmPassword", "ValidPass123!")
                                 .param("phone", "1234567890")
                                 .param("address", "456 Oak Ave")
+                                .param("city", "Toronto")
+                                .param("province", "ON")
                                 .param("postalCode", "M5H 2N2"))
                                 .andReturn();
 

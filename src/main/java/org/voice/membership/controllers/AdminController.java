@@ -34,6 +34,10 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
+/**
+ * Provides administrative dashboards, filtering, and export features.
+ * Allows admins to view and export member data with various filters applied.
+ */
 public class AdminController {
 
     @Autowired
@@ -46,7 +50,10 @@ public class AdminController {
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String province,
+<<<<<<< HEAD
             @RequestParam(required = false) String chapterLocation,
+=======
+>>>>>>> krimy
             @RequestParam(required = false) Integer minAge,
             @RequestParam(required = false) Integer maxAge,
             @RequestParam(required = false) String hearingLossType,
@@ -54,7 +61,6 @@ public class AdminController {
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
 
-        // Get admin info
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String adminEmail = auth.getName();
         User admin = userRepository.findByEmail(adminEmail);
@@ -70,21 +76,28 @@ public class AdminController {
         model.addAttribute("adminName", adminName);
         model.addAttribute("adminEmail", adminEmail);
 
-        // Get all users
         List<User> allUsers = userRepository.findAll();
 
+<<<<<<< HEAD
         // Apply filters
         List<User> filteredUsers = filterUsers(allUsers, address, city, province, chapterLocation,
                 minAge, maxAge, hearingLossType, equipmentType, startDate, endDate);
+=======
+        List<User> filteredUsers = filterUsers(allUsers, address, city, province, minAge, maxAge,
+                hearingLossType, equipmentType,
+                startDate, endDate);
+>>>>>>> krimy
 
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("users", filteredUsers);
 
-        // Add filter values back to model for form persistence
         model.addAttribute("address", address);
         model.addAttribute("city", city);
         model.addAttribute("province", province);
+<<<<<<< HEAD
         model.addAttribute("chapterLocation", chapterLocation);
+=======
+>>>>>>> krimy
         model.addAttribute("minAge", minAge);
         model.addAttribute("maxAge", maxAge);
         model.addAttribute("hearingLossType", hearingLossType);
@@ -96,14 +109,21 @@ public class AdminController {
     }
 
     private List<User> filterUsers(List<User> users, String address, String city, String province,
+<<<<<<< HEAD
             String chapterLocation, Integer minAge, Integer maxAge,
+=======
+            Integer minAge, Integer maxAge,
+>>>>>>> krimy
             String hearingLossType, String equipmentType,
             String startDate, String endDate) {
         return users.stream()
                 .filter(user -> filterByAddress(user, address))
                 .filter(user -> filterByCity(user, city))
                 .filter(user -> filterByProvince(user, province))
+<<<<<<< HEAD
                 .filter(user -> filterByChapterLocation(user, chapterLocation))
+=======
+>>>>>>> krimy
                 .filter(user -> filterByChildAge(user, minAge, maxAge))
                 .filter(user -> filterByHearingLossType(user, hearingLossType))
                 .filter(user -> filterByEquipmentType(user, equipmentType))
@@ -136,6 +156,7 @@ public class AdminController {
             return true;
         }
         String userProvince = user.getProvince();
+<<<<<<< HEAD
         return userProvince != null && userProvince.equalsIgnoreCase(province);
     }
 
@@ -153,6 +174,9 @@ public class AdminController {
             String childChapter = child.getChapterLocation();
             return childChapter != null && childChapter.toLowerCase().contains(chapterLocation.toLowerCase());
         });
+=======
+        return userProvince != null && userProvince.toLowerCase().contains(province.toLowerCase());
+>>>>>>> krimy
     }
 
     private boolean filterByChildAge(User user, Integer minAge, Integer maxAge) {
@@ -225,7 +249,6 @@ public class AdminController {
 
             if (endDateStr != null && !endDateStr.trim().isEmpty()) {
                 Date endDate = dateFormat.parse(endDateStr);
-                // Add one day to include the end date
                 endDate = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
                 if (userCreation.after(endDate)) {
                     return false;
@@ -234,7 +257,6 @@ public class AdminController {
 
             return true;
         } catch (ParseException e) {
-            System.err.println("Error parsing date: " + e.getMessage());
             return true;
         }
     }
@@ -269,13 +291,10 @@ public class AdminController {
     public void exportUsersToExcel(HttpServletResponse response) throws IOException {
         List<User> users = userRepository.findAll();
 
-        // Create workbook
         Workbook workbook = new XSSFWorkbook();
 
-        // Create Users sheet
         Sheet usersSheet = workbook.createSheet("Users");
 
-        // Create header style
         CellStyle headerStyle = workbook.createCellStyle();
         Font headerFont = workbook.createFont();
         headerFont.setBold(true);
@@ -284,7 +303,7 @@ public class AdminController {
         // Users sheet headers
         Row userHeaderRow = usersSheet.createRow(0);
         String[] userColumns = { "ID", "First Name", "Middle Name", "Last Name", "Email", "Phone", "Address",
-                "Postal Code", "Role", "Registration Date",
+                "City", "Province", "Postal Code", "Role", "Registration Date",
                 "Number of Children" };
 
         for (int i = 0; i < userColumns.length; i++) {
@@ -293,7 +312,6 @@ public class AdminController {
             cell.setCellStyle(headerStyle);
         }
 
-        // Fill users data
         int userRowNum = 1;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -307,18 +325,18 @@ public class AdminController {
             row.createCell(4).setCellValue(user.getEmail() != null ? user.getEmail() : "");
             row.createCell(5).setCellValue(user.getPhone() != null ? user.getPhone() : "");
             row.createCell(6).setCellValue(user.getAddress() != null ? user.getAddress() : "");
-            row.createCell(7).setCellValue(user.getPostalCode() != null ? user.getPostalCode() : "");
-            row.createCell(8).setCellValue(user.getRole() != null ? user.getRole() : "USER");
-            row.createCell(9).setCellValue(user.getCreation() != null ? dateFormat.format(user.getCreation()) : "");
-            row.createCell(10).setCellValue(user.getChildren() != null ? user.getChildren().size() : 0);
+            row.createCell(7).setCellValue(user.getCity() != null ? user.getCity() : "");
+            row.createCell(8).setCellValue(user.getProvince() != null ? user.getProvince() : "");
+            row.createCell(9).setCellValue(user.getPostalCode() != null ? user.getPostalCode() : "");
+            row.createCell(10).setCellValue(user.getRole() != null ? user.getRole() : "USER");
+            row.createCell(11).setCellValue(user.getCreation() != null ? dateFormat.format(user.getCreation()) : "");
+            row.createCell(12).setCellValue(user.getChildren() != null ? user.getChildren().size() : 0);
         }
 
-        // Auto-size columns for users sheet
         for (int i = 0; i < userColumns.length; i++) {
             usersSheet.autoSizeColumn(i);
         }
 
-        // Create Children sheet
         Sheet childrenSheet = workbook.createSheet("Children");
 
         // Children sheet headers
@@ -334,7 +352,6 @@ public class AdminController {
             cell.setCellStyle(headerStyle);
         }
 
-        // Fill children data
         int childRowNum = 1;
         SimpleDateFormat dobFormat = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -365,17 +382,14 @@ public class AdminController {
             }
         }
 
-        // Auto-size columns for children sheet
         for (int i = 0; i < childColumns.length; i++) {
             childrenSheet.autoSizeColumn(i);
         }
 
-        // Set response headers
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
                 "attachment; filename=users_and_children_" + System.currentTimeMillis() + ".xlsx");
 
-        // Write workbook to response
         workbook.write(response.getOutputStream());
         workbook.close();
     }

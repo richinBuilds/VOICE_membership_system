@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
+/**
+ * Aggregates data across the multi-step registration wizard.
+ * Holds user details, child info, and membership/cart selections between steps.
+ */
 public class MultiStepRegistrationDto {
     // Step 1: User details
     private RegisterDto userDetails;

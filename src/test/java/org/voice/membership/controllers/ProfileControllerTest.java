@@ -55,7 +55,6 @@ class ProfileControllerTest {
         childRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Create real test user
         testUser = new User();
         testUser.setFirstName("Test");
         testUser.setMiddleName(null);
@@ -64,12 +63,13 @@ class ProfileControllerTest {
         testUser.setPassword(passwordEncoder.encode("password"));
         testUser.setPhone("1234567890");
         testUser.setAddress("123 Test St");
+        testUser.setCity("Toronto");
+        testUser.setProvince("ON");
         testUser.setPostalCode("M5H 2N2");
         testUser.setRole("USER");
         testUser.setCreation(new Date());
         testUser = userRepository.save(testUser);
 
-        // Create real test child
         testChild = new Child();
         testChild.setName("Child One");
         testChild.setDateOfBirth(new Date());
@@ -80,7 +80,6 @@ class ProfileControllerTest {
     }
 
     // ===============================Positive Tests==============================
-    // View Profile Page
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void profile_WithAuthenticatedUser_ShouldReturnProfilePage() throws Exception {
@@ -92,7 +91,6 @@ class ProfileControllerTest {
                 .andExpect(model().attribute("userEmail", "test@example.com"));
     }
 
-    // Show Edit Profile Form
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_GetRequest_ShouldReturnEditForm() throws Exception {
@@ -102,7 +100,6 @@ class ProfileControllerTest {
                 .andExpect(model().attributeExists("updateUserRequest"));
     }
 
-    // Submit Profile Changes
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_PostRequest_WithValidData_ShouldUpdateProfile() throws Exception {
@@ -114,12 +111,13 @@ class ProfileControllerTest {
                 .param("email", "test@example.com")
                 .param("phone", "9876543210")
                 .param("address", "456 New St")
+                .param("city", "Vancouver")
+                .param("province", "BC")
                 .param("postalCode", "A1A 1A1"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/profile"));
     }
 
-    // Show Add Child Form
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void addChild_GetRequest_ShouldReturnAddChildForm() throws Exception {
@@ -130,7 +128,6 @@ class ProfileControllerTest {
                 .andExpect(model().attribute("isEdit", false));
     }
 
-    // Delete a Child
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteChild_WithValidId_ShouldDeleteChild() throws Exception {
@@ -217,7 +214,6 @@ class ProfileControllerTest {
     }
 
     // ==============================Negative Tests==============================
-    // Delete Child That Doesn't Exist - Controller redirects with error message
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteChild_WithInvalidId_ShouldRedirectToProfile() throws Exception {
@@ -227,7 +223,6 @@ class ProfileControllerTest {
                 .andExpect(redirectedUrl("/profile"));
     }
 
-    // Delete Someone Else's Child
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteChild_BelongingToAnotherUser_ShouldRedirectWithError() throws Exception {
@@ -238,6 +233,9 @@ class ProfileControllerTest {
         otherUser.setEmail("other@example.com");
         otherUser.setPassword(passwordEncoder.encode("password"));
         otherUser.setPhone("9999999999");
+        otherUser.setAddress("789 Other St");
+        otherUser.setCity("Vancouver");
+        otherUser.setProvince("BC");
         otherUser.setPostalCode("A1A 1A1");
         otherUser.setRole("USER");
         otherUser.setCreation(new Date());
@@ -257,7 +255,6 @@ class ProfileControllerTest {
                 .andExpect(redirectedUrl("/profile"));
     }
 
-    // Edit Profile With Invalid Postal Code
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_WithInvalidPostalCode_ShouldShowValidationError() throws Exception {
@@ -274,7 +271,6 @@ class ProfileControllerTest {
                 .andExpect(model().hasErrors());
     }
 
-    // Edit Profile With Missing Required Fields
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_WithMissingRequiredFields_ShouldShowValidationError() throws Exception {
@@ -289,7 +285,6 @@ class ProfileControllerTest {
                 .andExpect(model().hasErrors());
     }
 
-    // Edit Profile With Email That Already Exists
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_WithDuplicateEmail_ShouldShowValidationError() throws Exception {
@@ -301,6 +296,8 @@ class ProfileControllerTest {
         otherUser.setPassword(passwordEncoder.encode("password"));
         otherUser.setPhone("9999999999");
         otherUser.setAddress("789 Other St");
+        otherUser.setCity("Montreal");
+        otherUser.setProvince("QC");
         otherUser.setPostalCode("B2B 2B2");
         otherUser.setRole("USER");
         otherUser.setCreation(new Date());
@@ -315,13 +312,14 @@ class ProfileControllerTest {
                 .param("email", "other@example.com")
                 .param("phone", "1234567890")
                 .param("address", "123 Test St")
+                .param("city", "Montreal")
+                .param("province", "QC")
                 .param("postalCode", "M5H 2N2"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("editProfile"))
                 .andExpect(model().hasErrors());
     }
 
-    // Operations Without CSRF Token
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteChild_WithoutCSRF_ShouldReturnForbidden() throws Exception {

@@ -9,7 +9,8 @@ import lombok.Data;
 /**
  * 
  * Carries user profile update information from the form to the controller.
- * Contains validated fields: name, email, phone, address, postal code.
+ * Contains validated fields: name, email, phone, address, city, province,
+ * postal code.
  * Used for updating user profile information on the dashboard.
  */
 @Data

@@ -59,7 +59,6 @@ class UserServiceTest {
                 .build();
     }
 
-    // Test 1: Load user by email for login
     @Test
     void loadUserByUsername_WithValidEmail_ShouldReturnUserDetails() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(testUser);
@@ -72,7 +71,6 @@ class UserServiceTest {
         verify(userRepository).findByEmail("test@example.com");
     }
 
-    // Test 2: Loading non-existent user throws exception
     @Test
     void loadUserByUsername_WithInvalidEmail_ShouldThrowException() {
         when(userRepository.findByEmail(anyString())).thenReturn(null);
@@ -82,7 +80,6 @@ class UserServiceTest {
                 .hasMessageContaining("User not found with email: invalid@example.com");
     }
 
-    // Test 3: Send password reset email to valid user
     @Test
     void sendPasswordResetEmail_WithValidEmail_ShouldReturnTrue() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(testUser);
@@ -95,7 +92,6 @@ class UserServiceTest {
         verify(emailSenderService).sendPasswordResetEmail(eq("test@example.com"), anyString());
     }
 
-    // Test 4: Password reset email fails for invalid user
     @Test
     void sendPasswordResetEmail_WithInvalidEmail_ShouldReturnFalse() {
         when(userRepository.findByEmail(anyString())).thenReturn(null);
@@ -107,7 +103,6 @@ class UserServiceTest {
         verify(emailSenderService, never()).sendPasswordResetEmail(anyString(), anyString());
     }
 
-    // Test 5: Send password reset email successfully
     @Test
     void resetPassword_WithValidToken_ShouldReturnTrue() {
         String email = "test@example.com";
@@ -122,7 +117,6 @@ class UserServiceTest {
         verify(emailSenderService).sendPasswordResetEmail(eq(email), anyString());
     }
 
-    // Test 6: Reset password with invalid token fails
     @Test
     void resetPassword_WithInvalidToken_ShouldReturnFalse() {
         String invalidToken = "invalid-token";
@@ -134,7 +128,6 @@ class UserServiceTest {
         verify(userRepository, never()).save(any(User.class));
     }
 
-    // Test 7: Load admin user with admin role authority
     @Test
     void loadUserByUsername_WithAdminRole_ShouldReturnAdminUser() {
         User adminUser = User.builder()
@@ -158,3 +151,4 @@ class UserServiceTest {
         assertThat(userDetails.getAuthorities().toString()).contains("ADMIN");
     }
 }
+

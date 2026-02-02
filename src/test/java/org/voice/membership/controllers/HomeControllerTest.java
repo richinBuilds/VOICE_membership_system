@@ -23,7 +23,6 @@ class HomeControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Landing Page for Anonymous Users
     @Test
     void index_ShouldReturnLandingPage() throws Exception {
         mockMvc.perform(get("/"))
@@ -34,7 +33,6 @@ class HomeControllerTest {
                 .andExpect(model().attributeExists("memberships"));
     }
 
-    // Landing Page for Authenticated Users
     @Test
     @WithMockUser(username = "user@example.com", roles = "USER")
     void index_WithAuthenticatedUser_ShouldShowAuthenticatedStatus() throws Exception {
@@ -44,7 +42,6 @@ class HomeControllerTest {
                 .andExpect(model().attributeExists("isUserLoggedIn"));
     }
 
-    // Login Page
     @Test
     void login_ShouldReturnLoginPage() throws Exception {
         mockMvc.perform(get("/login"))
@@ -52,3 +49,4 @@ class HomeControllerTest {
                 .andExpect(view().name("login"));
     }
 }
+

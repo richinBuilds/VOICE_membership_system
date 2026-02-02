@@ -2,6 +2,10 @@ package org.voice.membership.validation;
 
 import java.util.regex.Pattern;
 
+/**
+ * Utility class that checks whether a password string is considered strong.
+ * Used in places where direct password strength validation is required.
+ */
 public final class PasswordPolicy {
     private PasswordPolicy() {
     }
@@ -13,3 +17,4 @@ public final class PasswordPolicy {
         return password != null && STRONG_PASSWORD.matcher(password).matches();
     }
 }
+

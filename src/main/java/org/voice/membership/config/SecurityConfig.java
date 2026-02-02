@@ -13,10 +13,14 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.core.Authentication;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
+/**
+ * Configures Spring Security for the VOICE membership application.
+ * Defines public and protected routes, login/logout, remember-me, and
+ * redirects.
+ */
 public class SecurityConfig {
 
         @Bean
@@ -24,10 +28,7 @@ public class SecurityConfig {
                 return httpSecurity
                                 .authorizeHttpRequests(auth -> auth
 
-                                                // ✅ Allow static resources (IMPORTANT)
                                                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-
-                                                // ✅ Public pages
                                                 .requestMatchers("/").permitAll()
                                                 .requestMatchers("/login").permitAll()
                                                 .requestMatchers("/register/**").permitAll()
@@ -35,10 +36,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/reset-password").permitAll()
                                                 .requestMatchers("/api/landing-page/**").permitAll()
 
-                                                // ✅ Admin pages
                                                 .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
 
-                                                // ✅ User pages - allow both USER and ADMIN roles
                                                 .requestMatchers("/profile/**")
                                                 .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
 
@@ -49,7 +48,6 @@ public class SecurityConfig {
                                                 .successHandler(authenticationSuccessHandler())
                                                 .permitAll())
                                 .logout(config -> config
-                                                // Allow both GET and POST for logout to support links and forms
                                                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                                                 .logoutSuccessUrl("/")
                                                 .invalidateHttpSession(true)
@@ -73,7 +71,6 @@ public class SecurityConfig {
         @Bean
         public AuthenticationSuccessHandler authenticationSuccessHandler() {
                 return (HttpServletRequest request, HttpServletResponse response, Authentication authentication) -> {
-                        // Check if user has ADMIN role
                         boolean isAdmin = authentication.getAuthorities().stream()
                                         .anyMatch(grantedAuthority -> grantedAuthority.getAuthority()
                                                         .equals("ROLE_ADMIN"));

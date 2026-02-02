@@ -14,18 +14,18 @@ import java.security.Principal;
 
 @Controller
 @RequestMapping("/")
+/**
+ * Handles the public home and login pages for the site.
+ * Populates basic landing content and login state for the index view.
+ */
 public class HomeController {
 
     @GetMapping
     public String index(Model model, Principal principal) {
-        // Add simple VOICE landing page information
         model.addAttribute("tagline", "Empowering families of children who are Deaf and Hard of Hearing");
-
-        // Add empty collections for benefits and memberships to prevent template errors
         model.addAttribute("benefits", Arrays.asList());
         model.addAttribute("memberships", Arrays.asList());
 
-        // Check if user is authenticated (including via remember-me)
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAuthenticated = auth != null && auth.isAuthenticated() &&
                 !auth.getPrincipal().equals("anonymousUser");

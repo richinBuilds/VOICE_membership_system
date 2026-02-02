@@ -5,6 +5,10 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
+/**
+ * Centralized handler for uncaught exceptions in MVC controllers.
+ * Displays a generic error page when unexpected errors occur.
+ */
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)

@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
+/**
+ * Manages the "forgot password" flow before a reset token is issued.
+ * Shows the request form and triggers sending of password reset emails.
+ */
 public class ForgotPasswordController {
 
     @Autowired
