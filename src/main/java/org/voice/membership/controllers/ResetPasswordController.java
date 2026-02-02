@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
+/**
+ * Handles the password reset form after a reset token has been issued.
+ * Validates new passwords and delegates the actual reset to UserService.
+ */
 public class ResetPasswordController {
 
     @Autowired

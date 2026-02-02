@@ -10,6 +10,11 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.stereotype.Service;
 
 @Service
+/**
+ * Sends application emails such as password reset and membership upgrade
+ * notices.
+ * Uses Thymeleaf templates and JavaMail to build and deliver messages.
+ */
 public class EmailSenderService {
 
     @Autowired
@@ -35,8 +40,9 @@ public class EmailSenderService {
             throw new RuntimeException("Failed to send password reset email", e);
         }
     }
-    
-    public void sendMembershipUpgradeConfirmation(String to, String userName, String membershipName, String expiryDate) {
+
+    public void sendMembershipUpgradeConfirmation(String to, String userName, String membershipName,
+            String expiryDate) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -44,23 +50,22 @@ public class EmailSenderService {
             helper.setSubject("Membership Upgrade Successful - VOICE");
 
             String htmlContent = "<html><body>" +
-                "<h2>Congratulations " + userName + "!</h2>" +
-                "<p>Your membership has been successfully upgraded to <strong>" + membershipName + "</strong>.</p>" +
-                "<p><strong>Membership Details:</strong></p>" +
-                "<ul>" +
-                "<li>Status: Active/Paid</li>" +
-                "<li>Expiry Date: " + expiryDate + "</li>" +
-                "</ul>" +
-                "<p>Thank you for choosing VOICE Membership System!</p>" +
-                "<p>Best regards,<br>VOICE Team</p>" +
-                "</body></html>";
-            
+                    "<h2>Congratulations " + userName + "!</h2>" +
+                    "<p>Your membership has been successfully upgraded to <strong>" + membershipName + "</strong>.</p>"
+                    +
+                    "<p><strong>Membership Details:</strong></p>" +
+                    "<ul>" +
+                    "<li>Status: Active/Paid</li>" +
+                    "<li>Expiry Date: " + expiryDate + "</li>" +
+                    "</ul>" +
+                    "<p>Thank you for choosing VOICE Membership System!</p>" +
+                    "<p>Best regards,<br>VOICE Team</p>" +
+                    "</body></html>";
+
             helper.setText(htmlContent, true);
             mailSender.send(mimeMessage);
-            System.out.println("Membership upgrade confirmation email sent to: " + to);
         } catch (MessagingException e) {
-            System.err.println("Failed to send membership upgrade email: " + e.getMessage());
-            // Don't throw exception - email failure shouldn't break the upgrade process
+            e.printStackTrace();
         }
     }
 }

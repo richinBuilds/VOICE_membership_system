@@ -17,9 +17,10 @@ import java.util.List;
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
     List<CartItem> findByCart(Cart cart);
+
     void deleteByCart(Cart cart);
-    
-    // For enforcing single membership selection
+
     void deleteByCartId(Integer cartId);
+
     List<CartItem> findByCartId(Integer cartId);
 }

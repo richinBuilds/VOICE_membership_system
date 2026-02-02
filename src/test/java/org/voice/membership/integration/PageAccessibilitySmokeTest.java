@@ -45,7 +45,6 @@ class PageAccessibilitySmokeTest {
         }
     }
 
-    // Test: Verify landing/home page loads successfully and contains VOICE branding
     @Test
     void testLandingPageAccessible() {
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/", String.class);
@@ -54,7 +53,6 @@ class PageAccessibilitySmokeTest {
         assertThat(response.getBody()).contains("VOICE");
     }
 
-    // Test: Verify registration page loads and displays account creation form
     @Test
     void testRegistrationPageAccessible() {
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/register", String.class);
@@ -63,7 +61,6 @@ class PageAccessibilitySmokeTest {
         assertThat(response.getBody()).contains("Create Your Account");
     }
 
-    // Test: Verify login page loads successfully
     @Test
     void testLoginPageAccessible() {
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/login", String.class);
@@ -72,7 +69,6 @@ class PageAccessibilitySmokeTest {
         assertThat(response.getBody()).contains("Login");
     }
 
-    // Test: Verify unauthenticated users are redirected to login when accessing
     // profile
     @Test
     void testProfilePageRequiresAuthentication() {
@@ -82,7 +78,6 @@ class PageAccessibilitySmokeTest {
         assertThat(response.getBody()).contains("Login");
     }
 
-    // Test: Verify admin dashboard requires authentication and redirects to login
     @Test
     void testAdminDashboardRequiresAdminRole() {
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/admin/dashboard", String.class);
@@ -91,7 +86,6 @@ class PageAccessibilitySmokeTest {
         assertThat(response.getBody()).contains("Login");
     }
 
-    // Test: Verify forgot password page is accessible and displays correctly
     @Test
     void testForgotPasswordPageAccessible() {
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/forgot-password", String.class);
@@ -100,7 +94,6 @@ class PageAccessibilitySmokeTest {
         assertThat(response.getBody()).contains("Forgot Password");
     }
 
-    // Test: Verify Spring application context loads successfully and beans are
     // available
     @Test
     void testApplicationContextLoads() {
@@ -108,10 +101,10 @@ class PageAccessibilitySmokeTest {
         assertThat(userRepository).isNotNull();
     }
 
-    // Test: Verify database connection is working and queries can be executed
     @Test
     void testDatabaseConnection() {
         long count = userRepository.count();
         assertThat(count).isGreaterThanOrEqualTo(0);
     }
 }
+

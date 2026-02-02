@@ -6,6 +6,10 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
+/**
+ * Data transfer object for child information in the registration flow.
+ * Mirrors the Child entity fields needed on registration and profile forms.
+ */
 public class ChildDto {
 
     @NotEmpty(message = "Child's name is required")

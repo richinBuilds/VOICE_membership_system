@@ -60,7 +60,6 @@ class UserRepositoryTest {
                 .build();
     }
 
-    // Test 1: Find user by exact email address
     @Test
     void findByEmail_WithExactMatch_ShouldReturnUser() {
         entityManager.persist(testUser1);
@@ -74,7 +73,6 @@ class UserRepositoryTest {
         assertThat(found.getEmail()).isEqualTo("john@example.com");
     }
 
-    // Test 2: Search for non-existent email returns null
     @Test
     void findByEmail_WithNonExistentEmail_ShouldReturnNull() {
         entityManager.persist(testUser1);
@@ -85,7 +83,6 @@ class UserRepositoryTest {
         assertThat(found).isNull();
     }
 
-    // Test 3: Find user by email (case-insensitive)
     @Test
     void findByEmailIgnoreCase_WithDifferentCase_ShouldReturnUser() {
         entityManager.persist(testUser2);
@@ -98,7 +95,6 @@ class UserRepositoryTest {
         assertThat(found.getLastName()).isEqualTo("Smith");
     }
 
-    // Test 4: Find all users with matching email (case-insensitive)
     @Test
     void findAllByEmailIgnoreCase_WithDuplicateEmails_ShouldReturnAllMatches() {
         entityManager.persist(testUser1);
@@ -113,7 +109,6 @@ class UserRepositoryTest {
         assertThat(found.get(0).getLastName()).isEqualTo("Smith");
     }
 
-    // Test 5: Save user to database
     @Test
     void save_ShouldPersistUser() {
         User saved = userRepository.save(testUser1);
@@ -123,7 +118,6 @@ class UserRepositoryTest {
         assertThat(entityManager.find(User.class, saved.getId())).isEqualTo(saved);
     }
 
-    // Test 6: Retrieve all users from database
     @Test
     void findAll_ShouldReturnAllUsers() {
         entityManager.persist(testUser1);
@@ -138,7 +132,6 @@ class UserRepositoryTest {
                 .containsExactlyInAnyOrder("Doe", "Smith");
     }
 
-    // Test 7: Delete user from database
     @Test
     void delete_ShouldRemoveUser() {
         entityManager.persist(testUser1);
@@ -151,7 +144,6 @@ class UserRepositoryTest {
         assertThat(found).isNull();
     }
 
-    // Test 8: Find user by ID from database
     @Test
     void findById_WithExistingId_ShouldReturnUser() {
         entityManager.persist(testUser1);
@@ -163,3 +155,4 @@ class UserRepositoryTest {
         assertThat(found.getId()).isEqualTo(userId);
     }
 }
+

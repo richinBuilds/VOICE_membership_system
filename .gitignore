@@ -6,6 +6,10 @@
 /.idea/
 /.vscode/
 *.iml
+/.settings/
+/.classpath
+/.project
+/.factorypath
 
 # OS files
 .DS_Store
@@ -31,3 +35,14 @@ Thumbs.db
 
 # VS Code
 .history/
+
+# Batch/script files (use Maven instead)
+*.bat
+*.ps1
+
+# Test and coverage reports
+/test-results/
+/coverage/
+
+# Workspace files
+*.code-workspace

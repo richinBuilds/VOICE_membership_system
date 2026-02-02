@@ -10,12 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-/**
 
- Business logic service for landing page and membership initialization.
- Retrieves and manages: memberships, benefits, and landing page content.
- Initializes default data (Free + Premium memberships, benefits, tagline) on app startup.
- Provides methods to populate database with seed data if not already present (idempotent).
+/**
+ * 
+ * Business logic service for landing page and membership initialization.
+ * Retrieves and manages: memberships, benefits, and landing page content.
+ * Initializes default data (Free + Premium memberships, benefits, tagline) on
+ * app startup.
+ * Provides methods to populate database with seed data if not already present
+ * (idempotent).
  */
 @Service
 public class LandingPageService {
@@ -29,39 +32,24 @@ public class LandingPageService {
     @Autowired
     private LandingPageContentRepository landingPageContentRepository;
 
-    /**
-     * Get all active membership options ordered by display order
-     */
     public List<Membership> getActiveMemberships() {
         return membershipRepository.findByActiveTrueOrderByDisplayOrderAsc();
     }
 
-    /**
-     * Get all active membership benefits ordered by display order
-     */
     public List<MembershipBenefit> getActiveBenefits() {
         return membershipBenefitRepository.findByActiveTrueOrderByDisplayOrderAsc();
     }
 
-    /**
-     * Get landing page content by key (mission, subtitle, etc.)
-     */
     public String getContentByKey(String key) {
         return landingPageContentRepository.findByKey(key)
                 .map(LandingPageContent::getValue)
                 .orElse("");
     }
 
-    /**
-     * Get landing page subtitle/tagline
-     */
     public String getTagline() {
         return getContentByKey("tagline");
     }
 
-    /**
-     * Initialize default landing page content if it doesn't exist
-     */
     public void initializeDefaultContent() {
         if (landingPageContentRepository.findByKey("tagline").isEmpty()) {
             LandingPageContent taglineContent = LandingPageContent.builder()
@@ -73,30 +61,30 @@ public class LandingPageService {
         }
     }
 
-    /**
-     * Initialize default membership options if they don't exist
-     */
     public void initializeDefaultMemberships() {
         long membershipCount = membershipRepository.count();
         if (membershipCount == 0) {
-            // Free membership
             Membership freeMembership = Membership.builder()
                     .name("Free")
                     .description("Get started with VOICE community")
                     .price(null)
-                    .features("Basic access" + System.lineSeparator() + "Community forum access" + System.lineSeparator() + "Weekly newsletters" + System.lineSeparator() + "No voting rights")
+                    .features(
+                            "Basic access" + System.lineSeparator() + "Community forum access" + System.lineSeparator()
+                                    + "Weekly newsletters" + System.lineSeparator() + "No voting rights")
                     .isFree(true)
                     .displayOrder(1)
                     .active(true)
                     .build();
             membershipRepository.save(freeMembership);
 
-            // Paid membership ($20 annually)
             Membership paidMembership = Membership.builder()
                     .name("Premium")
                     .description("Support VOICE and unlock premium benefits")
                     .price(new java.math.BigDecimal("20.00"))
-                    .features("Membership with full voting right" + System.lineSeparator() + "Includes two adults and any minor dependents in the same household" + System.lineSeparator() + "Exclusive webinars" + System.lineSeparator() + "Updated on events and kept informed")
+                    .features("Membership with full voting right" + System.lineSeparator()
+                            + "Includes two adults and any minor dependents in the same household"
+                            + System.lineSeparator() + "Exclusive webinars" + System.lineSeparator()
+                            + "Updated on events and kept informed")
 
                     .isFree(false)
                     .displayOrder(2)
@@ -106,9 +94,6 @@ public class LandingPageService {
         }
     }
 
-    /**
-     * Initialize default membership benefits if they don't exist
-     */
     public void initializeDefaultBenefits() {
         long benefitCount = membershipBenefitRepository.count();
         if (benefitCount == 0) {
@@ -159,3 +144,4 @@ public class LandingPageService {
         }
     }
 }
+

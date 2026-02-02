@@ -10,3 +10,4 @@ class WebRegistrationApplicationTests {
     void contextLoads() {
     }
 }
+

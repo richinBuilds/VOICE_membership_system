@@ -51,7 +51,6 @@ class MembershipRepositoryTest {
                 .build();
     }
 
-    // Test 1: Find only active memberships (exclude inactive ones)
     @Test
     void findByActiveTrue_ShouldReturnOnlyActiveMemberships() {
         Membership inactiveMembership = Membership.builder()
@@ -75,7 +74,6 @@ class MembershipRepositoryTest {
                 .containsExactlyInAnyOrder("Free", "Premium");
     }
 
-    // Test 2: Save membership to database
     @Test
     void save_ShouldPersistMembership() {
         Membership saved = membershipRepository.save(freeMembership);
@@ -85,7 +83,6 @@ class MembershipRepositoryTest {
         assertThat(entityManager.find(Membership.class, saved.getId())).isEqualTo(saved);
     }
 
-    // Test 3: Count total number of memberships in database
     @Test
     void count_ShouldReturnTotalMemberships() {
         entityManager.persist(freeMembership);
@@ -97,7 +94,6 @@ class MembershipRepositoryTest {
         assertThat(count).isEqualTo(2);
     }
 
-    // Test 4: Find membership by ID from database
     @Test
     void findById_WithExistingId_ShouldReturnMembership() {
         entityManager.persist(freeMembership);
@@ -111,3 +107,4 @@ class MembershipRepositoryTest {
         assertThat(found.isFree()).isTrue();
     }
 }
+

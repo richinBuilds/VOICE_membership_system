@@ -36,7 +36,6 @@ class StrongPasswordValidatorTest {
         }
     }
 
-    // Test 1: Valid strong password passes validation
     @Test
     void validate_WithValidPassword_ShouldPass() {
         TestDto dto = new TestDto("ValidPass123!");
@@ -46,7 +45,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isEmpty();
     }
 
-    // Test 2: Multiple valid password formats pass validation
     @ParameterizedTest
     @ValueSource(strings = {
             "Abcd123!",
@@ -62,7 +60,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isEmpty();
     }
 
-    // Test 3: Password too short (less than 8 characters) fails
     @Test
     void validate_WithShortPassword_ShouldFail() {
         TestDto dto = new TestDto("Short1!");
@@ -72,7 +69,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 
-    // Test 4: Password without uppercase letter fails
     @Test
     void validate_WithNoUppercase_ShouldFail() {
         TestDto dto = new TestDto("lowercase123!");
@@ -82,7 +78,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 
-    // Test 5: Password without lowercase letter fails
     @Test
     void validate_WithNoLowercase_ShouldFail() {
         TestDto dto = new TestDto("UPPERCASE123!");
@@ -92,7 +87,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 
-    // Test 6: Password without number fails
     @Test
     void validate_WithNoDigit_ShouldFail() {
         TestDto dto = new TestDto("NoDigitPass!");
@@ -102,7 +96,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 
-    // Test 7: Password without special character fails
     @Test
     void validate_WithNoSpecialCharacter_ShouldFail() {
         TestDto dto = new TestDto("NoSpecial123");
@@ -112,7 +105,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 
-    // Test 8: Null password fails validation
     @Test
     void validate_WithNullPassword_ShouldFail() {
         TestDto dto = new TestDto(null);
@@ -122,7 +114,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 
-    // Test 9: Empty password fails validation
     @Test
     void validate_WithEmptyPassword_ShouldFail() {
         TestDto dto = new TestDto("");
@@ -132,7 +123,6 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 
-    // Test 10: Multiple weak password formats all fail validation
     @ParameterizedTest
     @ValueSource(strings = {
             "weak",
@@ -151,3 +141,4 @@ class StrongPasswordValidatorTest {
         assertThat(violations).isNotEmpty();
     }
 }
+

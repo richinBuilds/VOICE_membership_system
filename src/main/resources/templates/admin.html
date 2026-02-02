@@ -10,10 +10,7 @@
 
     <title>Admin Dashboard - VOICE Membership System</title>
 
-    <!-- Bootstrap -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <!-- Global CSS -->
@@ -22,7 +19,6 @@
 
 <body style="background: var(--bg-bone);">
 
-<!-- Navbar -->
 <nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" th:href="@{/}">
@@ -55,7 +51,7 @@
     </div>
 </nav>
 
-<!-- Admin Header -->
+<!-- Dashboard welcome banner with user greeting -->
 <div class="admin-header">
     <div class="container">
         <h1><i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard</h1>
@@ -63,10 +59,9 @@
     </div>
 </div>
 
-<!-- Main Content -->
+<!-- Admin dashboard: user statistics, filtering, and data table -->
 <div class="container mb-5">
     
-    <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="stat-card">
@@ -97,7 +92,7 @@
         </div>
     </div>
 
-    <!-- Users Table -->
+    <!-- User management table with filtering, export, and detail view -->
     <div class="table-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="mb-0">
@@ -113,7 +108,7 @@
             </div>
         </div>
         
-        <!-- Filter Panel -->
+        <!-- Advanced search filters: location, age range, hearing loss type, equipment, and date range -->
         <div class="collapse mb-4" id="filterPanel">
             <div class="card card-body bg-light">
                 <form id="filterForm" th:action="@{/admin/dashboard}" method="get">
@@ -122,6 +117,16 @@
                             <label class="form-label">Address</label>
                             <input type="text" class="form-control" name="address" 
                                    th:value="${address}" placeholder="Search by address...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" 
+                                   th:value="${city}" placeholder="Search by city...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Province</label>
+                            <input type="text" class="form-control" name="province" 
+                                   th:value="${province}" placeholder="Search by province...">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Child Age Range</label>
@@ -148,7 +153,7 @@
                             <input type="text" class="form-control" name="equipmentType" 
                                    th:value="${equipmentType}" placeholder="Search equipment type">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">Registration Date Range</label>
                             <div class="input-group">
                                 <input type="date" class="form-control" name="startDate" th:value="${startDate}">
@@ -156,7 +161,7 @@
                                 <input type="date" class="form-control" name="endDate" th:value="${endDate}">
                             </div>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-6 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary-custom me-2">
                                 <i class="fas fa-search me-1"></i>Apply Filters
                             </button>
@@ -178,6 +183,8 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Address</th>
+                        <th>City</th>
+                        <th>Province</th>
                         <th>Children</th>
                         <th>Role</th>
                         <th>Registration Date</th>
@@ -199,6 +206,14 @@
                             <small class="text-muted" th:if="${user.address == null or #strings.isEmpty(user.address)}">
                                 N/A
                             </small>
+                        </td>
+                        <td>
+                            <span th:if="${user.city != null and !#strings.isEmpty(user.city)}" th:text="${user.city}">Toronto</span>
+                            <span class="text-muted" th:if="${user.city == null or #strings.isEmpty(user.city)}">N/A</span>
+                        </td>
+                        <td>
+                            <span th:if="${user.province != null and !#strings.isEmpty(user.province)}" th:text="${user.province}">Ontario</span>
+                            <span class="text-muted" th:if="${user.province == null or #strings.isEmpty(user.province)}">N/A</span>
                         </td>
                         <td>
                             <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
@@ -239,7 +254,6 @@
             </table>
         </div>
         
-        <!-- Empty state -->
         <div th:if="${#lists.isEmpty(users)}" class="text-center py-5">
             <i class="fas fa-users fa-3x text-muted mb-3"></i>
             <p class="text-muted">No users found in the system.</p>
@@ -248,7 +262,7 @@
 
 </div>
 
-<!-- User Details Modal -->
+<!-- Modal for displaying complete user information including children and membership details -->
 <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -328,7 +342,6 @@ function generateUserDetailsHTML(user) {
     
     let html = `
         <div class="container-fluid">
-            <!-- Basic Information -->
             <div class="card mb-3">
                 <div class="card-header text-white" style="background-color: var(--primary);">
                     <h6 class="mb-0"><i class="fas fa-user me-2"></i>Basic Information</h6>
@@ -375,16 +388,23 @@ function generateUserDetailsHTML(user) {
                 </div>
             </div>
 
-            <!-- Address Information -->
             <div class="card mb-3">
                 <div class="card-header text-white" style="background-color: var(--primary);">
                     <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Address Information</h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-8 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="text-muted small">Street Address</label>
                             <div class="fw-bold">${user.address || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">City</label>
+                            <div class="fw-bold">${user.city || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Province</label>
+                            <div class="fw-bold">${user.province || 'N/A'}</div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="text-muted small">Postal Code</label>
@@ -394,7 +414,6 @@ function generateUserDetailsHTML(user) {
                 </div>
             </div>
 
-            <!-- Children Information -->
             <div class="card mb-3">
                 <div class="card-header text-white" style="background-color: var(--primary);">
                     <h6 class="mb-0">
@@ -459,7 +478,6 @@ function generateUserDetailsHTML(user) {
                 </div>
             </div>
 
-            <!-- Membership Information -->
             <div class="card mb-3">
                 <div class="card-header text-white" style="background-color: var(--primary);">
                     <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Membership Information</h6>
@@ -506,7 +524,6 @@ function generateUserDetailsHTML(user) {
 }
 </script>
 
-<!-- Footer -->
 <div class="dashboard-footer">
     <div class="container">
         <p class="mb-0">
@@ -515,7 +532,6 @@ function generateUserDetailsHTML(user) {
     </div>
 </div>
 
-<!-- Bootstrap JS Bundle -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 </body>

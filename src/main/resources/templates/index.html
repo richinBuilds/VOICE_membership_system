@@ -8,13 +8,8 @@
 
     <title>VOICE Membership System - Join Our Community</title>
 
-    <!-- Bootstrap -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
 
@@ -23,13 +18,12 @@
 <!-- Skip Link -->
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
-<!-- ================= NAVBAR ================= -->
+<!-- ================= NAVIGATION BAR: Main navigation with user authentication state handling ================= -->
 
 <nav class="navbar navbar-expand-lg" data-testid="main-navbar">
     <div class="container">
 
         <a class="navbar-brand" th:href="@{/}" data-testid="navbar-logo">
-            <!-- Logo without filter - shows original colors -->
             <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="40" onerror="this.style.display='none'">
         </a>
 

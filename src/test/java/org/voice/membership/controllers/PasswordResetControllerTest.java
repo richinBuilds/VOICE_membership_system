@@ -47,12 +47,16 @@ class PasswordResetControllerTest {
         testUser.setFirstName("Test");
         testUser.setMiddleName(null);
         testUser.setLastName("User");
+        testUser.setPhone("1234567890");
+        testUser.setAddress("123 Test St");
+        testUser.setCity("Toronto");
+        testUser.setProvince("ON");
+        testUser.setPostalCode("A1A 1A1");
         testUser.setRole("USER");
         testUser = userRepository.save(testUser);
     }
 
     // ======================Positive Tests======================
-    // Show Forgot Password Page
     @Test
     void showForgotPasswordPage_ShouldReturnForgotPasswordPage() throws Exception {
         mockMvc.perform(get("/forgot-password"))
@@ -60,7 +64,6 @@ class PasswordResetControllerTest {
                 .andExpect(view().name("forgot-password"));
     }
 
-    // Submit Valid Email - Real test with existing user
     @Test
     void processForgotPassword_WithValidEmail_ShouldSendResetLink() throws Exception {
         mockMvc.perform(post("/forgot-password")
@@ -71,7 +74,6 @@ class PasswordResetControllerTest {
                 .andExpect(model().attributeExists("message"));
     }
 
-    // Show Reset Password Page
     @Test
     void showResetPasswordPage_WithToken_ShouldReturnResetPasswordPage() throws Exception {
         mockMvc.perform(get("/reset-password")
@@ -82,7 +84,6 @@ class PasswordResetControllerTest {
     }
 
     // ======================Negative Tests======================
-    // Submit Invalid Email - Real test with non-existent user
     @Test
     void processForgotPassword_WithInvalidEmail_ShouldReturnError() throws Exception {
         mockMvc.perform(post("/forgot-password")
@@ -106,7 +107,6 @@ class PasswordResetControllerTest {
                 .andExpect(model().attribute("message", "Passwords do not match."));
     }
 
-    // Invalid Token
     @Test
     void processResetPassword_WithInvalidToken_ShouldReturnError() throws Exception {
         mockMvc.perform(post("/reset-password")

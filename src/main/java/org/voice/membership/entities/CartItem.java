@@ -40,3 +40,4 @@ public class CartItem {
     @Column(name = "total_price", columnDefinition = "DECIMAL(10, 2)")
     private BigDecimal totalPrice;
 }
+
