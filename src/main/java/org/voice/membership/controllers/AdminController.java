@@ -261,7 +261,7 @@ public class AdminController {
         // Users sheet headers
         Row userHeaderRow = usersSheet.createRow(0);
         String[] userColumns = { "ID", "First Name", "Middle Name", "Last Name", "Email", "Phone", "Address",
-                "Postal Code", "Role", "Registration Date",
+                "City", "Province", "Postal Code", "Role", "Registration Date",
                 "Number of Children" };
 
         for (int i = 0; i < userColumns.length; i++) {
@@ -283,10 +283,12 @@ public class AdminController {
             row.createCell(4).setCellValue(user.getEmail() != null ? user.getEmail() : "");
             row.createCell(5).setCellValue(user.getPhone() != null ? user.getPhone() : "");
             row.createCell(6).setCellValue(user.getAddress() != null ? user.getAddress() : "");
-            row.createCell(7).setCellValue(user.getPostalCode() != null ? user.getPostalCode() : "");
-            row.createCell(8).setCellValue(user.getRole() != null ? user.getRole() : "USER");
-            row.createCell(9).setCellValue(user.getCreation() != null ? dateFormat.format(user.getCreation()) : "");
-            row.createCell(10).setCellValue(user.getChildren() != null ? user.getChildren().size() : 0);
+            row.createCell(7).setCellValue(user.getCity() != null ? user.getCity() : "");
+            row.createCell(8).setCellValue(user.getProvince() != null ? user.getProvince() : "");
+            row.createCell(9).setCellValue(user.getPostalCode() != null ? user.getPostalCode() : "");
+            row.createCell(10).setCellValue(user.getRole() != null ? user.getRole() : "USER");
+            row.createCell(11).setCellValue(user.getCreation() != null ? dateFormat.format(user.getCreation()) : "");
+            row.createCell(12).setCellValue(user.getChildren() != null ? user.getChildren().size() : 0);
         }
 
         for (int i = 0; i < userColumns.length; i++) {
