@@ -1,5 +1,5 @@
 # Docker and GitHub Integration Guide
-
+# some changes
 ## Overview
 This document explains how Docker containerization and GitHub CI/CD automation work together for the VOICE Membership System project.
 
