@@ -95,7 +95,6 @@ class LandingPageServiceTest {
                 .build();
     }
 
-    // Test 1: Get all active membership plans
     @Test
     void getActiveMemberships_ShouldReturnListOfMemberships() {
         when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc())
@@ -109,7 +108,6 @@ class LandingPageServiceTest {
         verify(membershipRepository).findByActiveTrueOrderByDisplayOrderAsc();
     }
 
-    // Test 2: Get all active membership benefits
     @Test
     void getActiveBenefits_ShouldReturnListOfBenefits() {
         when(membershipBenefitRepository.findByActiveTrueOrderByDisplayOrderAsc()).thenReturn(benefits);
@@ -122,7 +120,6 @@ class LandingPageServiceTest {
         verify(membershipBenefitRepository).findByActiveTrueOrderByDisplayOrderAsc();
     }
 
-    // Test 3: Get landing page tagline text
     @Test
     void getTagline_ShouldReturnTaglineString() {
         when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.of(landingPageContent));
@@ -134,7 +131,6 @@ class LandingPageServiceTest {
         verify(landingPageContentRepository).findByKey("tagline");
     }
 
-    // Test 4: Create default memberships if none exist
     @Test
     void initializeDefaultMemberships_WhenNoMembershipsExist_ShouldCreateMemberships() {
         when(membershipRepository.count()).thenReturn(0L);
@@ -145,7 +141,6 @@ class LandingPageServiceTest {
         verify(membershipRepository, times(2)).save(any(Membership.class));
     }
 
-    // Test 5: Skip creating memberships if they already exist
     @Test
     void initializeDefaultMemberships_WhenMembershipsExist_ShouldNotCreateMemberships() {
         when(membershipRepository.count()).thenReturn(2L);
@@ -155,7 +150,6 @@ class LandingPageServiceTest {
         verify(membershipRepository, never()).save(any(Membership.class));
     }
 
-    // Test 6: Create default benefits if none exist
     @Test
     void initializeDefaultBenefits_WhenNoBenefitsExist_ShouldCreateBenefits() {
         when(membershipBenefitRepository.count()).thenReturn(0L);
@@ -166,7 +160,6 @@ class LandingPageServiceTest {
         verify(membershipBenefitRepository, times(5)).save(any(MembershipBenefit.class));
     }
 
-    // Test 7: Skip creating benefits if they already exist
     @Test
     void initializeDefaultBenefits_WhenBenefitsExist_ShouldNotCreateBenefits() {
         when(membershipBenefitRepository.count()).thenReturn(6L);
@@ -176,7 +169,6 @@ class LandingPageServiceTest {
         verify(membershipBenefitRepository, never()).save(any(MembershipBenefit.class));
     }
 
-    // Test 8: Create default landing page content if none exists
     @Test
     void initializeDefaultContent_WhenNoContentExists_ShouldCreateContent() {
         when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.empty());
@@ -187,7 +179,6 @@ class LandingPageServiceTest {
         verify(landingPageContentRepository).save(any(LandingPageContent.class));
     }
 
-    // Test 9: Skip creating content if it already exists
     @Test
     void initializeDefaultContent_WhenContentExists_ShouldNotCreateContent() {
         when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.of(landingPageContent));
@@ -197,3 +188,4 @@ class LandingPageServiceTest {
         verify(landingPageContentRepository, never()).save(any(LandingPageContent.class));
     }
 }
+

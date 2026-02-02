@@ -14,6 +14,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({ FIELD, PARAMETER })
 @Retention(RUNTIME)
 @Constraint(validatedBy = StrongPasswordValidator.class)
+/**
+ * Annotation for enforcing strong password rules on fields and parameters.
+ * Delegates validation logic to {@link StrongPasswordValidator}.
+ */
 public @interface StrongPassword {
     String message() default "Password must be 8-64 chars, include upper, lower, number, special, and contain no spaces";
 
@@ -21,3 +25,4 @@ public @interface StrongPassword {
 
     Class<? extends Payload>[] payload() default {};
 }
+

@@ -1,4 +1,3 @@
-
 package org.voice.membership.controllers;
 
 import org.voice.membership.dtos.UpdateUserRequest;
@@ -54,14 +53,12 @@ public class ProfileController {
     @GetMapping
     public String profile(Model model, Principal principal) {
         try {
-            // Get the logged-in user's information
             User user = userRepository.findByEmail(principal.getName());
 
             if (user == null) {
                 return "redirect:/login";
             }
 
-            // Add user information to model
             model.addAttribute("user", user);
             String fullName = user.getFirstName() +
                     (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
@@ -71,9 +68,10 @@ public class ProfileController {
             model.addAttribute("userEmail", user.getEmail());
             model.addAttribute("userPhone", user.getPhone() != null ? user.getPhone() : "Not provided");
             model.addAttribute("userAddress", user.getAddress() != null ? user.getAddress() : "Not provided");
+            model.addAttribute("userCity", user.getCity() != null ? user.getCity() : "Not provided");
+            model.addAttribute("userProvince", user.getProvince() != null ? user.getProvince() : "Not provided");
             model.addAttribute("userPostalCode", user.getPostalCode() != null ? user.getPostalCode() : "Not provided");
 
-            // Format creation date
             if (user.getCreation() != null) {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy");
                 model.addAttribute("memberSince", dateFormat.format(user.getCreation()));
@@ -81,21 +79,16 @@ public class ProfileController {
                 model.addAttribute("memberSince", "Recently");
             }
 
-            // Get children information
             List<Child> children = childRepository.findByUser(user);
             model.addAttribute("children", children);
 
-            // Get membership information
             Membership membership = user.getMembership();
             if (membership != null) {
                 model.addAttribute("membershipType", membership.getName());
 
-                // For paid members, set status to "Paid" and calculate expiry date (1 year from
-                // creation)
                 if (!membership.isFree()) {
                     model.addAttribute("membershipStatus", "Paid");
 
-                    // Calculate expiry date: 1 year from user creation date
                     if (user.getCreation() != null) {
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(user.getCreation());
@@ -107,10 +100,8 @@ public class ProfileController {
                         model.addAttribute("membershipExpiryDate", "-");
                     }
 
-                    // Don't show benefits for paid members
                     model.addAttribute("showBenefits", false);
                 } else {
-                    // Free membership
                     model.addAttribute("membershipStatus", "Free");
                     model.addAttribute("membershipExpiryDate", "No expiry");
                     model.addAttribute("showBenefits", true);
@@ -118,7 +109,6 @@ public class ProfileController {
                             membership.getDescription() != null ? membership.getDescription() : "-");
                 }
             } else {
-                // No membership assigned
                 model.addAttribute("membershipStatus", "None");
                 model.addAttribute("membershipType", "No Membership Yet");
                 model.addAttribute("membershipExpiryDate", "-");
@@ -142,6 +132,8 @@ public class ProfileController {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
+                .city(user.getCity())
+                .province(user.getProvince())
                 .postalCode(user.getPostalCode())
                 .build();
         model.addAttribute("updateUserRequest", updateUserRequest);
@@ -167,11 +159,9 @@ public class ProfileController {
             user.setFirstName(updateUserRequest.getFirstName());
             user.setMiddleName(updateUserRequest.getMiddleName());
             user.setLastName(updateUserRequest.getLastName());
-            // If email changed, update and refresh session principal
             String oldEmail = user.getEmail();
             String newEmail = updateUserRequest.getEmail();
             if (newEmail != null && !newEmail.equalsIgnoreCase(oldEmail)) {
-                // Validate uniqueness: any other account with same email (case-insensitive)
                 List<User> matches = userRepository.findAllByEmailIgnoreCase(newEmail);
                 boolean conflict = matches.stream().anyMatch(u -> u.getId() != user.getId());
                 if (conflict) {
@@ -184,6 +174,8 @@ public class ProfileController {
             }
             user.setPhone(updateUserRequest.getPhone());
             user.setAddress(updateUserRequest.getAddress());
+            user.setCity(updateUserRequest.getCity());
+            user.setProvince(updateUserRequest.getProvince());
             user.setPostalCode(updateUserRequest.getPostalCode());
             userRepository.save(user);
             if (newEmail != null && !newEmail.equalsIgnoreCase(oldEmail)) {
@@ -193,7 +185,6 @@ public class ProfileController {
                             newDetails.getPassword(), newDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(newAuth);
                 } catch (Exception ex) {
-                    // If re-auth fails, user can re-login manually
                 }
             }
             return "redirect:/profile";
@@ -203,7 +194,6 @@ public class ProfileController {
         }
     }
 
-    // Child Management
     @GetMapping("/child/add")
     public String addChild(Model model, Principal principal) {
         try {
@@ -211,13 +201,11 @@ public class ProfileController {
             if (user == null) {
                 return "redirect:/login";
             }
-            // Create a new empty child object
             Child newChild = new Child();
             model.addAttribute("child", newChild);
             model.addAttribute("isEdit", false);
             return "editChild";
         } catch (Exception e) {
-            System.err.println("Error loading add child form: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/profile?error=add_child_failed";
         }
@@ -253,7 +241,6 @@ public class ProfileController {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                     child.setDateOfBirth(sdf.parse(dateOfBirthStr));
                 } catch (Exception e) {
-                    // Invalid date format, skip
                 }
             }
 
@@ -282,7 +269,6 @@ public class ProfileController {
             model.addAttribute("isEdit", true);
             return "editChild";
         } catch (Exception e) {
-            System.err.println("Error loading edit child form: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/profile?error=edit_child_failed";
         }
@@ -322,7 +308,6 @@ public class ProfileController {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                     child.setDateOfBirth(sdf.parse(dateOfBirthStr));
                 } catch (Exception e) {
-                    // Invalid date format, skip
                 }
             }
 
@@ -349,13 +334,11 @@ public class ProfileController {
             }
             return "redirect:/profile";
         } catch (Exception e) {
-            System.out.println("Error deleting child: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/profile";
         }
     }
 
-    // Upgrade Membership
     @GetMapping("/upgrade-membership")
     public String upgradeMembershipPage(Model model, Principal principal) {
         try {
@@ -364,14 +347,11 @@ public class ProfileController {
                 return "redirect:/login";
             }
 
-            // Check if user has free membership
             Membership membership = user.getMembership();
             if (membership == null || !membership.isFree()) {
-                // User is already paid or has no membership, redirect to profile
                 return "redirect:/profile?error=not_eligible_for_upgrade";
             }
 
-            // Get all paid membership options
             List<Membership> paidMemberships = membershipRepository.findByIsFree(false);
 
             model.addAttribute("user", user);
@@ -400,13 +380,11 @@ public class ProfileController {
                 return "redirect:/login";
             }
 
-            // Verify user has free membership
             Membership currentMembership = user.getMembership();
             if (currentMembership == null || !currentMembership.isFree()) {
                 return "redirect:/profile?error=not_eligible_for_upgrade";
             }
 
-            // Get the paid membership
             Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
             if (paidMembershipOpt.isEmpty() || paidMembershipOpt.get().isFree()) {
                 return "redirect:/profile/upgrade-membership?error=invalid_membership";
@@ -414,7 +392,6 @@ public class ProfileController {
 
             Membership paidMembership = paidMembershipOpt.get();
 
-            // Store in session or model for checkout
             model.addAttribute("user", user);
             model.addAttribute("upgradeMembership", paidMembership);
             String fullName = user.getFirstName() +

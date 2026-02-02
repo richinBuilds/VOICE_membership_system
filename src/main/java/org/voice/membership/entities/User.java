@@ -7,6 +7,10 @@ import lombok.*;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * JPA entity representing an application user and their membership details.
+ * Stores profile information, membership dates, children, and cart relation.
+ */
 @Getter
 @Setter
 @Entity
@@ -34,6 +38,10 @@ public class User {
     private String password;
     private String phone;
     private String address;
+    @Column(name = "city")
+    private String city;
+    @Column(name = "province")
+    private String province;
     @Column(name = "postal_code")
     private String postalCode;
     private String role;

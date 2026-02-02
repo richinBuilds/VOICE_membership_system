@@ -1,7 +1,5 @@
 /* =====================================================
    VOICE Membership System - Modern Redesigned UI
-   Theme: The Empathetic Professional
-   Inspired by: fiasco.design
    ===================================================== */
 
 /* Google Fonts - Inter (Clean, Professional) */
@@ -1621,7 +1619,7 @@ a:hover {
     }
 }
 
-/* ========== Admin Dashboard Styles ========== */
+/*Admin Dashboard Styles */
 .admin-header {
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
     color: var(--bg-white);
@@ -1781,5 +1779,70 @@ a:hover {
 
 #userDetailsModal .text-muted {
     color: var(--text-muted) !important;
+}
+
+
+/* Styles from checkout.html, editChild.html, register-step2.html, register-step3.html, register-step4.html */
+body.checkout-page,
+body.edit-child-page,
+body.register-page {
+    background: #09637E;
+    min-height: 100vh;
+}
+
+/* Styles from register.html and editProfile.html - Address Autocomplete */
+.address-autocomplete-dropdown {
+    position: absolute;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    width: 100%;
+    margin-top: 2px;
+}
+
+.address-autocomplete-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.address-autocomplete-item:hover {
+    background-color: #f5f5f5;
+}
+
+.address-autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+/* Styles from upgrade-membership.html */
+.membership-card-option {
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.membership-card-option:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.price-section {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.price {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.features-section {
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
 }
 

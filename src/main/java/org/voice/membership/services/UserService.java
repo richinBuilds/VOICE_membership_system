@@ -12,6 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
+/**
+ * Provides user-related operations and Spring Security user lookup.
+ * Handles loading users for authentication and password reset workflows.
+ */
 public class UserService implements UserDetailsService {
 
     @Autowired
@@ -32,7 +36,6 @@ public class UserService implements UserDetailsService {
     @Autowired(required = false)
     private EmailSenderService emailSenderService;
 
-    // In-memory token storage for demo (token -> user email)
     private final Map<String, String> resetTokens = new ConcurrentHashMap<>();
 
     public boolean sendPasswordResetEmail(String email) {

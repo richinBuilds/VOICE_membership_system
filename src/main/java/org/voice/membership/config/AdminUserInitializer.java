@@ -13,6 +13,10 @@ import java.util.Date;
 
 @Slf4j
 @Component
+/**
+ * Ensures a default admin user account exists on application startup.
+ * Creates or updates the admin user with a known email and password.
+ */
 public class AdminUserInitializer implements CommandLineRunner {
 
     @Autowired
@@ -23,12 +27,10 @@ public class AdminUserInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Check if admin user already exists
         String adminEmail = "tarparakrimy@gmail.com";
         User existingAdmin = userRepository.findByEmail(adminEmail);
 
         if (existingAdmin == null) {
-            // Create admin user
             User admin = User.builder()
                     .firstName("Admin")
                     .middleName(null)
@@ -47,7 +49,6 @@ public class AdminUserInitializer implements CommandLineRunner {
         } else {
             log.info("Admin user already exists");
 
-            // Update password and role to ensure correct credentials
             existingAdmin.setPassword(passwordEncoder.encode("Caspstone36!"));
             existingAdmin.setRole(Role.ADMIN.name());
             existingAdmin.setFirstName("Admin");

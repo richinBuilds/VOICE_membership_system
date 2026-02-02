@@ -9,7 +9,8 @@ import lombok.Data;
 /**
  * 
  * Carries user profile update information from the form to the controller.
- * Contains validated fields: name, email, phone, address, postal code.
+ * Contains validated fields: name, email, phone, address, city, province,
+ * postal code.
  * Used for updating user profile information on the dashboard.
  */
 @Data
@@ -32,6 +33,10 @@ public class UpdateUserRequest {
     private String phone;
 
     private String address;
+
+    private String city;
+
+    private String province;
 
     @Pattern(regexp = "^[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]$", message = "Valid Canadian postal code, e.g., A1A 1A1")
     private String postalCode;

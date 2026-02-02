@@ -124,6 +124,16 @@
                                    th:value="${address}" placeholder="Search by address...">
                         </div>
                         <div class="col-md-4">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" 
+                                   th:value="${city}" placeholder="Search by city...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Province</label>
+                            <input type="text" class="form-control" name="province" 
+                                   th:value="${province}" placeholder="Search by province...">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">Child Age Range</label>
                             <div class="input-group">
                                 <input type="number" class="form-control" name="minAge" 
@@ -148,7 +158,7 @@
                             <input type="text" class="form-control" name="equipmentType" 
                                    th:value="${equipmentType}" placeholder="Search equipment type">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">Registration Date Range</label>
                             <div class="input-group">
                                 <input type="date" class="form-control" name="startDate" th:value="${startDate}">
@@ -156,7 +166,7 @@
                                 <input type="date" class="form-control" name="endDate" th:value="${endDate}">
                             </div>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-6 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary-custom me-2">
                                 <i class="fas fa-search me-1"></i>Apply Filters
                             </button>
@@ -178,6 +188,8 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Address</th>
+                        <th>City</th>
+                        <th>Province</th>
                         <th>Children</th>
                         <th>Role</th>
                         <th>Registration Date</th>
@@ -199,6 +211,14 @@
                             <small class="text-muted" th:if="${user.address == null or #strings.isEmpty(user.address)}">
                                 N/A
                             </small>
+                        </td>
+                        <td>
+                            <span th:if="${user.city != null and !#strings.isEmpty(user.city)}" th:text="${user.city}">Toronto</span>
+                            <span class="text-muted" th:if="${user.city == null or #strings.isEmpty(user.city)}">N/A</span>
+                        </td>
+                        <td>
+                            <span th:if="${user.province != null and !#strings.isEmpty(user.province)}" th:text="${user.province}">Ontario</span>
+                            <span class="text-muted" th:if="${user.province == null or #strings.isEmpty(user.province)}">N/A</span>
                         </td>
                         <td>
                             <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
@@ -382,9 +402,17 @@ function generateUserDetailsHTML(user) {
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-8 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="text-muted small">Street Address</label>
                             <div class="fw-bold">${user.address || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">City</label>
+                            <div class="fw-bold">${user.city || 'N/A'}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small">Province</label>
+                            <div class="fw-bold">${user.province || 'N/A'}</div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="text-muted small">Postal Code</label>

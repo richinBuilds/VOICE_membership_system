@@ -75,12 +75,10 @@ class AuthenticationWorkflowTest {
     // Test Complete Password Reset
     @Test
     void testCompletePasswordResetWorkflow() throws Exception {
-        // Step 1: Request password reset
         mockMvc.perform(get("/forgot-password"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("forgot-password"));
 
-        // Step 2: Submit email for reset
         mockMvc.perform(post("/forgot-password")
                 .with(csrf())
                 .param("email", "auth-test@example.com"))
@@ -106,8 +104,6 @@ class AuthenticationWorkflowTest {
     // Test Reset Password Page with Token
     @Test
     void testResetPasswordPageWithToken() throws Exception {
-        // Note: We don't actually send email here to avoid requiring mail server
-        // Just test that the reset password page loads with a token parameter
         mockMvc.perform(get("/reset-password")
                 .param("token", "test-token"))
                 .andExpect(status().isOk())
@@ -134,3 +130,4 @@ class AuthenticationWorkflowTest {
         assertThat(userDetails.getAuthorities()).hasSize(1);
     }
 }
+

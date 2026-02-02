@@ -5,6 +5,10 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.regex.Pattern;
 
+/**
+ * Validates that a password meets the configured strong password rules.
+ * Used by the {@link StrongPassword} annotation during form validation.
+ */
 public class StrongPasswordValidator implements ConstraintValidator<StrongPassword, String> {
 
     private static final Pattern STRONG_PASSWORD = Pattern.compile(
@@ -18,3 +22,4 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         return STRONG_PASSWORD.matcher(value).matches();
     }
 }
+

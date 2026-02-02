@@ -29,6 +29,12 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/register")
+/**
+ * Implements the multi-step user registration, child details, and membership
+ * checkout flow.
+ * Guides users through all registration steps and persists users, children,
+ * carts, and memberships.
+ */
 public class RegisterController {
 
     @Autowired
@@ -55,10 +61,8 @@ public class RegisterController {
     @Autowired
     private EmailSenderService emailSenderService;
 
-    // Step 1: User Details
     @GetMapping
     public String showRegister(Model model, HttpSession session) {
-        // Clear any existing session data
         session.removeAttribute("registrationData");
         model.addAttribute("registerDto", new RegisterDto());
         model.addAttribute("step", 1);
@@ -71,13 +75,11 @@ public class RegisterController {
             BindingResult bindingResult,
             Model model,
             HttpSession session) {
-        // Confirm password match
         if (registerDto.getPassword() != null && registerDto.getConfirmPassword() != null
                 && !registerDto.getPassword().equals(registerDto.getConfirmPassword())) {
             bindingResult.addError(new FieldError("registerDto", "confirmPassword", "Passwords do not match"));
         }
 
-        // Email uniqueness check (case-insensitive)
         if (registerDto.getEmail() != null) {
             List<User> matches = userRepository.findAllByEmailIgnoreCase(registerDto.getEmail());
             if (!matches.isEmpty()) {
@@ -92,7 +94,6 @@ public class RegisterController {
             return "register";
         }
 
-        // Store in session
         MultiStepRegistrationDto registrationData = new MultiStepRegistrationDto();
         registrationData.setUserDetails(registerDto);
         session.setAttribute("registrationData", registrationData);
@@ -100,7 +101,6 @@ public class RegisterController {
         return "redirect:/register/step2";
     }
 
-    // Step 2: Child Information
     @GetMapping("/step2")
     public String showStep2(Model model, HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
@@ -136,7 +136,6 @@ public class RegisterController {
         }
 
         if ("addChild".equals(action)) {
-            // Add a new empty child
             if (registrationData.getChildren() == null) {
                 registrationData.setChildren(new ArrayList<>());
             }
@@ -145,7 +144,6 @@ public class RegisterController {
             return "redirect:/register/step2";
         }
 
-        // Process child data
         List<ChildDto> children = new ArrayList<>();
         if (childNames != null && !childNames.isEmpty()) {
             for (int i = 0; i < childNames.size(); i++) {
@@ -162,7 +160,6 @@ public class RegisterController {
                             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
                             child.setDateOfBirth(sdf.parse(childDobs.get(i)));
                         } catch (Exception e) {
-                            // Invalid date format
                         }
                     }
                     if (hearingLossTypes != null && i < hearingLossTypes.size()) {
@@ -188,7 +185,6 @@ public class RegisterController {
         return "redirect:/register/step3";
     }
 
-    // Step 3: Membership Selection
     @GetMapping("/step3")
     public String showStep3(Model model, HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
@@ -218,11 +214,8 @@ public class RegisterController {
             return "redirect:/register/step3";
         }
 
-        // Enforce single membership selection
-        // If user already selected a membership and selects a different one, replace it
         if (registrationData.getSelectedMembershipId() != null) {
-            System.out.println("Replacing previous membership selection: " +
-                    registrationData.getSelectedMembershipId() + " with " + membershipId);
+            // Replacing previous membership selection
         }
 
         registrationData.setSelectedMembershipId(membershipId);
@@ -232,7 +225,6 @@ public class RegisterController {
         return "redirect:/register/step4";
     }
 
-    // Step 4: Cart View/Management
     @GetMapping("/step4")
     public String showStep4(@RequestParam(value = "error", required = false) String error,
             Model model, HttpSession session) {
@@ -269,78 +261,59 @@ public class RegisterController {
             MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
                     .getAttribute("registrationData");
             if (registrationData == null) {
-                System.out.println("DEBUG: No registrationData in session");
                 return "redirect:/register";
             }
 
             if ("remove".equals(action)) {
-                // Remove from cart - go back to membership selection
                 registrationData.setCartMembershipId(null);
                 registrationData.setSelectedMembershipId(null);
                 session.setAttribute("registrationData", registrationData);
                 return "redirect:/register/step3";
             }
 
-            // Proceed to checkout or complete registration
             if (registrationData.getCartMembershipId() == null) {
-                System.out.println("DEBUG: cartMembershipId is null");
                 return "redirect:/register/step3";
             }
 
             Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
             if (membershipOpt.isEmpty()) {
-                System.out.println("DEBUG: Membership not found for id: " + registrationData.getCartMembershipId());
                 return "redirect:/register/step3";
             }
 
             Membership membership = membershipOpt.get();
-            System.out.println("DEBUG: Membership found: " + membership.getName() + ", isFree: " + membership.isFree());
 
             if (membership.isFree()) {
-                // Free membership - complete registration directly
-                System.out.println("DEBUG: Redirecting to complete registration (free)");
                 return completeRegistration(session);
             } else {
-                // Paid membership - go to checkout
-                System.out.println("DEBUG: Redirecting to /register/checkout");
                 return "redirect:/register/checkout";
             }
         } catch (Exception e) {
-            System.err.println("DEBUG: Exception in handleStep4: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/register/step4?error=processing_failed";
         }
     }
 
-    // Checkout for paid memberships
     @GetMapping("/checkout")
     public String showCheckout(Model model, HttpSession session) {
-        System.out.println("DEBUG: showCheckout() called - GET /register/checkout");
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
         if (registrationData == null) {
-            System.out.println("DEBUG: No registrationData in session at checkout");
             return "redirect:/register";
         }
 
         if (registrationData.getCartMembershipId() == null) {
-            System.out.println("DEBUG: cartMembershipId is null at checkout");
             return "redirect:/register/step3";
         }
 
         Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
         if (membershipOpt.isEmpty()) {
-            System.out.println("DEBUG: Membership not found at checkout");
             return "redirect:/register/step3";
         }
 
         Membership membership = membershipOpt.get();
         if (membership.isFree()) {
-            // Free membership shouldn't reach checkout
-            System.out.println("DEBUG: Free membership reached checkout, redirecting");
             return completeRegistration(session);
         }
 
-        System.out.println("DEBUG: Rendering checkout template with membership: " + membership.getName());
         model.addAttribute("membership", membership);
         model.addAttribute("totalAmount", membership.getPrice());
         return "checkout";
@@ -361,7 +334,6 @@ public class RegisterController {
                 return "redirect:/register";
             }
 
-            // Basic validation (in production, use proper payment gateway)
             if (cardNumber == null || cardNumber.trim().isEmpty() ||
                     cardHolderName == null || cardHolderName.trim().isEmpty() ||
                     expiryMonth == null || expiryMonth.trim().isEmpty() ||
@@ -376,13 +348,8 @@ public class RegisterController {
                 }
                 return "checkout";
             }
-
-            // In a real application, process payment here
-            // For now, we'll just complete the registration
-
             return completeRegistration(session);
         } catch (Exception e) {
-            System.err.println("Error in checkout: " + e.getMessage());
             e.printStackTrace();
             MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
                     .getAttribute("registrationData");
@@ -399,7 +366,6 @@ public class RegisterController {
         }
     }
 
-    // Complete registration and create account
     private String completeRegistration(HttpSession session) {
         try {
             MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
@@ -410,7 +376,6 @@ public class RegisterController {
 
             RegisterDto userDetails = registrationData.getUserDetails();
 
-            // Create user
             User user = User.builder()
                     .firstName(userDetails.getFirstName())
                     .middleName(userDetails.getMiddleName())
@@ -419,12 +384,13 @@ public class RegisterController {
                     .password(passwordEncoder.encode(userDetails.getPassword()))
                     .phone(userDetails.getPhone())
                     .address(userDetails.getAddress())
+                    .city(userDetails.getCity())
+                    .province(userDetails.getProvince())
                     .postalCode(userDetails.getPostalCode())
                     .role(Role.USER.name())
                     .creation(new Date())
                     .build();
 
-            // Set membership if selected
             if (registrationData.getSelectedMembershipId() != null) {
                 Optional<Membership> membershipOpt = membershipRepository
                         .findById(registrationData.getSelectedMembershipId());
@@ -432,25 +398,20 @@ public class RegisterController {
                     Membership membership = membershipOpt.get();
                     user.setMembership(membership);
 
-                    // Set membership dates for paid memberships
                     if (!membership.isFree()) {
                         Date now = new Date();
                         user.setMembershipStartDate(now);
 
-                        // Set expiry to 1 year from now
                         java.util.Calendar cal = java.util.Calendar.getInstance();
                         cal.setTime(now);
                         cal.add(java.util.Calendar.YEAR, 1);
                         user.setMembershipExpiryDate(cal.getTime());
-
-                        System.out.println("Paid membership registered with dates: " + now + " to " + cal.getTime());
                     }
                 }
             }
 
             user = userRepository.save(user);
 
-            // Save children
             if (registrationData.getChildren() != null && !registrationData.getChildren().isEmpty()) {
                 List<Child> children = new ArrayList<>();
                 for (ChildDto childDto : registrationData.getChildren()) {
@@ -473,26 +434,20 @@ public class RegisterController {
                 }
             }
 
-            // Create cart if paid membership
             if (registrationData.getSelectedMembershipId() != null) {
                 Optional<Membership> membershipOpt = membershipRepository
                         .findById(registrationData.getSelectedMembershipId());
                 if (membershipOpt.isPresent() && !membershipOpt.get().isFree()) {
-                    // Ensure only ONE membership in cart
-                    // Check if cart already exists for this user
                     Optional<Cart> existingCartOpt = cartRepository.findByUserId(user.getId());
 
                     Cart cart;
                     if (existingCartOpt.isPresent()) {
-                        // Clear existing cart items to enforce single membership
                         Cart existingCart = existingCartOpt.get();
                         cartItemRepository.deleteByCartId(existingCart.getId());
                         cart = existingCart;
                         cart.setUpdatedAt(new Date());
                         cart = cartRepository.save(cart);
-                        System.out.println("Cleared existing cart items to enforce single membership selection");
                     } else {
-                        // Create new cart
                         cart = Cart.builder()
                                 .user(user)
                                 .createdAt(new Date())
@@ -510,33 +465,26 @@ public class RegisterController {
                             .totalPrice(membership.getPrice())
                             .build();
                     cartItemRepository.save(cartItem);
-
-                    System.out.println("Added single membership to cart: " + membership.getName());
                 }
             }
 
-            // Auto-login the user
             try {
                 UserDetails userDetails1 = userService.loadUserByUsername(user.getEmail());
                 Authentication authentication = new UsernamePasswordAuthenticationToken(
                         userDetails1, null, userDetails1.getAuthorities());
 
-                // Set authentication in SecurityContext
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
                 securityContext.setAuthentication(authentication);
                 SecurityContextHolder.setContext(securityContext);
 
-                // Store in session using Spring Security's session key
                 session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
             } catch (Exception e) {
-                // If auto-login fails, redirect to login page with message
+
                 return "redirect:/login?registered=true";
             }
 
-            // Clear session
             session.removeAttribute("registrationData");
 
-            // Redirect to dashboard
             return "redirect:/profile";
         } catch (Exception e) {
             e.printStackTrace();
@@ -544,7 +492,6 @@ public class RegisterController {
         }
     }
 
-    // Upgrade Membership Checkout
     @GetMapping("/upgrade-checkout")
     public String showUpgradeCheckout(Model model, Principal principal) {
         try {
@@ -553,7 +500,6 @@ public class RegisterController {
                 return "redirect:/login";
             }
 
-            // Verify user has free membership
             Membership currentMembership = user.getMembership();
             if (currentMembership == null || !currentMembership.isFree()) {
                 return "redirect:/profile?error=not_eligible_for_upgrade";
@@ -589,19 +535,16 @@ public class RegisterController {
                 return "redirect:/login";
             }
 
-            // Verify user has free membership
             Membership currentMembership = user.getMembership();
             if (currentMembership == null || !currentMembership.isFree()) {
                 return "redirect:/profile?error=not_eligible_for_upgrade";
             }
 
-            // Validate membership exists and is paid
             Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
             if (paidMembershipOpt.isEmpty() || paidMembershipOpt.get().isFree()) {
                 return "redirect:/profile?error=invalid_membership";
             }
 
-            // Basic payment validation
             if (cardNumber == null || cardNumber.trim().isEmpty() ||
                     cardHolderName == null || cardHolderName.trim().isEmpty() ||
                     expiryMonth == null || expiryMonth.trim().isEmpty() ||
@@ -619,30 +562,19 @@ public class RegisterController {
                 return "upgrade-checkout";
             }
 
-            // Process payment (in production, use proper payment gateway)
-            // For now, just update the user membership
-            System.out.println("=== PAYMENT PROCESSING ===");
-            System.out.println("User: " + user.getEmail());
-            System.out.println("Current Membership: " + currentMembership.getName());
-            System.out.println("New Membership: " + paidMembershipOpt.get().getName());
-
             Membership paidMembership = paidMembershipOpt.get();
 
-            // Replace unpaid/free membership with paid membership
             user.setMembership(paidMembership);
 
-            // Set membership start date to now
             Date now = new Date();
             user.setMembershipStartDate(now);
 
-            // Set membership expiry date (1 year from now)
             java.util.Calendar cal = java.util.Calendar.getInstance();
             cal.setTime(now);
             cal.add(java.util.Calendar.YEAR, 1);
             Date expiryDate = cal.getTime();
             user.setMembershipExpiryDate(expiryDate);
 
-            // Save user with updated membership and dates
             userRepository.save(user);
 
             System.out.println("=== MEMBERSHIP UPDATED ===");
@@ -650,7 +582,6 @@ public class RegisterController {
             System.out.println("Start Date: " + now);
             System.out.println("Expiry Date: " + expiryDate);
 
-            // Send confirmation email
             try {
                 java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMMM dd, yyyy");
                 String fullName = user.getFirstName() +
@@ -666,17 +597,14 @@ public class RegisterController {
                 System.out.println("Confirmation email sent to: " + user.getEmail());
             } catch (Exception emailEx) {
                 System.err.println("Warning: Failed to send confirmation email: " + emailEx.getMessage());
-                // Continue even if email fails
             }
 
-            // Redirect to success page or profile with message
             return "redirect:/profile?upgrade=success";
         } catch (Exception e) {
             System.err.println("=== UPGRADE PAYMENT ERROR ===");
             System.err.println("Error in upgrade checkout: " + e.getMessage());
             e.printStackTrace();
 
-            // Rainy day scenario: System error while saving membership data
             model.addAttribute("error",
                     "An error occurred processing your payment. Please try again or contact support if the issue persists.");
 
@@ -692,7 +620,6 @@ public class RegisterController {
                             " " + user.getLastName();
                     model.addAttribute("userName", fullName);
 
-                    // Reload the membership for display
                     Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
                     paidMembershipOpt.ifPresent(membership -> model.addAttribute("upgradeMembership", membership));
                 }
