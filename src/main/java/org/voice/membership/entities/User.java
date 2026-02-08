@@ -47,6 +47,18 @@ public class User {
     private String role;
     private Date creation;
 
+    @Column(name = "email_verified", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean emailVerified = false;
+
+    @Column(name = "failed_login_attempts", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "account_locked", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean accountLocked = false;
+
+    @Column(name = "lockout_time")
+    private Date lockoutTime;
+
     @Column(name = "membership_start_date")
     private Date membershipStartDate;
 

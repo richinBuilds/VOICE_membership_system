@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Email verification result">
+
+    <title>Email Verification - VOICE Membership System</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body class="auth-bg">
+
+<div class="auth-container">
+
+    <div class="auth-card">
+
+        <!-- Header -->
+        <div class="auth-header">
+            <a th:href="@{/}">
+                <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="50" onerror="this.style.display='none'">
+            </a>
+        </div>
+
+        <!-- Success Message -->
+        <div th:if="${success}" class="text-center mb-4">
+            <div class="mb-4">
+                <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745;"></i>
+            </div>
+            <h1 class="mb-3">Email Verified!</h1>
+            <div class="alert alert-success mb-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${success}">Email verified successfully!</span>
+            </div>
+            <p class="text-muted mb-4">
+                Your account is now active. You can now sign in and access all features.
+            </p>
+            <a th:href="@{/login}" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-1"></i> Sign In Now
+            </a>
+        </div>
+
+        <!-- Error Message -->
+        <div th:if="${error}" class="text-center mb-4">
+            <div class="mb-4">
+                <i class="fas fa-times-circle" style="font-size: 64px; color: #dc3545;"></i>
+            </div>
+            <h1 class="mb-3">Verification Failed</h1>
+            <div class="alert alert-danger mb-3" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${error}">Verification failed.</span>
+            </div>
+            <p class="text-muted mb-4">
+                The verification link may have expired or is invalid.
+            </p>
+            <div class="d-grid gap-2">
+                <a th:href="@{/register/resend-verification}" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-1"></i> Resend Verification Email
+                </a>
+                <a th:href="@{/register}" class="btn btn-outline-secondary">
+                    <i class="fas fa-user-plus me-1"></i> Register Again
+                </a>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center">
+            <a th:href="@{/}" class="auth-link">
+                <i class="fas fa-home me-1"></i> Back to Home
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

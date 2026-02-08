@@ -68,4 +68,23 @@ public class EmailSenderService {
             e.printStackTrace();
         }
     }
+
+    public void sendVerificationEmail(String to, String userName, String verificationLink) {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("Verify Your Email - VOICE Membership");
+
+            Context context = new Context();
+            context.setVariable("userName", userName);
+            context.setVariable("verificationLink", verificationLink);
+            String htmlContent = templateEngine.process("email-verification", context);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send verification email", e);
+        }
+    }
 }

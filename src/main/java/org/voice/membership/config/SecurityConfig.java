@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.core.Authentication;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +23,12 @@ import jakarta.servlet.http.HttpServletResponse;
  * redirects.
  */
 public class SecurityConfig {
+
+        @Autowired
+        private CustomAuthenticationFailureHandler authenticationFailureHandler;
+
+        @Autowired
+        private CustomAuthenticationSuccessHandler authenticationSuccessHandler;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -45,7 +52,8 @@ public class SecurityConfig {
 
                                 .formLogin(form -> form
                                                 .loginPage("/login")
-                                                .successHandler(authenticationSuccessHandler())
+                                                .successHandler(authenticationSuccessHandler)
+                                                .failureHandler(authenticationFailureHandler)
                                                 .permitAll())
                                 .logout(config -> config
                                                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
@@ -66,21 +74,6 @@ public class SecurityConfig {
         @Bean
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder();
-        }
-
-        @Bean
-        public AuthenticationSuccessHandler authenticationSuccessHandler() {
-                return (HttpServletRequest request, HttpServletResponse response, Authentication authentication) -> {
-                        boolean isAdmin = authentication.getAuthorities().stream()
-                                        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority()
-                                                        .equals("ROLE_ADMIN"));
-
-                        if (isAdmin) {
-                                response.sendRedirect("/admin/dashboard");
-                        } else {
-                                response.sendRedirect("/profile");
-                        }
-                };
         }
 
 }

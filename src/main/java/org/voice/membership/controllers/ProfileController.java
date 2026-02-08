@@ -49,6 +49,7 @@ public class ProfileController {
     private final MembershipRepository membershipRepository;
     private final ChildRepository childRepository;
     private final UserService userService;
+    private final org.voice.membership.services.MembershipCancellationService membershipCancellationService;
 
     @GetMapping
     public String profile(Model model, Principal principal) {
@@ -85,6 +86,7 @@ public class ProfileController {
             Membership membership = user.getMembership();
             if (membership != null) {
                 model.addAttribute("membershipType", membership.getName());
+                model.addAttribute("hasPaidMembership", !membership.isFree());
 
                 if (!membership.isFree()) {
                     model.addAttribute("membershipStatus", "Paid");
@@ -407,6 +409,67 @@ public class ProfileController {
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/profile/upgrade-membership?error=selection_failed";
+        }
+    }
+
+    /**
+     * Displays the membership cancellation confirmation page.
+     * Allows members to review their current membership before cancelling.
+     */
+    @GetMapping("/cancel-membership")
+    public String cancelMembershipPage(Model model, Principal principal) {
+        try {
+            User user = userRepository.findByEmail(principal.getName());
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            // Check if user has a membership to cancel
+            if (!membershipCancellationService.canCancelMembership(user.getId())) {
+                return "redirect:/profile?error=no_membership_to_cancel";
+            }
+
+            // Get current membership info
+            var membershipInfo = membershipCancellationService.getCurrentMembershipInfo(user.getId());
+
+            model.addAttribute("user", user);
+            String fullName = user.getFirstName() +
+                    (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
+                    + " " + user.getLastName();
+            model.addAttribute("userName", fullName);
+            model.addAttribute("currentMembershipName", membershipInfo.getName());
+            model.addAttribute("isFree", membershipInfo.isFree());
+
+            return "cancel-membership";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/profile?error=cancellation_page_load_failed";
+        }
+    }
+
+    /**
+     * Processes the membership cancellation request.
+     * Cancels the user's membership and redirects to profile with confirmation.
+     */
+    @PostMapping("/cancel-membership")
+    public String processCancelMembership(Principal principal) {
+        try {
+            User user = userRepository.findByEmail(principal.getName());
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            // Attempt to cancel membership
+            var result = membershipCancellationService.cancelMembership(user.getId());
+
+            if (result.isSuccess()) {
+                return "redirect:/profile?cancelled=true";
+            } else {
+                return "redirect:/profile?error=cancellation_failed&message=" + result.getMessage();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/profile?error=cancellation_failed";
         }
     }
 }
