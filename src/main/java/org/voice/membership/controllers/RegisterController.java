@@ -3,11 +3,6 @@ package org.voice.membership.controllers;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,15 +12,14 @@ import org.springframework.web.bind.annotation.*;
 import org.voice.membership.dtos.*;
 import org.voice.membership.entities.*;
 import org.voice.membership.repositories.*;
-import org.voice.membership.services.UserService;
 import org.voice.membership.services.EmailSenderService;
 
-import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/register")
@@ -56,10 +50,10 @@ public class RegisterController {
     private CartItemRepository cartItemRepository;
 
     @Autowired
-    private UserService userService;
+    private EmailSenderService emailSenderService;
 
     @Autowired
-    private EmailSenderService emailSenderService;
+    private VerificationTokenRepository verificationTokenRepository;
 
     @GetMapping
     public String showRegister(Model model, HttpSession session) {
@@ -412,6 +406,21 @@ public class RegisterController {
 
             user = userRepository.save(user);
 
+            // Create and save verification token
+            String token = UUID.randomUUID().toString();
+            VerificationToken verificationToken = new VerificationToken(token, user);
+            verificationTokenRepository.save(verificationToken);
+
+            // Send verification email
+            String verificationLink = "http://localhost:8080/register/verify?token=" + token;
+            String userName = user.getFirstName() + " " + user.getLastName();
+            try {
+                emailSenderService.sendVerificationEmail(user.getEmail(), userName, verificationLink);
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Continue with registration even if email fails
+            }
+
             if (registrationData.getChildren() != null && !registrationData.getChildren().isEmpty()) {
                 List<Child> children = new ArrayList<>();
                 for (ChildDto childDto : registrationData.getChildren()) {
@@ -468,24 +477,11 @@ public class RegisterController {
                 }
             }
 
-            try {
-                UserDetails userDetails1 = userService.loadUserByUsername(user.getEmail());
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails1, null, userDetails1.getAuthorities());
-
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                securityContext.setAuthentication(authentication);
-                SecurityContextHolder.setContext(securityContext);
-
-                session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
-            } catch (Exception e) {
-
-                return "redirect:/login?registered=true";
-            }
-
+            // Do NOT auto-login - user must verify email first
             session.removeAttribute("registrationData");
 
-            return "redirect:/profile";
+            // Redirect to a page informing user to check email
+            return "redirect:/register/verification-sent";
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/register?error=registration_failed";
@@ -629,5 +625,78 @@ public class RegisterController {
 
             return "upgrade-checkout";
         }
+    }
+
+    @GetMapping("/verification-sent")
+    public String showVerificationSent(Model model) {
+        model.addAttribute("message", "Registration successful! Please check your email to verify your account.");
+        return "verification-sent";
+    }
+
+    @GetMapping("/verify")
+    public String verifyEmail(@RequestParam("token") String token, Model model) {
+        Optional<VerificationToken> verificationTokenOpt = verificationTokenRepository.findByToken(token);
+
+        if (verificationTokenOpt.isEmpty()) {
+            model.addAttribute("error", "Invalid verification token.");
+            return "verification-result";
+        }
+
+        VerificationToken verificationToken = verificationTokenOpt.get();
+
+        if (verificationToken.isExpired()) {
+            model.addAttribute("error", "Verification token has expired. Please register again.");
+            return "verification-result";
+        }
+
+        User user = verificationToken.getUser();
+        user.setEmailVerified(true);
+        userRepository.save(user);
+
+        verificationTokenRepository.delete(verificationToken);
+
+        model.addAttribute("success", "Email verified successfully! You can now login to your account.");
+        return "verification-result";
+    }
+
+    @GetMapping("/resend-verification")
+    public String showResendVerification() {
+        return "resend-verification";
+    }
+
+    @PostMapping("/resend-verification")
+    public String resendVerification(@RequestParam("email") String email, Model model) {
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            model.addAttribute("error", "No account found with this email address.");
+            return "resend-verification";
+        }
+
+        if (user.isEmailVerified()) {
+            model.addAttribute("error", "This email is already verified. You can login.");
+            return "resend-verification";
+        }
+
+        // Delete old token if exists
+        verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
+
+        // Create new token
+        String token = UUID.randomUUID().toString();
+        VerificationToken verificationToken = new VerificationToken(token, user);
+        verificationTokenRepository.save(verificationToken);
+
+        // Send verification email
+        String verificationLink = "http://localhost:8080/register/verify?token=" + token;
+        String userName = user.getFirstName() + " " + user.getLastName();
+        try {
+            emailSenderService.sendVerificationEmail(user.getEmail(), userName, verificationLink);
+            model.addAttribute("success", "Verification email sent! Please check your inbox.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Failed to send verification email. Please try again later.");
+        }
+
+        return "resend-verification";
     }
 }

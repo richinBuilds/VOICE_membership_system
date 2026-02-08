@@ -21,9 +21,26 @@ public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AccountLockoutService accountLockoutService;
+
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmail(email);
         if (user != null) {
+            // Check if account is locked
+            if (accountLockoutService.isAccountLocked(email)) {
+                long remainingMinutes = accountLockoutService.getRemainingLockoutTime(email);
+                throw new org.springframework.security.authentication.LockedException(
+                        "Your account has been temporarily locked due to multiple failed login attempts. " +
+                                "Please try again in " + remainingMinutes + " minute(s).");
+            }
+
+            // Check if email is verified
+            if (!user.isEmailVerified()) {
+                throw new org.springframework.security.authentication.DisabledException(
+                        "Please verify your email before logging in. Check your inbox for the verification link.");
+            }
+
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getEmail())
                     .password(user.getPassword())

@@ -3,7 +3,7 @@ spring:
     name: WebRegistration
 
   datasource:
-    url: jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -14,14 +14,13 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
 
   mail:
     host: smtp.gmail.com
     port: 587
-    username:
-    password:
+    username: tarparakrimy@gmail.com
+    password: afpe ztfj lpfc ukud
     properties:
       mail:
         smtp:
@@ -49,3 +48,9 @@ logging:
           descriptor:
             sql:
               BasicBinder: TRACE
+
+# Account lockout configuration
+account:
+  lockout:
+    max-attempts: 5 # Maximum failed login attempts before lockout
+    duration-minutes: 30 # Lockout duration in minutes
