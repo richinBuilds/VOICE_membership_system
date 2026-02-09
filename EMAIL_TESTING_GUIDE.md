@@ -1,4 +1,5 @@
 # Email Verification Testing Guide
+## .env changed
 
 ## Current Email Configuration
 
