@@ -3,6 +3,7 @@ package org.voice.membership.controllers;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -48,6 +49,9 @@ public class RegisterController {
 
     @Autowired
     private CartItemRepository cartItemRepository;
+
+    @Value("${app.base-url:http://localhost:8080}")
+    private String appBaseUrl;
 
     @Autowired
     private EmailSenderService emailSenderService;
@@ -412,7 +416,7 @@ public class RegisterController {
             verificationTokenRepository.save(verificationToken);
 
             // Send verification email
-            String verificationLink = "http://localhost:8080/register/verify?token=" + token;
+            String verificationLink = appBaseUrl + "/register/verify?token=" + token;
             String userName = user.getFirstName() + " " + user.getLastName();
             try {
                 emailSenderService.sendVerificationEmail(user.getEmail(), userName, verificationLink);
@@ -687,7 +691,7 @@ public class RegisterController {
         verificationTokenRepository.save(verificationToken);
 
         // Send verification email
-        String verificationLink = "http://localhost:8080/register/verify?token=" + token;
+        String verificationLink = appBaseUrl + "/register/verify?token=" + token;
         String userName = user.getFirstName() + " " + user.getLastName();
         try {
             emailSenderService.sendVerificationEmail(user.getEmail(), userName, verificationLink);
