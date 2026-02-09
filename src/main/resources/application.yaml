@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: Study$2024
+    password: ${DB_PASSWORD} 
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -17,10 +17,10 @@ spring:
         format_sql: true
 
   mail:
-    host: smtp.gmail.com
+    host: sandbox.smtp.mailtrap.io
     port: 587
-    username: rexwinston916@gmail.com
-    password: vgci qakw qkrk enlh
+    username: ${MAILTRAP_USERNAME}
+    password: ${MAILTRAP_PASSWORD}
     properties:
       mail:
         smtp:
