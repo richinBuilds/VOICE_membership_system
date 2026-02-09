@@ -1,5 +1,6 @@
 package org.voice.membership.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.voice.membership.entities.LandingPageContent;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.MembershipBenefit;
@@ -20,6 +21,7 @@ import java.util.List;
  * Provides methods to populate database with seed data if not already present
  * (idempotent).
  */
+@Slf4j
 @Service
 public class LandingPageService {
 
@@ -62,8 +64,12 @@ public class LandingPageService {
     }
 
     public void initializeDefaultMemberships() {
-        long membershipCount = membershipRepository.count();
-        if (membershipCount == 0) {
+        log.info("Initializing default memberships...");
+        
+        // Check for Free membership
+        List<Membership> freeMemberships = membershipRepository.findByNameAndIsFreeTrue("Free");
+        if (freeMemberships.isEmpty()) {
+            log.info("Creating Free membership...");
             Membership freeMembership = Membership.builder()
                     .name("Free")
                     .description("Get started with VOICE community")
@@ -76,7 +82,22 @@ public class LandingPageService {
                     .active(true)
                     .build();
             membershipRepository.save(freeMembership);
+            log.info("Free membership created successfully");
+        } else {
+            log.info("Free membership already exists");
+            // Ensure existing free membership is active
+            Membership existing = freeMemberships.get(0);
+            if (!existing.isActive()) {
+                log.info("Activating existing Free membership");
+                existing.setActive(true);
+                membershipRepository.save(existing);
+            }
+        }
 
+        // Check for Premium membership
+        List<Membership> premiumMemberships = membershipRepository.findByNameAndIsFreeFalse("Premium");
+        if (premiumMemberships.isEmpty()) {
+            log.info("Creating Premium membership...");
             Membership paidMembership = Membership.builder()
                     .name("Premium")
                     .description("Support VOICE and unlock premium benefits")
@@ -91,6 +112,23 @@ public class LandingPageService {
                     .active(true)
                     .build();
             membershipRepository.save(paidMembership);
+            log.info("Premium membership created successfully");
+        } else {
+            log.info("Premium membership already exists");
+            // Ensure existing premium membership is active
+            Membership existing = premiumMemberships.get(0);
+            if (!existing.isActive()) {
+                log.info("Activating existing Premium membership");
+                existing.setActive(true);
+                membershipRepository.save(existing);
+            }
+        }
+        
+        // Log all active memberships
+        List<Membership> activeMemberships = membershipRepository.findByActiveTrueOrderByDisplayOrderAsc();
+        log.info("Total active memberships: {}", activeMemberships.size());
+        for (Membership m : activeMemberships) {
+            log.info("  - {} (isFree={}, active={}, price={})", m.getName(), m.isFree(), m.isActive(), m.getPrice());
         }
     }
 
