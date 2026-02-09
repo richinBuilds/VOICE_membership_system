@@ -30,6 +30,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_MAIL_USERNAME=${MAILTRAP_USERNAME}    
       - SPRING_MAIL_PASSWORD=${MAILTRAP_PASSWORD}
+      - APP_BASE_URL=${APP_BASE_URL}
 
   #   - SPRING_MAIL_USERNAME=${MAIL_USERNAME}    #use when using real email account#
   #   - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}   #use when using real email account#
