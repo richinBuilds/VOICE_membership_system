@@ -578,23 +578,6 @@ public class RegisterController {
             System.out.println("Start Date: " + now);
             System.out.println("Expiry Date: " + expiryDate);
 
-            try {
-                java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMMM dd, yyyy");
-                String fullName = user.getFirstName() +
-                        (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName()
-                                : "")
-                        +
-                        " " + user.getLastName();
-                emailSenderService.sendMembershipUpgradeConfirmation(
-                        user.getEmail(),
-                        fullName,
-                        paidMembership.getName(),
-                        dateFormat.format(expiryDate));
-                System.out.println("Confirmation email sent to: " + user.getEmail());
-            } catch (Exception emailEx) {
-                System.err.println("Warning: Failed to send confirmation email: " + emailEx.getMessage());
-            }
-
             return "redirect:/profile?upgrade=success";
         } catch (Exception e) {
             System.err.println("=== UPGRADE PAYMENT ERROR ===");
