@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Edit Member Profile - VOICE Admin">
+
+    <title>Edit Member Profile - VOICE Admin</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body style="background: var(--bg-bone);">
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">
+            <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="50" onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item me-3">
+                    <span class="admin-badge">
+                        <i class="fas fa-shield-alt me-1"></i> ADMIN
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/dashboard}">
+                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Admin Edit Member Header -->
+<div class="admin-header">
+    <div class="container">
+        <h1><i class="fas fa-user-edit me-2"></i> Edit Member Profile</h1>
+        <p class="mb-0" style="color: var(--bg-white);">
+            Editing profile for: <strong th:text="${user.firstName + ' ' + user.lastName}">Member Name</strong>
+        </p>
+    </div>
+</div>
+
+<div class="container my-5">
+    
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Member Profile</li>
+        </ol>
+    </nav>
+    
+    <!-- Edit Member Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <div class="table-card">
+                
+                <h3 class="mb-4">
+                    <i class="fas fa-id-card me-2" style="color: var(--primary);"></i>
+                    Member Information
+                </h3>
+                
+                <form th:action="@{/admin/edit-member/{id}(id=${user.id})}" 
+                      th:object="${updateRequest}"
+                      method="post">
+                    
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" th:field="*{userId}"/>
+                    
+                    <!-- Personal Information Section -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-user me-2"></i> Personal Information
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <!-- First Name -->
+                            <div class="col-md-4">
+                                <label for="firstName" class="form-label">
+                                    First Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control"
+                                       th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
+                                       id="firstName" 
+                                       th:field="*{firstName}"
+                                       required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" 
+                                     th:errors="*{firstName}">
+                                    First name error
+                                </div>
+                            </div>
+                            
+                            <!-- Middle Name -->
+                            <div class="col-md-4">
+                                <label for="middleName" class="form-label">Middle Name</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="middleName" 
+                                       th:field="*{middleName}">
+                            </div>
+                            
+                            <!-- Last Name -->
+                            <div class="col-md-4">
+                                <label for="lastName" class="form-label">
+                                    Last Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control"
+                                       th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
+                                       id="lastName" 
+                                       th:field="*{lastName}"
+                                       required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" 
+                                     th:errors="*{lastName}">
+                                    Last name error
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information Section -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-address-book me-2"></i> Contact Information
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">
+                                    Email <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" 
+                                       class="form-control"
+                                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                                       id="email" 
+                                       th:field="*{email}"
+                                       required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" 
+                                     th:errors="*{email}">
+                                    Email error
+                                </div>
+                            </div>
+                            
+                            <!-- Phone -->
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">
+                                    Phone <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel" 
+                                       class="form-control"
+                                       th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
+                                       id="phone" 
+                                       th:field="*{phone}"
+                                       required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" 
+                                     th:errors="*{phone}">
+                                    Phone error
+                                </div>
+                            </div>
+                            
+                            <!-- Address -->
+                            <div class="col-12">
+                                <label for="address" class="form-label">Address</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="address" 
+                                       th:field="*{address}">
+                            </div>
+                            
+                            <!-- City -->
+                            <div class="col-md-4">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="city" 
+                                       th:field="*{city}">
+                            </div>
+                            
+                            <!-- Province -->
+                            <div class="col-md-4">
+                                <label for="province" class="form-label">Province</label>
+                                <select class="form-select" 
+                                        id="province" 
+                                        th:field="*{province}">
+                                    <option value="">Select Province</option>
+                                    <option value="Alberta">Alberta</option>
+                                    <option value="British Columbia">British Columbia</option>
+                                    <option value="Manitoba">Manitoba</option>
+                                    <option value="New Brunswick">New Brunswick</option>
+                                    <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                                    <option value="Northwest Territories">Northwest Territories</option>
+                                    <option value="Nova Scotia">Nova Scotia</option>
+                                    <option value="Nunavut">Nunavut</option>
+                                    <option value="Ontario">Ontario</option>
+                                    <option value="Prince Edward Island">Prince Edward Island</option>
+                                    <option value="Quebec">Quebec</option>
+                                    <option value="Saskatchewan">Saskatchewan</option>
+                                    <option value="Yukon">Yukon</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Postal Code -->
+                            <div class="col-md-4">
+                                <label for="postalCode" class="form-label">Postal Code</label>
+                                <input type="text" 
+                                       class="form-control"
+                                       th:classappend="${#fields.hasErrors('postalCode')} ? 'is-invalid' : ''"
+                                       id="postalCode" 
+                                       th:field="*{postalCode}"
+                                       placeholder="A1A 1A1">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('postalCode')}" 
+                                     th:errors="*{postalCode}">
+                                    Postal code error
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Membership Section -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-crown me-2"></i> Membership
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <!-- Membership Type -->
+                            <div class="col-md-6">
+                                <label for="membershipId" class="form-label">Membership Type</label>
+                                <select class="form-select" 
+                                        id="membershipId" 
+                                        th:field="*{membershipId}">
+                                    <option value="">No Membership</option>
+                                    <option th:each="membership : ${memberships}" 
+                                            th:value="${membership.id}"
+                                            th:text="${membership.name + ' - $' + (membership.price != null ? membership.price : '0.00')}">
+                                        Membership Option
+                                    </option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    Current: <span th:text="${user.membership != null ? user.membership.name : 'None'}">None</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Status Section -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-cog me-2"></i> Account Status
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <!-- Email Verified -->
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="emailVerified" 
+                                           th:field="*{emailVerified}">
+                                    <label class="form-check-label" for="emailVerified">
+                                        <i class="fas fa-envelope-circle-check me-1"></i>
+                                        Email Verified
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Allow or deny email verification status
+                                </small>
+                            </div>
+                            
+                            <!-- Account Locked -->
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="accountLocked" 
+                                           th:field="*{accountLocked}">
+                                    <label class="form-check-label" for="accountLocked">
+                                        <i class="fas fa-lock me-1"></i>
+                                        Account Locked
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Lock or unlock the user's account
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Account Info (Read-only) -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-info-circle me-2"></i> Account Information
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">User ID</label>
+                                <p class="fw-bold" th:text="${user.id}">123</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">Registration Date</label>
+                                <p class="fw-bold" th:text="${user.creation != null ? #dates.format(user.creation, 'MMM dd, yyyy') : 'N/A'}">
+                                    Jan 1, 2024
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">Role</label>
+                                <p class="fw-bold">
+                                    <span class="badge" 
+                                          th:classappend="${user.role == 'ADMIN'} ? 'bg-danger' : 'bg-primary'"
+                                          th:text="${user.role != null ? user.role : 'USER'}">
+                                        USER
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">Failed Login Attempts</label>
+                                <p class="fw-bold" th:text="${user.failedLoginAttempts}">0</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">Number of Children</label>
+                                <p class="fw-bold" th:text="${user.children != null ? user.children.size() : 0}">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <a th:href="@{/admin/dashboard}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Save Changes
+                        </button>
+                    </div>
+                    
+                </form>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
