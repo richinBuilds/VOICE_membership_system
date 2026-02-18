@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,9 @@ public class UserService implements UserDetailsService {
     @Autowired(required = false)
     private EmailSenderService emailSenderService;
 
+    @Value("${app.base-url:http://localhost:8080}")
+    private String appBaseUrl;
+
     private final Map<String, String> resetTokens = new ConcurrentHashMap<>();
 
     public boolean sendPasswordResetEmail(String email) {
@@ -62,7 +66,7 @@ public class UserService implements UserDetailsService {
         }
         String token = java.util.UUID.randomUUID().toString();
         resetTokens.put(token, user.getEmail());
-        String resetLink = "http://localhost:8080/reset-password?token=" + token;
+        String resetLink = appBaseUrl + "/reset-password?token=" + token;
         if (emailSenderService != null) {
             emailSenderService.sendPasswordResetEmail(user.getEmail(), resetLink);
         }

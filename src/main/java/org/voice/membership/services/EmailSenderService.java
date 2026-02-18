@@ -58,4 +58,25 @@ public class EmailSenderService {
             throw new RuntimeException("Failed to send verification email", e);
         }
     }
+
+    public void sendCustomEmail(String to, String subject, String messageBody, String fromName) {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject(subject);
+
+            String htmlContent = "<html><body>" +
+                    "<p>" + messageBody.replaceAll("\n", "<br>") + "</p>" +
+                    "<br>" +
+                    "<p>Sent from: " + fromName + "</p>" +
+                    "<p>---<br>VOICE Membership System</p>" +
+                    "</body></html>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send custom email to " + to, e);
+        }
+    }
 }

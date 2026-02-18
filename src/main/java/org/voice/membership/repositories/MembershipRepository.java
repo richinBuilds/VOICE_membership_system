@@ -19,4 +19,8 @@ public interface MembershipRepository extends JpaRepository<Membership, Integer>
     List<Membership> findByActiveTrueOrderByDisplayOrderAsc();
 
     List<Membership> findByIsFree(boolean isFree);
+    
+    List<Membership> findByNameAndIsFreeTrue(String name);
+    
+    List<Membership> findByNameAndIsFreeFalse(String name);
 }
