@@ -36,7 +36,7 @@ public class AdminUserInitializer implements CommandLineRunner {
                     .middleName(null)
                     .lastName("User")
                     .email(adminEmail)
-                    .password(passwordEncoder.encode("Caspstone36!"))
+                    .password(passwordEncoder.encode("Capstone36!"))
                     .phone("N/A")
                     .address("N/A")
                     .postalCode("N/A")

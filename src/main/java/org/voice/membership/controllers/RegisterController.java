@@ -2,7 +2,10 @@ package org.voice.membership.controllers;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.voice.membership.config.PayPalProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -14,11 +17,15 @@ import org.voice.membership.dtos.*;
 import org.voice.membership.entities.*;
 import org.voice.membership.repositories.*;
 import org.voice.membership.services.EmailSenderService;
+import org.voice.membership.services.PayPalService;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -58,6 +65,15 @@ public class RegisterController {
 
     @Autowired
     private VerificationTokenRepository verificationTokenRepository;
+
+    @Autowired
+    private PayPalProperties payPalProperties;
+
+    @Autowired
+    private PayPalService payPalService;
+
+    @Autowired
+    private MembershipPaymentTransactionRepository paymentTransactionRepository;
 
     @GetMapping
     public String showRegister(Model model, HttpSession session) {
@@ -314,53 +330,144 @@ public class RegisterController {
 
         model.addAttribute("membership", membership);
         model.addAttribute("totalAmount", membership.getPrice());
+        model.addAttribute("paypalClientId", payPalProperties.getClientId());
+        model.addAttribute("paypalCurrency", payPalProperties.getCurrency());
+        model.addAttribute("mode", "registration");
         return "checkout";
     }
 
     @PostMapping("/checkout")
-    public String handleCheckout(@RequestParam("cardNumber") String cardNumber,
-            @RequestParam("cardHolderName") String cardHolderName,
-            @RequestParam("expiryMonth") String expiryMonth,
-            @RequestParam("expiryYear") String expiryYear,
-            @RequestParam("cvv") String cvv,
-            Model model,
+    public String handleCheckout(HttpSession session) {
+        MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
+        if (registrationData == null) {
+            return "redirect:/register";
+        }
+        return "redirect:/register/checkout?error=use_paypal_checkout";
+    }
+
+    @PostMapping("/paypal/checkout/create-order")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> createCheckoutOrder(@RequestBody CreatePayPalOrderRequest request,
+            HttpSession session) {
+        try {
+            if (!payPalProperties.hasCredentials()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("message", "PayPal is not configured"));
+            }
+
+            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
+                    .getAttribute("registrationData");
+            if (registrationData == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Registration session expired"));
+            }
+
+            Integer membershipId = registrationData.getCartMembershipId();
+            if (membershipId == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "No membership selected"));
+            }
+
+            if (request == null || request.membershipId() == null || !request.membershipId().equals(membershipId)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Membership mismatch"));
+            }
+
+            Optional<Membership> membershipOpt = membershipRepository.findById(membershipId);
+            if (membershipOpt.isEmpty() || membershipOpt.get().isFree()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid paid membership"));
+            }
+
+            if (Boolean.TRUE.equals(session.getAttribute("registrationPaymentCompleted"))) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("message", "Payment already completed"));
+            }
+
+            String registrationPaymentRef = (String) session.getAttribute("registrationPaymentRef");
+            if (registrationPaymentRef == null || registrationPaymentRef.isBlank()) {
+                registrationPaymentRef = UUID.randomUUID().toString();
+                session.setAttribute("registrationPaymentRef", registrationPaymentRef);
+            }
+
+            String orderId = payPalService.createOrderForRegistration(membershipOpt.get(), registrationPaymentRef);
+            session.setAttribute("registrationPayPalOrderId", orderId);
+
+            return ResponseEntity.ok(Map.of("orderId", orderId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to create payment order"));
+        }
+    }
+
+    @PostMapping("/paypal/checkout/capture-order")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> captureCheckoutOrder(@RequestBody CapturePayPalOrderRequest request,
             HttpSession session) {
         try {
             MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
                     .getAttribute("registrationData");
             if (registrationData == null) {
-                return "redirect:/register";
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Registration session expired"));
             }
 
-            if (cardNumber == null || cardNumber.trim().isEmpty() ||
-                    cardHolderName == null || cardHolderName.trim().isEmpty() ||
-                    expiryMonth == null || expiryMonth.trim().isEmpty() ||
-                    expiryYear == null || expiryYear.trim().isEmpty() ||
-                    cvv == null || cvv.trim().isEmpty()) {
-                model.addAttribute("error", "All payment fields are required");
-                Optional<Membership> membershipOpt = membershipRepository
-                        .findById(registrationData.getCartMembershipId());
-                if (membershipOpt.isPresent()) {
-                    model.addAttribute("membership", membershipOpt.get());
-                    model.addAttribute("totalAmount", membershipOpt.get().getPrice());
-                }
-                return "checkout";
+            Integer membershipId = registrationData.getCartMembershipId();
+            if (membershipId == null || request == null || request.orderId() == null || request.orderId().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid payment request"));
             }
-            return completeRegistration(session);
+
+            if (request.membershipId() == null || !request.membershipId().equals(membershipId)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Membership mismatch"));
+            }
+
+            String expectedOrderId = (String) session.getAttribute("registrationPayPalOrderId");
+            if (expectedOrderId == null || !expectedOrderId.equals(request.orderId())) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Order mismatch"));
+            }
+
+            Optional<Membership> membershipOpt = membershipRepository.findById(membershipId);
+            if (membershipOpt.isEmpty() || membershipOpt.get().isFree()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid paid membership"));
+            }
+
+            String registrationPaymentRef = (String) session.getAttribute("registrationPaymentRef");
+            if (registrationPaymentRef == null || registrationPaymentRef.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Payment reference missing"));
+            }
+
+            PayPalService.CaptureValidationResult validation = payPalService.captureAndValidateRegistration(
+                    membershipOpt.get(),
+                    request.orderId(),
+                    registrationPaymentRef);
+
+            if (!validation.completed()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Payment verification failed"));
+            }
+
+            // Create payment transaction record (like upgrade flow)
+            MembershipPaymentTransaction transaction = paymentTransactionRepository
+                    .findByPaypalOrderId(request.orderId())
+                    .orElseGet(MembershipPaymentTransaction::new);
+            transaction.setMembership(membershipOpt.get());
+            transaction.setPaypalOrderId(request.orderId());
+            transaction.setPaypalCaptureId(validation.captureId());
+            transaction.setAmount(membershipOpt.get().getPrice().setScale(2, RoundingMode.HALF_UP));
+            transaction.setCurrency(payPalProperties.getCurrency());
+            transaction.setStatus("COMPLETED");
+            transaction.setFailureReason(null);
+            // Note: user field will be set after user is created
+            MembershipPaymentTransaction savedTransaction = paymentTransactionRepository.save(transaction);
+
+            session.setAttribute("registrationPaymentCompleted", true);
+            session.setAttribute("paymentTransactionId", savedTransaction.getId());
+            String redirect = completeRegistration(session);
+            String redirectUrl = redirect.startsWith("redirect:") ? redirect.substring("redirect:".length()) : redirect;
+
+            return ResponseEntity.ok(Map.of("success", true, "redirectUrl", redirectUrl));
         } catch (Exception e) {
             e.printStackTrace();
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
-                    .getAttribute("registrationData");
-            if (registrationData != null) {
-                Optional<Membership> membershipOpt = membershipRepository
-                        .findById(registrationData.getCartMembershipId());
-                if (membershipOpt.isPresent()) {
-                    model.addAttribute("membership", membershipOpt.get());
-                    model.addAttribute("totalAmount", membershipOpt.get().getPrice());
-                }
-            }
-            model.addAttribute("error", "An error occurred processing your payment. Please try again.");
-            return "checkout";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to finalize payment"));
         }
     }
 
@@ -399,16 +506,32 @@ public class RegisterController {
                     if (!membership.isFree()) {
                         Date now = new Date();
                         user.setMembershipStartDate(now);
+                        user.setPaid(true);
 
                         java.util.Calendar cal = java.util.Calendar.getInstance();
                         cal.setTime(now);
                         cal.add(java.util.Calendar.YEAR, 1);
                         user.setMembershipExpiryDate(cal.getTime());
+                    } else {
+                        user.setPaid(false);
                     }
                 }
             }
 
             user = userRepository.save(user);
+
+            // Link payment transaction to newly created user (if exists)
+            Long paymentTransactionId = (Long) session.getAttribute("paymentTransactionId");
+            if (paymentTransactionId != null) {
+                Optional<MembershipPaymentTransaction> transactionOpt = paymentTransactionRepository
+                        .findById(paymentTransactionId);
+                if (transactionOpt.isPresent()) {
+                    MembershipPaymentTransaction transaction = transactionOpt.get();
+                    transaction.setUser(user);
+                    paymentTransactionRepository.save(transaction);
+                    session.removeAttribute("paymentTransactionId");
+                }
+            }
 
             // Create and save verification token
             String token = UUID.randomUUID().toString();
@@ -483,134 +606,15 @@ public class RegisterController {
 
             // Do NOT auto-login - user must verify email first
             session.removeAttribute("registrationData");
+            session.removeAttribute("registrationPaymentRef");
+            session.removeAttribute("registrationPayPalOrderId");
+            session.removeAttribute("registrationPaymentCompleted");
 
             // Redirect to a page informing user to check email
             return "redirect:/register/verification-sent";
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/register?error=registration_failed";
-        }
-    }
-
-    @GetMapping("/upgrade-checkout")
-    public String showUpgradeCheckout(Model model, Principal principal) {
-        try {
-            User user = userRepository.findByEmail(principal.getName());
-            if (user == null) {
-                return "redirect:/login";
-            }
-
-            Membership currentMembership = user.getMembership();
-            if (currentMembership == null || !currentMembership.isFree()) {
-                return "redirect:/profile?error=not_eligible_for_upgrade";
-            }
-
-            model.addAttribute("user", user);
-            String fullName = user.getFirstName() +
-                    (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
-                    +
-                    " " + user.getLastName();
-            model.addAttribute("userName", fullName);
-            model.addAttribute("userEmail", user.getEmail());
-
-            return "upgrade-checkout";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/profile?error=checkout_load_failed";
-        }
-    }
-
-    @PostMapping("/upgrade-checkout")
-    public String handleUpgradeCheckout(@RequestParam("membershipId") Integer membershipId,
-            @RequestParam("cardNumber") String cardNumber,
-            @RequestParam("cardHolderName") String cardHolderName,
-            @RequestParam("expiryMonth") String expiryMonth,
-            @RequestParam("expiryYear") String expiryYear,
-            @RequestParam("cvv") String cvv,
-            Model model,
-            Principal principal) {
-        try {
-            User user = userRepository.findByEmail(principal.getName());
-            if (user == null) {
-                return "redirect:/login";
-            }
-
-            Membership currentMembership = user.getMembership();
-            if (currentMembership == null || !currentMembership.isFree()) {
-                return "redirect:/profile?error=not_eligible_for_upgrade";
-            }
-
-            Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
-            if (paidMembershipOpt.isEmpty() || paidMembershipOpt.get().isFree()) {
-                return "redirect:/profile?error=invalid_membership";
-            }
-
-            if (cardNumber == null || cardNumber.trim().isEmpty() ||
-                    cardHolderName == null || cardHolderName.trim().isEmpty() ||
-                    expiryMonth == null || expiryMonth.trim().isEmpty() ||
-                    expiryYear == null || expiryYear.trim().isEmpty() ||
-                    cvv == null || cvv.trim().isEmpty()) {
-                model.addAttribute("error", "All payment fields are required");
-                model.addAttribute("user", user);
-                String fullName = user.getFirstName() +
-                        (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName()
-                                : "")
-                        +
-                        " " + user.getLastName();
-                model.addAttribute("userName", fullName);
-                model.addAttribute("upgradeMembership", paidMembershipOpt.get());
-                return "upgrade-checkout";
-            }
-
-            Membership paidMembership = paidMembershipOpt.get();
-
-            user.setMembership(paidMembership);
-
-            Date now = new Date();
-            user.setMembershipStartDate(now);
-
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTime(now);
-            cal.add(java.util.Calendar.YEAR, 1);
-            Date expiryDate = cal.getTime();
-            user.setMembershipExpiryDate(expiryDate);
-
-            userRepository.save(user);
-
-            System.out.println("=== MEMBERSHIP UPDATED ===");
-            System.out.println("Status: Paid/Active");
-            System.out.println("Start Date: " + now);
-            System.out.println("Expiry Date: " + expiryDate);
-
-            return "redirect:/profile?upgrade=success";
-        } catch (Exception e) {
-            System.err.println("=== UPGRADE PAYMENT ERROR ===");
-            System.err.println("Error in upgrade checkout: " + e.getMessage());
-            e.printStackTrace();
-
-            model.addAttribute("error",
-                    "An error occurred processing your payment. Please try again or contact support if the issue persists.");
-
-            try {
-                User user = userRepository.findByEmail(principal.getName());
-                if (user != null) {
-                    model.addAttribute("user", user);
-                    String fullName = user.getFirstName() +
-                            (user.getMiddleName() != null && !user.getMiddleName().isEmpty()
-                                    ? " " + user.getMiddleName()
-                                    : "")
-                            +
-                            " " + user.getLastName();
-                    model.addAttribute("userName", fullName);
-
-                    Optional<Membership> paidMembershipOpt = membershipRepository.findById(membershipId);
-                    paidMembershipOpt.ifPresent(membership -> model.addAttribute("upgradeMembership", membership));
-                }
-            } catch (Exception ex2) {
-                System.err.println("Error loading user for error page: " + ex2.getMessage());
-            }
-
-            return "upgrade-checkout";
         }
     }
 

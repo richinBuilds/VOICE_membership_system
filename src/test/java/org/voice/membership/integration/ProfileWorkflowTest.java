@@ -186,7 +186,7 @@ class ProfileWorkflowTest {
                                 .with(csrf())
                                 .param("membershipId", String.valueOf(paidMembership.getId())))
                                 .andExpect(status().isOk())
-                                .andExpect(view().name("upgrade-checkout"))
+                                .andExpect(view().name("checkout"))
                                 .andExpect(model().attributeExists("upgradeMembership"));
 
                 User updatedUser = userRepository.findByEmail("integration@example.com");

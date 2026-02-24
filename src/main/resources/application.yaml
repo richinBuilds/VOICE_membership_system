@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: Study$2024 ## ${DB_PASSWORD} 
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -17,10 +17,10 @@ spring:
         format_sql: true
 
   mail:
-    host: sandbox.smtp.mailtrap.io
+    host: smtp.gmail.com
     port: 587
-    username: 618ab0d6165c0a # ${MAILTRAP_USERNAME}
-    password: a397cf37b87941 # ${MAILTRAP_PASSWORD}
+    username:
+    password:
     properties:
       mail:
         smtp:
@@ -57,3 +57,10 @@ account:
   lockout:
     max-attempts: 5 # Maximum failed login attempts before lockout
     duration-minutes: 30 # Lockout duration in minutes
+
+paypal:
+  mode: sandbox
+  client-id:
+  client-secret:
+  currency: CAD
+  webhook-id:

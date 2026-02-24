@@ -1,6 +1,7 @@
 package org.voice.membership.controllers;
 
 import org.voice.membership.dtos.UpdateUserRequest;
+import org.voice.membership.config.PayPalProperties;
 import org.voice.membership.entities.User;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Child;
@@ -49,6 +50,7 @@ public class ProfileController {
     private final MembershipRepository membershipRepository;
     private final ChildRepository childRepository;
     private final UserService userService;
+    private final PayPalProperties payPalProperties;
     private final org.voice.membership.services.MembershipCancellationService membershipCancellationService;
 
     @GetMapping
@@ -154,10 +156,6 @@ public class ProfileController {
                 return "editProfile";
             }
 
-            user.setFirstName(updateUserRequest.getFirstName());
-            user.setMiddleName(updateUserRequest.getMiddleName());
-            user.setFirstName(updateUserRequest.getFirstName());
-            user.setMiddleName(updateUserRequest.getMiddleName());
             user.setFirstName(updateUserRequest.getFirstName());
             user.setMiddleName(updateUserRequest.getMiddleName());
             user.setLastName(updateUserRequest.getLastName());
@@ -404,8 +402,11 @@ public class ProfileController {
             model.addAttribute("membershipName", paidMembership.getName());
             model.addAttribute("membershipPrice", paidMembership.getPrice());
             model.addAttribute("membershipDescription", paidMembership.getDescription());
+            model.addAttribute("paypalClientId", payPalProperties.getClientId());
+            model.addAttribute("paypalCurrency", payPalProperties.getCurrency());
+            model.addAttribute("mode", "upgrade");
 
-            return "upgrade-checkout";
+            return "checkout";
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/profile/upgrade-membership?error=selection_failed";

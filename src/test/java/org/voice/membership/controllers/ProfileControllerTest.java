@@ -206,7 +206,7 @@ class ProfileControllerTest {
                 .with(csrf())
                 .param("membershipId", String.valueOf(paidMembership.getId())))
                 .andExpect(status().isOk())
-                .andExpect(view().name("upgrade-checkout"))
+                .andExpect(view().name("checkout"))
                 .andExpect(model().attributeExists("user"))
                 .andExpect(model().attributeExists("upgradeMembership"))
                 .andExpect(model().attributeExists("membershipName"))

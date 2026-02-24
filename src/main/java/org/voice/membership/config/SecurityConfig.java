@@ -9,10 +9,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.core.Authentication;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
@@ -38,10 +34,14 @@ public class SecurityConfig {
                                                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                                                 .requestMatchers("/").permitAll()
                                                 .requestMatchers("/login").permitAll()
+                                                .requestMatchers("/register/paypal/checkout/**").permitAll()
+                                                .requestMatchers("/register/paypal/**")
+                                                .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                                                 .requestMatchers("/register/**").permitAll()
                                                 .requestMatchers("/forgot-password").permitAll()
                                                 .requestMatchers("/reset-password").permitAll()
                                                 .requestMatchers("/api/landing-page/**").permitAll()
+                                                .requestMatchers("/api/paypal/webhook").permitAll()
 
                                                 .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
 
@@ -67,7 +67,7 @@ public class SecurityConfig {
                                                 .rememberMeCookieName("VOICE_REMEMBER_ME")
                                                 .useSecureCookie(false) // Set to true in production with HTTPS
                                                 .alwaysRemember(false))
-                                .csrf(csrf -> csrf.ignoringRequestMatchers("/logout"))
+                                .csrf(csrf -> csrf.ignoringRequestMatchers("/logout", "/api/paypal/webhook"))
                                 .build();
         }
 
