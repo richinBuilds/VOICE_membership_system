@@ -33,6 +33,7 @@ import java.util.UUID;
 
 @Controller
 @RequestMapping("/register")
+
 /**
  * Implements the multi-step user registration, child details, and membership
  * checkout flow.

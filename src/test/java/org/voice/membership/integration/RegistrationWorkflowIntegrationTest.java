@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -56,6 +57,17 @@ class RegistrationWorkflowIntegrationTest {
         @Primary
         public PayPalService payPalService() {
             return mock(PayPalService.class);
+        }
+        
+        @Bean
+        @Primary
+        public JavaMailSender javaMailSender() {
+            JavaMailSender mailSender = mock(JavaMailSender.class);
+            when(mailSender.createMimeMessage()).thenAnswer(invocation -> {
+                jakarta.mail.Session session = jakarta.mail.Session.getInstance(System.getProperties());
+                return new jakarta.mail.internet.MimeMessage(session);
+            });
+            return mailSender;
         }
     }
 
@@ -241,7 +253,7 @@ class RegistrationWorkflowIntegrationTest {
                 .andExpect(model().attributeExists("membership"));
 
         // Step 5: Create PayPal order via API (registration checkout endpoint)
-        MvcResult orderResult = mockMvc.perform(post("/paypal/checkout/create-order")
+        MvcResult orderResult = mockMvc.perform(post("/register/paypal/checkout/create-order")
                 .session(session)
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -257,12 +269,17 @@ class RegistrationWorkflowIntegrationTest {
         assertThat(sessionOrderId).isEqualTo(testOrderId);
 
         // Step 6: Capture PayPal payment (registration checkout endpoint)
-        mockMvc.perform(post("/paypal/checkout/capture-order")
+        MvcResult captureResult = mockMvc.perform(post("/register/paypal/checkout/capture-order")
                 .session(session)
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"membershipId\": " + paidMembership.getId() + ", \"orderId\": \"" + testOrderId + "\"}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String captureResponse = captureResult.getResponse().getContentAsString();
+        assertThat(captureResponse).contains("success");
+        assertThat(captureResponse).contains("redirectUrl");
 
         // Verify user was created with paid membership
         User createdUser = userRepository.findByEmail("premium.user@example.com");
@@ -292,7 +309,7 @@ class RegistrationWorkflowIntegrationTest {
                 .param("token", token.getToken()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("verification-result"))
-                .andExpect(model().attribute("success", "Your email has been verified successfully! You can now log in."));
+                .andExpect(model().attribute("success", "Email verified successfully! You can now login to your account."));
 
         // Verify user is now email verified
         User verifiedUser = userRepository.findByEmail("premium.user@example.com");
