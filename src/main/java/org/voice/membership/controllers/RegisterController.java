@@ -608,6 +608,8 @@ public class RegisterController {
             }
 
             // Do NOT auto-login - user must verify email first
+            boolean paymentCompleted = Boolean.TRUE.equals(session.getAttribute("registrationPaymentCompleted"));
+            
             session.removeAttribute("registrationData");
             session.removeAttribute("registrationPaymentRef");
             session.removeAttribute("registrationPayPalOrderId");
@@ -617,6 +619,9 @@ public class RegisterController {
             session.removeAttribute("paymentAmount");
 
             // Redirect to a page informing user to check email
+            if (paymentCompleted) {
+                return "redirect:/register/verification-sent?payment=success";
+            }
             return "redirect:/register/verification-sent";
         } catch (Exception e) {
             e.printStackTrace();

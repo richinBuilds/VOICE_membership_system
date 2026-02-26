@@ -355,8 +355,50 @@
 </div>
 
 
+<!-- Payment Success Modal -->
+<div class="modal fade" id="paymentSuccessModal" tabindex="-1" aria-labelledby="paymentSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: 2px solid #28a745;">
+            <div class="modal-header" style="background-color: #d4edda; border-bottom: 2px solid #28a745;">
+                <h5 class="modal-title" id="paymentSuccessModalLabel" style="color: #155724;">
+                    <i class="fas fa-check-circle me-2"></i>Payment Successful!
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745;"></i>
+                </div>
+                <h4 class="mb-3" style="color: #155724;">Thank you for your payment!</h4>
+                <p class="mb-2">Your membership has been successfully upgraded.</p>
+                <p class="text-muted mb-0">You now have access to all premium features.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                    <i class="fas fa-thumbs-up me-1"></i> Got it!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bootstrap JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+    // Show payment success modal if upgrade=success parameter is present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('upgrade') === 'success') {
+        const modal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
+        modal.show();
+        
+        // Remove the query parameter from URL after showing modal
+        if (window.history.replaceState) {
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+        }
+    }
+</script>
 
 </body>
 </html>

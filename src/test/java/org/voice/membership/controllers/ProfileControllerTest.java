@@ -94,6 +94,17 @@ class ProfileControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
+    void profile_WithUpgradeSuccessParam_ShouldShowSuccessMessage() throws Exception {
+        mockMvc.perform(get("/profile")
+                .param("upgrade", "success"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("profile"))
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attribute("userName", "Test User"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_GetRequest_ShouldReturnEditForm() throws Exception {
         mockMvc.perform(get("/profile/edit"))
                 .andExpect(status().isOk())

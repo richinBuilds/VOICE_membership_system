@@ -962,6 +962,16 @@ class RegisterControllerTest {
                                 .andExpect(model().attributeExists("message"));
         }
 
+        // Show Verification Sent Page with Payment Success
+        @Test
+        void showVerificationSent_WithPaymentSuccessParam_ShouldDisplayPage() throws Exception {
+                mockMvc.perform(get("/register/verification-sent")
+                                .param("payment", "success"))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("verification-sent"))
+                                .andExpect(model().attributeExists("message"));
+        }
+
         // Verify Email - With Valid Token
         @Test
         void verifyEmail_WithValidToken_ShouldVerifySuccessfully() throws Exception {
@@ -1385,7 +1395,7 @@ class RegisterControllerTest {
                                 .content(captureRequestBody))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.success").value(true))
-                                .andExpect(jsonPath("$.redirectUrl").value("/register/verification-sent"));
+                                .andExpect(jsonPath("$.redirectUrl").value("/register/verification-sent?payment=success"));
         }
 
         // Capture PayPal Order - Without Session

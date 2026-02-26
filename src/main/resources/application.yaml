@@ -19,8 +19,8 @@ spring:
   mail:
     host: sandbox.mailtrap.io
     port: 587
-    username:
-    password:
+    username: tarparakrimy@gmail.com
+    password: afpe ztfj lpfc ukud
     properties:
       mail:
         smtp:
@@ -60,7 +60,7 @@ account:
 
 paypal:
   mode: sandbox
-  client-id:
-  client-secret:
-  webhook-id:
+  client-id: AVH4sK7LCVk5C6Jjtgh9jRMKR2Bvt0z9AliivRQk5Vfjs5utAWHCRtS-jova3lV2fhrTycUebJi5p6XO
+  client-secret: EJZSY-JcLV0MVNjvrtqa8dDyxBalDMJZR-5_lM3McjWYYgSJ3P0mRwsy8MHWtL4fDYH0-nAIzMxWD9jN
+  webhook-id: 5E784659P1083983B
   currency: CAD

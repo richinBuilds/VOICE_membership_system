@@ -280,6 +280,7 @@ class RegistrationWorkflowIntegrationTest {
         String captureResponse = captureResult.getResponse().getContentAsString();
         assertThat(captureResponse).contains("success");
         assertThat(captureResponse).contains("redirectUrl");
+        assertThat(captureResponse).contains("/register/verification-sent?payment=success");
 
         // Verify user was created with paid membership
         User createdUser = userRepository.findByEmail("premium.user@example.com");
@@ -541,5 +542,15 @@ class RegistrationWorkflowIntegrationTest {
         // Verify new token was created
         VerificationToken newToken = verificationTokenRepository.findByUser(user).orElse(null);
         assertThat(newToken).isNotNull();
+    }
+
+    @Test
+    void testVerificationSentPageWithPaymentSuccessParameter() throws Exception {
+        // Verify that verification-sent page accepts payment=success parameter
+        mockMvc.perform(get("/register/verification-sent")
+                .param("payment", "success"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("verification-sent"))
+                .andExpect(model().attributeExists("message"));
     }
 }
