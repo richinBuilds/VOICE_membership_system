@@ -171,7 +171,7 @@ public class PayPalService {
         return "voice:registration:" + registrationRef + ":membership:" + membershipId;
     }
 
-    private CaptureValidationResult validateCaptureResponse(JsonNode response, Membership membership,
+    CaptureValidationResult validateCaptureResponse(JsonNode response, Membership membership,
             String expectedCustomId) {
         String orderStatus = response.path("status").asText();
         JsonNode purchaseUnit = response.path("purchase_units").path(0);

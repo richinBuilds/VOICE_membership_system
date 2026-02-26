@@ -80,7 +80,7 @@ class AccountLockoutIntegrationTest {
                 .param("password", WRONG_PASSWORD)
                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login?error=true&remaining=2"));
+                .andExpect(redirectedUrl("/login?error=true&remaining=2"));
 
         // Second failed attempt
         mockMvc.perform(post("/login")
@@ -88,7 +88,7 @@ class AccountLockoutIntegrationTest {
                 .param("password", WRONG_PASSWORD)
                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login?error=true&remaining=1"));
+                .andExpect(redirectedUrl("/login?error=true&remaining=1"));
 
         // Third failed attempt - should lock the account
         mockMvc.perform(post("/login")
@@ -96,7 +96,7 @@ class AccountLockoutIntegrationTest {
                 .param("password", WRONG_PASSWORD)
                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login?locked=true&minutes=*"));
+                .andExpect(redirectedUrlPattern("/login?locked=true&minutes=*"));
 
         // Verify user is locked in database
         User lockedUser = userRepository.findByEmail(TEST_EMAIL);
@@ -121,7 +121,7 @@ class AccountLockoutIntegrationTest {
                 .param("password", CORRECT_PASSWORD)
                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login?locked=true&minutes=*"));
+                .andExpect(redirectedUrlPattern("/login?locked=true&minutes=*"));
     }
 
     @Test
@@ -166,7 +166,7 @@ class AccountLockoutIntegrationTest {
                 .param("password", WRONG_PASSWORD)
                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login?error=true*"));
+                .andExpect(redirectedUrlPattern("/login?error=true*"));
     }
 
     @Test
@@ -184,7 +184,7 @@ class AccountLockoutIntegrationTest {
                 .param("password", WRONG_PASSWORD)
                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login?locked=true&minutes=*"));
+                .andExpect(redirectedUrlPattern("/login?locked=true&minutes=*"));
 
         // Verify attempts didn't increase
         User user = userRepository.findByEmail(TEST_EMAIL);

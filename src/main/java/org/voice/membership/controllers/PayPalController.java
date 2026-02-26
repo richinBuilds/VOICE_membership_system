@@ -17,10 +17,10 @@ import org.voice.membership.repositories.MembershipPaymentTransactionRepository;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 import org.voice.membership.services.PayPalService;
+import org.voice.membership.services.MembershipService;
 
 import java.math.RoundingMode;
 import java.security.Principal;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -37,6 +37,7 @@ public class PayPalController {
     private final PayPalService payPalService;
     private final PayPalProperties payPalProperties;
     private final ObjectMapper objectMapper;
+    private final MembershipService membershipService;
 
     @PostMapping("/register/paypal/create-order")
     public ResponseEntity<Map<String, Object>> createOrder(@RequestBody CreatePayPalOrderRequest request,
@@ -239,11 +240,7 @@ public class PayPalController {
 
         Date now = new Date();
         user.setMembershipStartDate(now);
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(now);
-        cal.add(Calendar.YEAR, 1);
-        user.setMembershipExpiryDate(cal.getTime());
+        user.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
 
         userRepository.save(user);
     }

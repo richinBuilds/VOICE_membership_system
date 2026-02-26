@@ -1,6 +1,7 @@
 package org.voice.membership.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.thymeleaf.context.Context;
@@ -35,7 +36,7 @@ public class EmailSenderService {
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
+        } catch (MessagingException | MailException e) {
             throw new RuntimeException("Failed to send password reset email", e);
         }
     }
@@ -54,7 +55,7 @@ public class EmailSenderService {
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
+        } catch (MessagingException | MailException e) {
             throw new RuntimeException("Failed to send verification email", e);
         }
     }
@@ -75,7 +76,7 @@ public class EmailSenderService {
 
             helper.setText(htmlContent, true);
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
+        } catch (MessagingException | MailException e) {
             throw new RuntimeException("Failed to send custom email to " + to, e);
         }
     }

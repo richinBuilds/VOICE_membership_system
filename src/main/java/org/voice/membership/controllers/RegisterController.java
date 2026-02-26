@@ -18,6 +18,8 @@ import org.voice.membership.entities.*;
 import org.voice.membership.repositories.*;
 import org.voice.membership.services.EmailSenderService;
 import org.voice.membership.services.PayPalService;
+import org.voice.membership.services.MembershipService;
+import org.voice.membership.services.ChildService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -74,6 +76,12 @@ public class RegisterController {
 
     @Autowired
     private MembershipPaymentTransactionRepository paymentTransactionRepository;
+
+    @Autowired
+    private MembershipService membershipService;
+
+    @Autowired
+    private ChildService childService;
 
     @GetMapping
     public String showRegister(Model model, HttpSession session) {
@@ -170,10 +178,12 @@ public class RegisterController {
                     }
                     if (childDobs != null && i < childDobs.size() && childDobs.get(i) != null
                             && !childDobs.get(i).isEmpty()) {
+                        // ChildService will handle date parsing
                         try {
                             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
                             child.setDateOfBirth(sdf.parse(childDobs.get(i)));
                         } catch (Exception e) {
+                            // Date parsing handled later
                         }
                     }
                     if (hearingLossTypes != null && i < hearingLossTypes.size()) {
@@ -444,22 +454,13 @@ public class RegisterController {
                         .body(Map.of("message", "Payment verification failed"));
             }
 
-            // Create payment transaction record (like upgrade flow)
-            MembershipPaymentTransaction transaction = paymentTransactionRepository
-                    .findByPaypalOrderId(request.orderId())
-                    .orElseGet(MembershipPaymentTransaction::new);
-            transaction.setMembership(membershipOpt.get());
-            transaction.setPaypalOrderId(request.orderId());
-            transaction.setPaypalCaptureId(validation.captureId());
-            transaction.setAmount(membershipOpt.get().getPrice().setScale(2, RoundingMode.HALF_UP));
-            transaction.setCurrency(payPalProperties.getCurrency());
-            transaction.setStatus("COMPLETED");
-            transaction.setFailureReason(null);
-            // Note: user field will be set after user is created
-            MembershipPaymentTransaction savedTransaction = paymentTransactionRepository.save(transaction);
-
+            // Store payment details in session - transaction will be created after user is
+            // created
             session.setAttribute("registrationPaymentCompleted", true);
-            session.setAttribute("paymentTransactionId", savedTransaction.getId());
+            session.setAttribute("paypalOrderId", request.orderId());
+            session.setAttribute("paypalCaptureId", validation.captureId());
+            session.setAttribute("paymentAmount", membershipOpt.get().getPrice().setScale(2, RoundingMode.HALF_UP));
+
             String redirect = completeRegistration(session);
             String redirectUrl = redirect.startsWith("redirect:") ? redirect.substring("redirect:".length()) : redirect;
 
@@ -507,11 +508,7 @@ public class RegisterController {
                         Date now = new Date();
                         user.setMembershipStartDate(now);
                         user.setPaid(true);
-
-                        java.util.Calendar cal = java.util.Calendar.getInstance();
-                        cal.setTime(now);
-                        cal.add(java.util.Calendar.YEAR, 1);
-                        user.setMembershipExpiryDate(cal.getTime());
+                        user.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
                     } else {
                         user.setPaid(false);
                     }
@@ -520,17 +517,22 @@ public class RegisterController {
 
             user = userRepository.save(user);
 
-            // Link payment transaction to newly created user (if exists)
-            Long paymentTransactionId = (Long) session.getAttribute("paymentTransactionId");
-            if (paymentTransactionId != null) {
-                Optional<MembershipPaymentTransaction> transactionOpt = paymentTransactionRepository
-                        .findById(paymentTransactionId);
-                if (transactionOpt.isPresent()) {
-                    MembershipPaymentTransaction transaction = transactionOpt.get();
-                    transaction.setUser(user);
-                    paymentTransactionRepository.save(transaction);
-                    session.removeAttribute("paymentTransactionId");
-                }
+            // Create payment transaction if payment was completed during registration
+            String paypalOrderId = (String) session.getAttribute("paypalOrderId");
+            String paypalCaptureId = (String) session.getAttribute("paypalCaptureId");
+            BigDecimal paymentAmount = (BigDecimal) session.getAttribute("paymentAmount");
+
+            if (paypalOrderId != null && paypalCaptureId != null && paymentAmount != null) {
+                MembershipPaymentTransaction transaction = new MembershipPaymentTransaction();
+                transaction.setUser(user);
+                transaction.setMembership(user.getMembership());
+                transaction.setPaypalOrderId(paypalOrderId);
+                transaction.setPaypalCaptureId(paypalCaptureId);
+                transaction.setAmount(paymentAmount);
+                transaction.setCurrency(payPalProperties.getCurrency());
+                transaction.setStatus("COMPLETED");
+                transaction.setFailureReason(null);
+                paymentTransactionRepository.save(transaction);
             }
 
             // Create and save verification token
@@ -549,24 +551,24 @@ public class RegisterController {
             }
 
             if (registrationData.getChildren() != null && !registrationData.getChildren().isEmpty()) {
-                List<Child> children = new ArrayList<>();
                 for (ChildDto childDto : registrationData.getChildren()) {
                     if (childDto.getName() != null && !childDto.getName().trim().isEmpty()) {
-                        Child child = Child.builder()
-                                .name(childDto.getName())
-                                .age(childDto.getAge())
-                                .dateOfBirth(childDto.getDateOfBirth())
-                                .hearingLossType(childDto.getHearingLossType())
-                                .equipmentType(childDto.getEquipmentType())
-                                .siblingsNames(childDto.getSiblingsNames())
-                                .chapterLocation(childDto.getChapterLocation())
-                                .user(user)
-                                .build();
-                        children.add(child);
+                        String dobStr = null;
+                        if (childDto.getDateOfBirth() != null) {
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                            dobStr = sdf.format(childDto.getDateOfBirth());
+                        }
+
+                        childService.createChild(
+                                user,
+                                childDto.getName(),
+                                childDto.getAge(),
+                                dobStr,
+                                childDto.getHearingLossType(),
+                                childDto.getEquipmentType(),
+                                childDto.getSiblingsNames(),
+                                childDto.getChapterLocation());
                     }
-                }
-                if (!children.isEmpty()) {
-                    childRepository.saveAll(children);
                 }
             }
 
@@ -609,6 +611,9 @@ public class RegisterController {
             session.removeAttribute("registrationPaymentRef");
             session.removeAttribute("registrationPayPalOrderId");
             session.removeAttribute("registrationPaymentCompleted");
+            session.removeAttribute("paypalOrderId");
+            session.removeAttribute("paypalCaptureId");
+            session.removeAttribute("paymentAmount");
 
             // Redirect to a page informing user to check email
             return "redirect:/register/verification-sent";

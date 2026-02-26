@@ -46,6 +46,9 @@ public class AdminAddMemberRequest {
     )
     private String password;
 
+    @NotBlank(message = "Password confirmation is required")
+    private String confirmPassword;
+
     private Integer membershipId;
 
     @NotNull(message = "Email verification status is required")

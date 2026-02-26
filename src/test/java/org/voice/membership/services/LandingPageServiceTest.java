@@ -133,7 +133,9 @@ class LandingPageServiceTest {
 
     @Test
     void initializeDefaultMemberships_WhenNoMembershipsExist_ShouldCreateMemberships() {
-        when(membershipRepository.count()).thenReturn(0L);
+        when(membershipRepository.findByNameAndIsFreeTrue("Free")).thenReturn(List.of());
+        when(membershipRepository.findByNameAndIsFreeFalse("Premium")).thenReturn(List.of());
+        when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc()).thenReturn(List.of());
         when(membershipRepository.save(any(Membership.class))).thenAnswer(i -> i.getArguments()[0]);
 
         landingPageService.initializeDefaultMemberships();
@@ -143,7 +145,9 @@ class LandingPageServiceTest {
 
     @Test
     void initializeDefaultMemberships_WhenMembershipsExist_ShouldNotCreateMemberships() {
-        when(membershipRepository.count()).thenReturn(2L);
+        when(membershipRepository.findByNameAndIsFreeTrue("Free")).thenReturn(List.of(freeMembership));
+        when(membershipRepository.findByNameAndIsFreeFalse("Premium")).thenReturn(List.of(premiumMembership));
+        when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc()).thenReturn(Arrays.asList(freeMembership, premiumMembership));
 
         landingPageService.initializeDefaultMemberships();
 

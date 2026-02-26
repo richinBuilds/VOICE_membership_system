@@ -59,6 +59,7 @@ class AuthenticationWorkflowTest {
                 .phone("1234567890")
                 .role(Role.USER.name())
                 .creation(new Date())
+                .emailVerified(true)
                 .build();
 
         testUser = userRepository.save(testUser);

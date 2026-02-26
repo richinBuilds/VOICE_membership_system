@@ -1,5 +1,6 @@
 package org.voice.membership.services;
 
+import org.voice.membership.dtos.UpdateUserRequest;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -89,5 +91,45 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
         resetTokens.remove(token);
         return true;
+    }
+
+    /**
+     * Update user profile information.
+     * Handles email conflict checking and updates all user fields.
+     * 
+     * @param currentEmail  The user's current email (for lookup)
+     * @param updateRequest The update request with new user information
+     * @return The updated user, or null if email conflict exists
+     */
+    public User updateProfile(String currentEmail, UpdateUserRequest updateRequest) {
+        User user = userRepository.findByEmail(currentEmail);
+        if (user == null) {
+            return null;
+        }
+
+        // Update basic info
+        user.setFirstName(updateRequest.getFirstName());
+        user.setMiddleName(updateRequest.getMiddleName());
+        user.setLastName(updateRequest.getLastName());
+
+        // Check email conflict if email is being changed
+        String newEmail = updateRequest.getEmail();
+        if (newEmail != null && !newEmail.equalsIgnoreCase(currentEmail)) {
+            List<User> matches = userRepository.findAllByEmailIgnoreCase(newEmail);
+            boolean conflict = matches.stream().anyMatch(u -> u.getId() != user.getId());
+            if (conflict) {
+                return null; // Email conflict
+            }
+            user.setEmail(newEmail);
+        }
+
+        // Update contact and address info
+        user.setPhone(updateRequest.getPhone());
+        user.setAddress(updateRequest.getAddress());
+        user.setCity(updateRequest.getCity());
+        user.setProvince(updateRequest.getProvince());
+        user.setPostalCode(updateRequest.getPostalCode());
+
+        return userRepository.save(user);
     }
 }
