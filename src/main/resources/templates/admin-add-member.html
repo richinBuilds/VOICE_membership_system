@@ -17,7 +17,7 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
 
-<body style="background: var(--bg-bone);">
+<body class="admin-add-member-page">
 
 <nav class="navbar navbar-expand-lg">
     <div class="container">
@@ -86,20 +86,20 @@
     <!-- Add Member Form -->
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i> New Member Information</h5>
+            <div class="card add-member-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-plus me-2"></i> New Member Information</h5>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body">
                     <form th:action="@{/admin/add-member}" 
                           th:object="${memberRequest}" 
                           method="post"
                           id="addMemberForm">
                         
                         <!-- Personal Information Section -->
-                        <div class="mb-4">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="fas fa-id-card me-2"></i>Personal Information
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-id-card"></i>Personal Information
                             </h6>
                             
                             <div class="row g-3">
@@ -138,9 +138,9 @@
                         </div>
 
                         <!-- Contact Information Section -->
-                        <div class="mb-4">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="fas fa-address-book me-2"></i>Contact Information
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-address-book"></i>Contact Information
                             </h6>
                             
                             <div class="row g-3">
@@ -199,9 +199,9 @@
                         </div>
 
                         <!-- Security Section -->
-                        <div class="mb-4">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="fas fa-lock me-2"></i>Security
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-lock"></i>Security
                             </h6>
                             
                             <div class="row g-3">
@@ -217,24 +217,41 @@
                                     <small class="text-muted d-block mt-2">
                                         <i class="fas fa-check-circle text-success me-1"></i>Requirements:
                                     </small>
-                                    <ul class="text-muted small ps-3 mt-1 mb-0">
-                                        <li id="lengthCheck"><i class="fas fa-times text-danger me-1"></i>Minimum 8 characters</li>
-                                        <li id="uppercaseCheck"><i class="fas fa-times text-danger me-1"></i>At least one uppercase letter (A-Z)</li>
-                                        <li id="lowercaseCheck"><i class="fas fa-times text-danger me-1"></i>At least one lowercase letter (a-z)</li>
-                                        <li id="numberCheck"><i class="fas fa-times text-danger me-1"></i>At least one number (0-9)</li>
-                                        <li id="specialCheck"><i class="fas fa-times text-danger me-1"></i>At least one special character (@$!%*?&#)</li>
+                                    <ul class="password-requirements">
+                                        <li id="lengthCheck" class="invalid"><i class="fas fa-times"></i>Minimum 8 characters</li>
+                                        <li id="uppercaseCheck" class="invalid"><i class="fas fa-times"></i>At least one uppercase letter (A-Z)</li>
+                                        <li id="lowercaseCheck" class="invalid"><i class="fas fa-times"></i>At least one lowercase letter (a-z)</li>
+                                        <li id="numberCheck" class="invalid"><i class="fas fa-times"></i>At least one number (0-9)</li>
+                                        <li id="specialCheck" class="invalid"><i class="fas fa-times"></i>At least one special character (@$!%*?&#)</li>
                                     </ul>
-                                    <div id="passwordError" class="alert alert-danger alert-sm mt-2 py-2" style="display: none;">
+                                    <div id="passwordError" class="password-error-alert" style="display: none;">
                                         <small id="passwordErrorMessage"></small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="confirmPassword" class="form-label">
+                                        Confirm Password <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="confirmPassword" 
+                                           th:field="*{confirmPassword}"
+                                           required>
+                                    <small class="text-muted d-block mt-2">
+                                        Re-enter the password to confirm
+                                    </small>
+                                    <div id="confirmPasswordError" class="password-error-alert" style="display: none;">
+                                        <small id="confirmPasswordErrorMessage"></small>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Membership Assignment Section -->
-                        <div class="mb-4">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="fas fa-id-badge me-2"></i>Membership Assignment
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-id-badge"></i>Membership Assignment
                             </h6>
                             
                             <div class="row g-3">
@@ -257,9 +274,9 @@
                         </div>
 
                         <!-- Account Status Section -->
-                        <div class="mb-4">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="fas fa-cog me-2"></i>Account Status
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-cog"></i>Account Status
                             </h6>
                             
                             <div class="row g-3">
@@ -299,12 +316,12 @@
                         </div>
 
                         <!-- Form Actions -->
-                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <div class="form-actions">
                             <a th:href="@{/admin/dashboard}" class="btn btn-secondary">
-                                <i class="fas fa-times me-1"></i> Cancel
+                                <i class="fas fa-times me-2"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-user-plus me-1"></i> Add Member
+                                <i class="fas fa-user-plus me-2"></i> Add Member
                             </button>
                         </div>
                         
@@ -315,12 +332,13 @@
     </div>
 </div>
 
-<!-- Footer -->
-<footer class="footer mt-5">
-    <div class="container text-center">
-        <p class="mb-0">&copy; 2024 VOICE. All rights reserved.</p>
+<div class="dashboard-footer">
+    <div class="container">
+        <p class="mb-0">
+            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
+        </p>
     </div>
-</footer>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
@@ -328,6 +346,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.getElementById('phone');
     const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
     const addMemberForm = document.getElementById('addMemberForm');
     
     // Phone number validation - only allow digits, max 10
@@ -354,6 +373,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (passwordInput) {
         passwordInput.addEventListener('input', function() {
             validatePassword(this.value);
+            validatePasswordMatch();
+        });
+    }
+    
+    // Confirm password validation
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            validatePasswordMatch();
         });
     }
     
@@ -374,6 +401,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isPasswordStrong(passwordInput.value)) {
                 e.preventDefault();
                 showPasswordError('Password does not meet the requirements');
+                return false;
+            }
+            
+            // Validate passwords match
+            if (confirmPasswordInput && passwordInput.value !== confirmPasswordInput.value) {
+                e.preventDefault();
+                showConfirmPasswordError('Passwords do not match');
                 return false;
             }
             
@@ -419,14 +453,18 @@ function updateCheck(elementId, isValid) {
     if (!element) return;
     
     if (isValid) {
+        element.classList.remove('invalid');
+        element.classList.add('valid');
         element.innerHTML = element.innerHTML.replace(
-            /fas fa-times text-danger/g,
-            'fas fa-check-circle text-success'
+            '<i class="fas fa-times"></i>',
+            '<i class="fas fa-check-circle"></i>'
         );
     } else {
+        element.classList.remove('valid');
+        element.classList.add('invalid');
         element.innerHTML = element.innerHTML.replace(
-            /fas fa-check-circle text-success/g,
-            'fas fa-times text-danger'
+            '<i class="fas fa-check-circle"></i>',
+            '<i class="fas fa-times"></i>'
         );
     }
 }
@@ -451,6 +489,52 @@ function showPasswordError(message) {
         
         // Scroll to error
         passwordError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function showConfirmPasswordError(message) {
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+    const confirmPasswordErrorMessage = document.getElementById('confirmPasswordErrorMessage');
+    
+    if (confirmPasswordError && confirmPasswordErrorMessage) {
+        confirmPasswordErrorMessage.textContent = message;
+        confirmPasswordError.style.display = 'block';
+        
+        // Scroll to error
+        confirmPasswordError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function validatePasswordMatch() {
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+    
+    if (!passwordInput || !confirmPasswordInput) return;
+    
+    if (confirmPasswordInput.value.length > 0) {
+        if (passwordInput.value === confirmPasswordInput.value) {
+            confirmPasswordInput.classList.remove('is-invalid');
+            confirmPasswordInput.classList.add('is-valid');
+            if (confirmPasswordError) {
+                confirmPasswordError.style.display = 'none';
+            }
+        } else {
+            confirmPasswordInput.classList.remove('is-valid');
+            confirmPasswordInput.classList.add('is-invalid');
+            if (confirmPasswordError) {
+                const confirmPasswordErrorMessage = document.getElementById('confirmPasswordErrorMessage');
+                if (confirmPasswordErrorMessage) {
+                    confirmPasswordErrorMessage.textContent = 'Passwords do not match';
+                }
+                confirmPasswordError.style.display = 'block';
+            }
+        }
+    } else {
+        confirmPasswordInput.classList.remove('is-valid', 'is-invalid');
+        if (confirmPasswordError) {
+            confirmPasswordError.style.display = 'none';
+        }
     }
 }
 </script>

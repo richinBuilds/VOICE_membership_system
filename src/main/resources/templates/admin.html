@@ -112,10 +112,10 @@
                 <i class="fas fa-list me-2"></i> All Users
             </h3>
             <div>
-                <a th:href="@{/admin/add-member}" class="btn btn-success me-2">
+                <a th:href="@{/admin/add-member}" class="btn btn-primary-custom me-2">
                     <i class="fas fa-user-plus me-2"></i>Add Member
                 </a>
-                <button class="btn btn-info me-2" type="button" data-bs-toggle="modal" data-bs-target="#sendEmailModal"
+                <button class="btn btn-primary-custom me-2" type="button" data-bs-toggle="modal" data-bs-target="#sendEmailModal"
                         id="sendEmailBtnMain" disabled>
                     <i class="fas fa-envelope me-2"></i>Send Email to Selected
                 </button>
@@ -254,7 +254,7 @@
                         </td>
                         <td>
                             <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
-                                <span class="badge bg-secondary" th:text="${#lists.size(user.children)} + ' child(ren)'">
+                                <span class="badge" style="background: var(--bg-light); color: var(--text-secondary); border: 1px solid var(--border-default);" th:text="${#lists.size(user.children)} + ' child(ren)'">
                                     2 child(ren)
                                 </span>
                                 <div class="mt-1">
@@ -272,13 +272,12 @@
                         </td>
                         <td>
                             <span class="badge" 
-                                  th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : ''}"
-                                  th:style="${user.role == 'USER' ? 'background: var(--primary); color: var(--bg-white);' : ''}"
+                                  th:style="${user.role == 'ADMIN' ? 'background: var(--text-secondary); color: var(--bg-white);' : 'background: var(--primary); color: var(--bg-white);'}"
                                   th:text="${user.role}">USER</span>
                         </td>
                         <td>
                             <span class="badge" 
-                                  th:classappend="${user.membership != null and !user.membership.isFree ? 'bg-success' : 'bg-warning'}"
+                                  th:style="${user.membership != null and !user.membership.isFree ? 'background: var(--primary); color: var(--bg-white);' : 'background: var(--bg-light); color: var(--text-secondary); border: 1px solid var(--border-default);'}"
                                   th:text="${user.membership != null and !user.membership.isFree ? 'Paid' : 'Unpaid'}">Unpaid</span>
                         </td>
                         <td th:text="${#dates.format(user.creation, 'yyyy-MM-dd')}">2024-01-01</td>
@@ -290,7 +289,8 @@
                                 <i class="fas fa-eye"></i>
                             </button>
                             <a th:href="@{/admin/edit-member/{id}(id=${user.id})}"
-                               class="btn btn-sm btn-outline-success"
+                               class="btn btn-sm btn-outline-primary"
+                               style="border-color: var(--primary); color: var(--primary);"
                                title="Edit Profile">
                                 <i class="fas fa-edit"></i>
                             </a>
@@ -342,33 +342,35 @@
 
 <!-- Modal for delete confirmation -->
 <div class="modal fade" id="deleteMemberModal" tabindex="-1" aria-labelledby="deleteMemberModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content delete-modal">
+            <div class="modal-header">
                 <h5 class="modal-title" id="deleteMemberModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete Member
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to permanently delete this member?</p>
-                <div class="alert alert-warning">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Member:</strong> <span id="deleteMemberName"></span>
+                <div class="delete-warning-box">
+                    <i class="fas fa-user-times delete-icon"></i>
+                    <p class="delete-question">Are you sure you want to permanently delete this member?</p>
+                    <div class="member-info-box">
+                        <strong>Member:</strong> <span id="deleteMemberName"></span>
+                    </div>
+                    <p class="warning-text">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        This action cannot be undone!
+                    </p>
                 </div>
-                <p class="text-danger mb-0">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    <strong>This action cannot be undone!</strong>
-                </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Cancel
+                    <i class="fas fa-times me-2"></i>Cancel
                 </button>
                 <form id="deleteMemberForm" method="post" style="display: inline;">
                     <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i>Delete Member
+                        <i class="fas fa-trash me-2"></i>Delete Member
                     </button>
                 </form>
             </div>
@@ -380,7 +382,7 @@
 <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header text-white" style="background-color: #28a745;">
+            <div class="modal-header">
                 <h5 class="modal-title" id="sendEmailModalLabel">
                     <i class="fas fa-envelope me-2"></i>Send Email to Selected Members
                 </h5>
@@ -416,7 +418,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Cancel
                 </button>
-                <button type="button" class="btn btn-success" id="sendEmailBtn">
+                <button type="button" class="btn btn-primary-custom" id="sendEmailBtn">
                     <i class="fas fa-paper-plane me-1"></i>Send Email
                 </button>
             </div>
@@ -695,7 +697,7 @@ function generateUserDetailsHTML(user) {
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small">Role</label>
                             <div>
-                                <span class="badge ${user.role === 'ADMIN' ? 'bg-danger' : ''}" style="${user.role === 'USER' ? 'background: var(--primary); color: var(--bg-white);' : ''}">
+                                <span class="badge" style="${user.role === 'ADMIN' ? 'background: var(--text-secondary); color: var(--bg-white);' : 'background: var(--primary); color: var(--bg-white);'}">
                                     ${user.role}
                                 </span>
                             </div>
@@ -742,7 +744,7 @@ function generateUserDetailsHTML(user) {
                 <div class="card-header text-white" style="background-color: var(--primary);">
                     <h6 class="mb-0">
                         <i class="fas fa-child me-2"></i>Children Information
-                        <span class="badge bg-light ms-2" style="color: #000000 !important;">${user.children ? user.children.length : 0}</span>
+                        <span class="badge" style="background: rgba(255,255,255,0.2); color: var(--bg-white); border: 1px solid rgba(255,255,255,0.3);">${user.children ? user.children.length : 0}</span>
                     </h6>
                 </div>
                 <div class="card-body">

@@ -755,7 +755,7 @@ a:hover {
 
 /* ========== Form Containers - COMPACT ========== */
 .checkout-container {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: var(--space-lg) var(--space-md);
 }
@@ -1781,6 +1781,157 @@ a:hover {
     color: var(--text-muted) !important;
 }
 
+/* ========== Delete Member Modal Styles ========== */
+#deleteMemberModal .modal-content.delete-modal {
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+#deleteMemberModal .modal-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--bg-white);
+    padding: 1.5rem 2rem;
+    border-bottom: none;
+}
+
+#deleteMemberModal .modal-header .modal-title {
+    color: var(--bg-white);
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+#deleteMemberModal .modal-header i {
+    color: var(--bg-white);
+    opacity: 0.9;
+}
+
+#deleteMemberModal .modal-body {
+    padding: 2rem;
+    background: var(--bg-white);
+}
+
+#deleteMemberModal .delete-warning-box {
+    text-align: center;
+}
+
+#deleteMemberModal .delete-icon {
+    font-size: 4rem;
+    color: var(--danger);
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+}
+
+#deleteMemberModal .delete-question {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+#deleteMemberModal .member-info-box {
+    background: var(--bg-light);
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary);
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+#deleteMemberModal .member-info-box strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+#deleteMemberModal .member-info-box span {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+#deleteMemberModal .warning-text {
+    color: var(--danger);
+    font-weight: 600;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+#deleteMemberModal .modal-footer {
+    padding: 1.5rem 2rem;
+    background: var(--bg-light);
+    border-top: 1px solid var(--border-light);
+    gap: 1rem;
+}
+
+#deleteMemberModal .modal-footer .btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    min-width: 120px;
+    transition: all var(--transition-base);
+}
+
+#deleteMemberModal .modal-footer .btn-secondary {
+    background: var(--bg-white);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+}
+
+#deleteMemberModal .modal-footer .btn-secondary:hover {
+    background: #E2E8F0;
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#deleteMemberModal .modal-footer .btn-danger {
+    background: linear-gradient(135deg, var(--danger), #DC2626);
+    border: none;
+    color: white;
+}
+
+#deleteMemberModal .modal-footer .btn-danger:hover {
+    background: linear-gradient(135deg, #DC2626, #B91C1C);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* ========== Send Email Modal Styles ========== */
+#sendEmailModal .modal-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--bg-white);
+    padding: 1.5rem 2rem;
+    border-bottom: none;
+}
+
+#sendEmailModal .modal-header .modal-title {
+    color: var(--bg-white);
+    font-weight: 700;
+}
+
+#sendEmailModal .modal-header i {
+    color: var(--bg-white);
+    opacity: 0.9;
+}
+
+/* ========== Admin Dashboard Button Styles ========== */
+.table .btn-outline-primary:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--bg-white) !important;
+}
+
+.table .btn-outline-danger:hover {
+    background: var(--danger) !important;
+    border-color: var(--danger) !important;
+    color: var(--bg-white) !important;
+}
+
 
 /* Styles from checkout.html, editChild.html, register-step2.html, register-step3.html, register-step4.html */
 body.checkout-page,
@@ -1846,3 +1997,251 @@ body.register-page {
     padding-top: 1rem;
 }
 
+/* ========== Admin Add/Edit Member Form Styles ========== */
+.add-member-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: box-shadow var(--transition-base);
+    margin-bottom: var(--space-2xl);
+}
+
+.add-member-card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.add-member-card .card-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--bg-white);
+    padding: var(--space-xl);
+    border-bottom: none;
+}
+
+.add-member-card .card-header h5 {
+    color: var(--bg-white);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.add-member-card .card-header i {
+    color: var(--bg-white);
+    opacity: 0.9;
+}
+
+.add-member-card .card-body {
+    padding: 4rem;
+}
+
+/* ========== Section Headers ========== */
+.form-section {
+    margin-bottom: 3rem;
+}
+
+.form-section-header {
+    color: var(--primary);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.form-section-header i {
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+/* ========== Form Labels ========== */
+.add-member-card .form-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin-bottom: var(--space-sm);
+    display: block;
+}
+
+.add-member-card .form-label.text-muted {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+    background-color: #FFFFFF;
+    padding: 0.6rem 2rem;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: var(--space-sm);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ========== Form Action Buttons ========== */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border-light);
+}
+
+.add-member-card .btn {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 140px;
+    justify-content: center;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-member-card .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+}
+
+.add-member-card .btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-hover), var(--primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(9, 99, 126, 0.3);
+}
+
+.add-member-card .btn-secondary {
+    background: var(--bg-light);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+}
+
+.add-member-card .btn-secondary:hover {
+    background: #E2E8F0;
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.add-member-card .btn i {
+    font-size: 0.95rem;
+}
+
+/* ========== Cancel Membership Confirmation Modal ========== */
+#confirmModal .modal-content.delete-modal {
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+#confirmModal .modal-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--bg-white);
+    padding: 1.5rem 2rem;
+    border-bottom: none;
+}
+
+#confirmModal .modal-header .modal-title {
+    color: var(--bg-white);
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+#confirmModal .modal-header i {
+    color: var(--bg-white);
+    opacity: 0.9;
+}
+
+#confirmModal .modal-body {
+    padding: 2.5rem 2rem;
+    background: var(--bg-white);
+}
+
+#confirmModal .warning-icon {
+    font-size: 4rem;
+    color: var(--danger);
+    margin-bottom: 1.5rem;
+    opacity: 0.2;
+}
+
+#confirmModal .warning-icon i {
+    font-size: 4rem;
+}
+
+#confirmModal .confirmation-message {
+    text-align: center;
+}
+
+#confirmModal .main-message {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+#confirmModal .warning-box {
+    background: #FEF2F2;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--danger);
+    color: #991B1B;
+    font-size: 0.95rem;
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+#confirmModal .warning-box i {
+    color: var(--danger);
+    flex-shrink: 0;
+}
+
+#confirmModal .modal-footer {
+    padding: 1.5rem 2rem;
+    background: var(--bg-light);
+    border-top: 1px solid var(--border-light);
+    gap: 1rem;
+}
+
+#confirmModal .modal-footer .btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    min-width: 160px;
+    transition: all var(--transition-base);
+}
+
+#confirmModal .modal-footer .btn-secondary-custom {
+    background: var(--bg-white);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+}
+
+#confirmModal .modal-footer .btn-secondary-custom:hover {
+    background: #E2E8F0;
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#confirmModal .modal-footer .btn-danger {
+    background: linear-gradient(135deg, var(--danger), #DC2626);
+    border: none;
+    color: white;
+}
+
+#confirmModal .modal-footer .btn-danger:hover {
+    background: linear-gradient(135deg, #DC2626, #B91C1C);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(220, 38, 38, 0.4);
+}

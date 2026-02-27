@@ -80,12 +80,11 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
             
-            <div class="table-card">
-                
-                <h3 class="mb-4">
-                    <i class="fas fa-id-card me-2" style="color: var(--primary);"></i>
-                    Member Information
-                </h3>
+            <div class="add-member-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-edit me-2"></i> Member Information</h5>
+                </div>
+                <div class="card-body">
                 
                 <form th:action="@{/admin/edit-member/{id}(id=${user.id})}" 
                       th:object="${updateRequest}"
@@ -95,10 +94,10 @@
                     <input type="hidden" th:field="*{userId}"/>
                     
                     <!-- Personal Information Section -->
-                    <div class="mb-4">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-user me-2"></i> Personal Information
-                        </h5>
+                    <div class="form-section">
+                        <h6 class="form-section-header">
+                            <i class="fas fa-user"></i>Personal Information
+                        </h6>
                         
                         <div class="row g-3">
                             <!-- First Name -->
@@ -147,10 +146,10 @@
                     </div>
                     
                     <!-- Contact Information Section -->
-                    <div class="mb-4">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-address-book me-2"></i> Contact Information
-                        </h5>
+                    <div class="form-section">
+                        <h6 class="form-section-header">
+                            <i class="fas fa-address-book"></i>Contact Information
+                        </h6>
                         
                         <div class="row g-3">
                             <!-- Email -->
@@ -180,7 +179,10 @@
                                        th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
                                        id="phone" 
                                        th:field="*{phone}"
+                                       placeholder="1234567890"
+                                       maxlength="10"
                                        required>
+                                <small class="text-muted">10 digits, numbers only</small>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" 
                                      th:errors="*{phone}">
                                     Phone error
@@ -236,7 +238,9 @@
                                        th:classappend="${#fields.hasErrors('postalCode')} ? 'is-invalid' : ''"
                                        id="postalCode" 
                                        th:field="*{postalCode}"
-                                       placeholder="A1A 1A1">
+                                       placeholder="A1A 1A1"
+                                       maxlength="7">
+                                <small class="text-muted">Canadian postal code format</small>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('postalCode')}" 
                                      th:errors="*{postalCode}">
                                     Postal code error
@@ -246,26 +250,28 @@
                     </div>
                     
                     <!-- Membership Section -->
-                    <div class="mb-4">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-crown me-2"></i> Membership
-                        </h5>
+                    <div class="form-section">
+                        <h6 class="form-section-header">
+                            <i class="fas fa-id-badge"></i>Membership Assignment
+                        </h6>
                         
                         <div class="row g-3">
                             <!-- Membership Type -->
                             <div class="col-md-6">
-                                <label for="membershipId" class="form-label">Membership Type</label>
+                                <label for="membershipId" class="form-label">
+                                    Assign Membership Plan
+                                </label>
                                 <select class="form-select" 
                                         id="membershipId" 
                                         th:field="*{membershipId}">
-                                    <option value="">No Membership</option>
+                                    <option value="">-- No Membership --</option>
                                     <option th:each="membership : ${memberships}" 
                                             th:value="${membership.id}"
                                             th:text="${membership.name + ' - $' + (membership.price != null ? membership.price : '0.00')}">
                                         Membership Option
                                     </option>
                                 </select>
-                                <small class="form-text text-muted">
+                                <small class="text-muted">
                                     Current: <span th:text="${user.membership != null ? user.membership.name : 'None'}">None</span>
                                 </small>
                             </div>
@@ -273,10 +279,10 @@
                     </div>
                     
                     <!-- Account Status Section -->
-                    <div class="mb-4">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-cog me-2"></i> Account Status
-                        </h5>
+                    <div class="form-section">
+                        <h6 class="form-section-header">
+                            <i class="fas fa-cog"></i>Account Status
+                        </h6>
                         
                         <div class="row g-3">
                             <!-- Email Verified -->
@@ -316,24 +322,24 @@
                     </div>
                     
                     <!-- Account Info (Read-only) -->
-                    <div class="mb-4">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-info-circle me-2"></i> Account Information
-                        </h5>
+                    <div class="form-section">
+                        <h6 class="form-section-header">
+                            <i class="fas fa-info-circle"></i>Account Information
+                        </h6>
                         
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label text-muted">User ID</label>
+                                <label>User ID</label>
                                 <p class="fw-bold" th:text="${user.id}">123</p>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-muted">Registration Date</label>
+                                <label>Registration Date</label>
                                 <p class="fw-bold" th:text="${user.creation != null ? #dates.format(user.creation, 'MMM dd, yyyy') : 'N/A'}">
                                     Jan 1, 2024
                                 </p>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-muted">Role</label>
+                                <label>Role</label>
                                 <p class="fw-bold">
                                     <span class="badge" 
                                           th:classappend="${user.role == 'ADMIN'} ? 'bg-danger' : 'bg-primary'"
@@ -343,18 +349,18 @@
                                 </p>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-muted">Failed Login Attempts</label>
+                                <label>Failed Login Attempts</label>
                                 <p class="fw-bold" th:text="${user.failedLoginAttempts}">0</p>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-muted">Number of Children</label>
+                                <label>Number of Children</label>
                                 <p class="fw-bold" th:text="${user.children != null ? user.children.size() : 0}">0</p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Action Buttons -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-actions">
                         <a th:href="@{/admin/dashboard}" class="btn btn-secondary">
                             <i class="fas fa-times me-2"></i> Cancel
                         </a>
@@ -365,6 +371,7 @@
                     
                 </form>
                 
+                </div> <!-- card-body -->
             </div>
             
         </div>
@@ -372,8 +379,58 @@
     
 </div>
 
+<div class="dashboard-footer">
+    <div class="container">
+        <p class="mb-0">
+            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
+        </p>
+    </div>
+</div>
+
 <!-- Bootstrap JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone');
+    const postalCodeInput = document.getElementById('postalCode');
+    
+    // Phone number validation - only allow digits, max 10
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            // Remove any non-digit characters
+            let value = this.value.replace(/\D/g, '');
+            // Limit to 10 digits
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
+            this.value = value;
+        });
+        
+        phoneInput.addEventListener('keypress', function(e) {
+            // Only allow numeric keys
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Postal code formatting
+    if (postalCodeInput) {
+        postalCodeInput.addEventListener('input', function(e) {
+            let value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 6) {
+                value = value.substring(0, 6);
+            }
+            // Format as A1A 1A1
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ' ' + value.substring(3);
+            }
+            this.value = value;
+        });
+    }
+});
+</script>
 
 </body>
 </html>
