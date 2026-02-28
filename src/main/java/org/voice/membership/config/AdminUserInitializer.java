@@ -36,11 +36,13 @@ public class AdminUserInitializer implements CommandLineRunner {
                     .middleName(null)
                     .lastName("User")
                     .email(adminEmail)
-                    .password(passwordEncoder.encode("Caspstone36!"))
+                    .password(passwordEncoder.encode("Capstone36!"))
                     .phone("N/A")
                     .address("N/A")
                     .postalCode("N/A")
                     .role(Role.ADMIN.name())
+                    .emailVerified(true)
+                    .accountLocked(false)
                     .creation(new Date())
                     .build();
 
@@ -54,6 +56,8 @@ public class AdminUserInitializer implements CommandLineRunner {
             existingAdmin.setFirstName("Admin");
             existingAdmin.setMiddleName(null);
             existingAdmin.setLastName("User");
+            existingAdmin.setEmailVerified(true);
+            existingAdmin.setAccountLocked(false);
             userRepository.save(existingAdmin);
             log.info("Admin credentials updated successfully. Email: {}", adminEmail);
         }

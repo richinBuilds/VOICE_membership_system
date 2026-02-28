@@ -32,3 +32,11 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.voice.membership: DEBUG
+
+# Mock PayPal configuration for tests (not real credentials)
+paypal:
+  mode: sandbox
+  client-id: test-client-id
+  client-secret: test-client-secret
+  webhook-id: test-webhook-id
+  currency: CAD

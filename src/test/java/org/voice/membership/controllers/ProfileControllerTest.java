@@ -17,6 +17,7 @@ import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 import java.util.Date;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -93,6 +94,17 @@ class ProfileControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
+    void profile_WithUpgradeSuccessParam_ShouldShowSuccessMessage() throws Exception {
+        mockMvc.perform(get("/profile")
+                .param("upgrade", "success"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("profile"))
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attribute("userName", "Test User"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void editProfile_GetRequest_ShouldReturnEditForm() throws Exception {
         mockMvc.perform(get("/profile/edit"))
                 .andExpect(status().isOk())
@@ -130,11 +142,191 @@ class ProfileControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
+    void addChild_PostRequest_WithValidData_ShouldCreateChild() throws Exception {
+        int initialCount = childRepository.findByUser(testUser).size();
+
+        mockMvc.perform(post("/profile/child/add")
+                .with(csrf())
+                .param("name", "New Child")
+                .param("age", "5")
+                .param("hearingLossType", "Moderate")
+                .param("equipmentType", "Hearing Aid"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"));
+
+        int finalCount = childRepository.findByUser(testUser).size();
+        assertThat(finalCount).isEqualTo(initialCount + 1);
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void editChild_GetRequest_WithValidId_ShouldShowEditForm() throws Exception {
+        mockMvc.perform(get("/profile/child/edit/" + testChild.getId()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("editChild"))
+                .andExpect(model().attributeExists("child"))
+                .andExpect(model().attribute("isEdit", true));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void editChild_GetRequest_WithInvalidId_ShouldRedirectToProfile() throws Exception {
+        mockMvc.perform(get("/profile/child/edit/99999"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void editChild_GetRequest_BelongingToAnotherUser_ShouldRedirectToProfile() throws Exception {
+        User otherUser = new User();
+        otherUser.setFirstName("Other");
+        otherUser.setLastName("User");
+        otherUser.setEmail("other2@example.com");
+        otherUser.setPassword(passwordEncoder.encode("password"));
+        otherUser.setPhone("9999999999");
+        otherUser.setAddress("789 Other St");
+        otherUser.setCity("Vancouver");
+        otherUser.setProvince("BC");
+        otherUser.setPostalCode("A1A 1A1");
+        otherUser.setRole("USER");
+        otherUser.setCreation(new Date());
+        otherUser = userRepository.save(otherUser);
+
+        Child otherChild = new Child();
+        otherChild.setName("Other Child");
+        otherChild.setDateOfBirth(new Date());
+        otherChild.setUser(otherUser);
+        otherChild = childRepository.save(otherChild);
+
+        mockMvc.perform(get("/profile/child/edit/" + otherChild.getId()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void updateChild_PostRequest_WithValidData_ShouldUpdateChild() throws Exception {
+        mockMvc.perform(post("/profile/child/edit/" + testChild.getId())
+                .with(csrf())
+                .param("name", "Updated Child Name")
+                .param("age", "6")
+                .param("hearingLossType", "Severe")
+                .param("equipmentType", "Cochlear Implant"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"));
+
+        Child updated = childRepository.findById(testChild.getId()).orElse(null);
+        assertThat(updated).isNotNull();
+        assertThat(updated.getName()).isEqualTo("Updated Child Name");
+        assertThat(updated.getAge()).isEqualTo(6);
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void updateChild_PostRequest_WithInvalidId_ShouldRedirectToProfile() throws Exception {
+        mockMvc.perform(post("/profile/child/edit/99999")
+                .with(csrf())
+                .param("name", "Updated Name"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void updateChild_PostRequest_BelongingToAnotherUser_ShouldRedirectToProfile() throws Exception {
+        User otherUser = new User();
+        otherUser.setFirstName("Other");
+        otherUser.setLastName("User");
+        otherUser.setEmail("other3@example.com");
+        otherUser.setPassword(passwordEncoder.encode("password"));
+        otherUser.setPhone("8888888888");
+        otherUser.setAddress("456 Other St");
+        otherUser.setCity("Calgary");
+        otherUser.setProvince("AB");
+        otherUser.setPostalCode("T2P 1A1");
+        otherUser.setRole("USER");
+        otherUser.setCreation(new Date());
+        otherUser = userRepository.save(otherUser);
+
+        Child otherChild = new Child();
+        otherChild.setName("Other Child");
+        otherChild.setDateOfBirth(new Date());
+        otherChild.setUser(otherUser);
+        otherChild = childRepository.save(otherChild);
+
+        mockMvc.perform(post("/profile/child/edit/" + otherChild.getId())
+                .with(csrf())
+                .param("name", "Hacked Name"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteChild_WithValidId_ShouldDeleteChild() throws Exception {
         mockMvc.perform(post("/profile/child/delete/" + testChild.getId())
                 .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/profile"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void cancelMembershipPage_WithPaidMembership_ShouldShowCancellationPage() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership paidMembership = new org.voice.membership.entities.Membership();
+        paidMembership.setName("Premium Membership");
+        paidMembership.setPrice(new java.math.BigDecimal("50.00"));
+        paidMembership.setActive(true);
+        paidMembership.setFree(false);
+        paidMembership.setDisplayOrder(2);
+        paidMembership = membershipRepository.save(paidMembership);
+
+        user.setMembership(paidMembership);
+        userRepository.save(user);
+
+        mockMvc.perform(get("/profile/cancel-membership"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("cancel-membership"))
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attributeExists("currentMembershipName"))
+                .andExpect(model().attribute("currentMembershipName", "Premium Membership"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void cancelMembershipPage_WithoutMembership_ShouldRedirectToProfile() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+        user.setMembership(null);
+        userRepository.save(user);
+
+        mockMvc.perform(get("/profile/cancel-membership"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile?error=no_membership_to_cancel"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void processCancelMembership_WithPaidMembership_ShouldCancelAndRedirect() throws Exception {
+        User user = userRepository.findByEmail("test@example.com");
+
+        org.voice.membership.entities.Membership paidMembership = new org.voice.membership.entities.Membership();
+        paidMembership.setName("Premium Membership");
+        paidMembership.setPrice(new java.math.BigDecimal("50.00"));
+        paidMembership.setActive(true);
+        paidMembership.setFree(false);
+        paidMembership.setDisplayOrder(2);
+        paidMembership = membershipRepository.save(paidMembership);
+
+        user.setMembership(paidMembership);
+        userRepository.save(user);
+
+        mockMvc.perform(post("/profile/cancel-membership")
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile?cancelled=true"));
     }
 
     // Profile Without Login
@@ -206,7 +398,7 @@ class ProfileControllerTest {
                 .with(csrf())
                 .param("membershipId", String.valueOf(paidMembership.getId())))
                 .andExpect(status().isOk())
-                .andExpect(view().name("upgrade-checkout"))
+                .andExpect(view().name("checkout"))
                 .andExpect(model().attributeExists("user"))
                 .andExpect(model().attributeExists("upgradeMembership"))
                 .andExpect(model().attributeExists("membershipName"))

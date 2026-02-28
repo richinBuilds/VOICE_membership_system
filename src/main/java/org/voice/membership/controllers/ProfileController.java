@@ -1,6 +1,7 @@
 package org.voice.membership.controllers;
 
 import org.voice.membership.dtos.UpdateUserRequest;
+import org.voice.membership.config.PayPalProperties;
 import org.voice.membership.entities.User;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Child;
@@ -8,6 +9,8 @@ import org.voice.membership.repositories.UserRepository;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.ChildRepository;
 import org.voice.membership.services.UserService;
+import org.voice.membership.services.MembershipService;
+import org.voice.membership.services.ChildService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -25,10 +28,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.security.Principal;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -49,6 +50,9 @@ public class ProfileController {
     private final MembershipRepository membershipRepository;
     private final ChildRepository childRepository;
     private final UserService userService;
+    private final MembershipService membershipService;
+    private final ChildService childService;
+    private final PayPalProperties payPalProperties;
     private final org.voice.membership.services.MembershipCancellationService membershipCancellationService;
 
     @GetMapping
@@ -74,8 +78,7 @@ public class ProfileController {
             model.addAttribute("userPostalCode", user.getPostalCode() != null ? user.getPostalCode() : "Not provided");
 
             if (user.getCreation() != null) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy");
-                model.addAttribute("memberSince", dateFormat.format(user.getCreation()));
+                model.addAttribute("memberSince", membershipService.formatMembershipDate(user.getCreation()));
             } else {
                 model.addAttribute("memberSince", "Recently");
             }
@@ -92,12 +95,8 @@ public class ProfileController {
                     model.addAttribute("membershipStatus", "Paid");
 
                     if (user.getCreation() != null) {
-                        Calendar cal = Calendar.getInstance();
-                        cal.setTime(user.getCreation());
-                        cal.add(Calendar.YEAR, 1);
-                        Date expiryDate = cal.getTime();
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy");
-                        model.addAttribute("membershipExpiryDate", dateFormat.format(expiryDate));
+                        Date expiryDate = membershipService.calculateMembershipExpiry(user.getCreation());
+                        model.addAttribute("membershipExpiryDate", membershipService.formatMembershipDate(expiryDate));
                     } else {
                         model.addAttribute("membershipExpiryDate", "-");
                     }
@@ -149,37 +148,27 @@ public class ProfileController {
             Principal principal) {
         try {
             User user = userRepository.findByEmail(principal.getName());
+            if (user == null) {
+                return "redirect:/login";
+            }
+
             if (bindingResult.hasErrors()) {
                 model.addAttribute("updateUserRequest", updateUserRequest);
                 return "editProfile";
             }
 
-            user.setFirstName(updateUserRequest.getFirstName());
-            user.setMiddleName(updateUserRequest.getMiddleName());
-            user.setFirstName(updateUserRequest.getFirstName());
-            user.setMiddleName(updateUserRequest.getMiddleName());
-            user.setFirstName(updateUserRequest.getFirstName());
-            user.setMiddleName(updateUserRequest.getMiddleName());
-            user.setLastName(updateUserRequest.getLastName());
-            String oldEmail = user.getEmail();
-            String newEmail = updateUserRequest.getEmail();
-            if (newEmail != null && !newEmail.equalsIgnoreCase(oldEmail)) {
-                List<User> matches = userRepository.findAllByEmailIgnoreCase(newEmail);
-                boolean conflict = matches.stream().anyMatch(u -> u.getId() != user.getId());
-                if (conflict) {
-                    bindingResult.addError(new FieldError(
-                            "updateUserRequest", "email", "email already exist. choose different"));
-                    model.addAttribute("updateUserRequest", updateUserRequest);
-                    return "editProfile";
-                }
-                user.setEmail(newEmail);
+            User updatedUser = userService.updateProfile(principal.getName(), updateUserRequest);
+            if (updatedUser == null) {
+                // Email conflict
+                bindingResult.addError(new FieldError(
+                        "updateUserRequest", "email", "email already exist. choose different"));
+                model.addAttribute("updateUserRequest", updateUserRequest);
+                return "editProfile";
             }
-            user.setPhone(updateUserRequest.getPhone());
-            user.setAddress(updateUserRequest.getAddress());
-            user.setCity(updateUserRequest.getCity());
-            user.setProvince(updateUserRequest.getProvince());
-            user.setPostalCode(updateUserRequest.getPostalCode());
-            userRepository.save(user);
+
+            // If email was changed, update authentication
+            String newEmail = updateUserRequest.getEmail();
+            String oldEmail = principal.getName();
             if (newEmail != null && !newEmail.equalsIgnoreCase(oldEmail)) {
                 try {
                     UserDetails newDetails = userService.loadUserByUsername(newEmail);
@@ -187,8 +176,10 @@ public class ProfileController {
                             newDetails.getPassword(), newDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(newAuth);
                 } catch (Exception ex) {
+                    // Authentication update failed, but profile was saved
                 }
             }
+
             return "redirect:/profile";
         } catch (Exception e) {
             model.addAttribute("updateUserRequest", updateUserRequest);
@@ -228,25 +219,9 @@ public class ProfileController {
                 return "redirect:/login";
             }
 
-            Child child = Child.builder()
-                    .name(name)
-                    .age(age)
-                    .hearingLossType(hearingLossType)
-                    .equipmentType(equipmentType)
-                    .siblingsNames(siblingsNames)
-                    .chapterLocation(chapterLocation)
-                    .user(user)
-                    .build();
+            childService.createChild(user, name, age, dateOfBirthStr, hearingLossType,
+                    equipmentType, siblingsNames, chapterLocation);
 
-            if (dateOfBirthStr != null && !dateOfBirthStr.isEmpty()) {
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                    child.setDateOfBirth(sdf.parse(dateOfBirthStr));
-                } catch (Exception e) {
-                }
-            }
-
-            childRepository.save(child);
             return "redirect:/profile";
         } catch (Exception e) {
             e.printStackTrace();
@@ -262,8 +237,8 @@ public class ProfileController {
                 return "redirect:/login";
             }
 
-            Optional<Child> childOpt = childRepository.findById(id);
-            if (childOpt.isEmpty() || childOpt.get().getUser().getId() != user.getId()) {
+            Optional<Child> childOpt = childService.getChildByIdForUser(id, user);
+            if (childOpt.isEmpty()) {
                 return "redirect:/profile";
             }
 
@@ -292,31 +267,15 @@ public class ProfileController {
                 return "redirect:/login";
             }
 
-            Optional<Child> childOpt = childRepository.findById(id);
-            if (childOpt.isEmpty() || childOpt.get().getUser().getId() != user.getId()) {
+            Optional<Child> updatedChild = childService.updateChild(id, user, name, age, dateOfBirthStr,
+                    hearingLossType, equipmentType, siblingsNames, chapterLocation);
+
+            if (updatedChild.isEmpty()) {
                 return "redirect:/profile";
             }
 
-            Child child = childOpt.get();
-            child.setName(name);
-            child.setAge(age);
-            child.setHearingLossType(hearingLossType);
-            child.setEquipmentType(equipmentType);
-            child.setSiblingsNames(siblingsNames);
-            child.setChapterLocation(chapterLocation);
-
-            if (dateOfBirthStr != null && !dateOfBirthStr.isEmpty()) {
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                    child.setDateOfBirth(sdf.parse(dateOfBirthStr));
-                } catch (Exception e) {
-                }
-            }
-
-            childRepository.save(child);
             return "redirect:/profile";
         } catch (Exception e) {
-
             e.printStackTrace();
             return "redirect:/profile/child/edit/" + id + "?error=update_failed";
         }
@@ -330,10 +289,7 @@ public class ProfileController {
                 return "redirect:/login";
             }
 
-            Optional<Child> childOpt = childRepository.findById(id);
-            if (childOpt.isPresent() && childOpt.get().getUser().getId() == user.getId()) {
-                childRepository.delete(childOpt.get());
-            }
+            childService.deleteChild(id, user);
             return "redirect:/profile";
         } catch (Exception e) {
             e.printStackTrace();
@@ -404,8 +360,11 @@ public class ProfileController {
             model.addAttribute("membershipName", paidMembership.getName());
             model.addAttribute("membershipPrice", paidMembership.getPrice());
             model.addAttribute("membershipDescription", paidMembership.getDescription());
+            model.addAttribute("paypalClientId", payPalProperties.getClientId());
+            model.addAttribute("paypalCurrency", payPalProperties.getCurrency());
+            model.addAttribute("mode", "upgrade");
 
-            return "upgrade-checkout";
+            return "checkout";
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/profile/upgrade-membership?error=selection_failed";

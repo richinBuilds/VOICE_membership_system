@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Add New Member - VOICE Admin">
+
+    <title>Add New Member - VOICE Admin</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body class="admin-add-member-page">
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">
+            <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="50" onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item me-3">
+                    <span class="admin-badge">
+                        <i class="fas fa-shield-alt me-1"></i> ADMIN
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/dashboard}">
+                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Admin Add Member Header -->
+<div class="admin-header">
+    <div class="container">
+        <h1><i class="fas fa-user-plus me-2"></i> Add New Member</h1>
+        <p class="mb-0" style="color: var(--bg-white);">
+            Manually add a new member to the system
+        </p>
+    </div>
+</div>
+
+<div class="container my-5">
+    
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add New Member</li>
+        </ol>
+    </nav>
+    
+    <!-- Error Alert with Field-Specific Errors -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <!-- Add Member Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card add-member-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-plus me-2"></i> New Member Information</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/add-member}" 
+                          th:object="${memberRequest}" 
+                          method="post"
+                          id="addMemberForm">
+                        
+                        <!-- Personal Information Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-id-card"></i>Personal Information
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="firstName" class="form-label">
+                                        First Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           th:field="*{firstName}"
+                                           required>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="middleName" class="form-label">
+                                        Middle Name
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="middleName" 
+                                           th:field="*{middleName}">
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="lastName" class="form-label">
+                                        Last Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           th:field="*{lastName}"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-address-book"></i>Contact Information
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">
+                                        Email Address <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           th:field="*{email}"
+                                           required>
+                                    <small class="text-muted">This will be the member's login email</small>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">
+                                        Phone Number <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="phone" 
+                                           th:field="*{phone}"
+                                           placeholder="e.g., 5551234567"
+                                           pattern="[0-9]{10}"
+                                           maxlength="10"
+                                           inputmode="numeric"
+                                           required>
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="fas fa-info-circle me-1"></i>Enter exactly 10 digits (no dashes or spaces)
+                                    </small>
+                                </div>
+                                
+                                <div class="col-md-8">
+                                    <label for="address" class="form-label">
+                                        Address <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="address" 
+                                           th:field="*{address}"
+                                           required>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="postalCode" class="form-label">
+                                        Postal Code <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="postalCode" 
+                                           th:field="*{postalCode}"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-lock"></i>Security
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="password" class="form-label">
+                                        Password <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="password" 
+                                           th:field="*{password}"
+                                           required>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-check-circle text-success me-1"></i>Requirements:
+                                    </small>
+                                    <ul class="password-requirements">
+                                        <li id="lengthCheck" class="invalid"><i class="fas fa-times"></i>Minimum 8 characters</li>
+                                        <li id="uppercaseCheck" class="invalid"><i class="fas fa-times"></i>At least one uppercase letter (A-Z)</li>
+                                        <li id="lowercaseCheck" class="invalid"><i class="fas fa-times"></i>At least one lowercase letter (a-z)</li>
+                                        <li id="numberCheck" class="invalid"><i class="fas fa-times"></i>At least one number (0-9)</li>
+                                        <li id="specialCheck" class="invalid"><i class="fas fa-times"></i>At least one special character (@$!%*?&#)</li>
+                                    </ul>
+                                    <div id="passwordError" class="password-error-alert" style="display: none;">
+                                        <small id="passwordErrorMessage"></small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="confirmPassword" class="form-label">
+                                        Confirm Password <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="confirmPassword" 
+                                           th:field="*{confirmPassword}"
+                                           required>
+                                    <small class="text-muted d-block mt-2">
+                                        Re-enter the password to confirm
+                                    </small>
+                                    <div id="confirmPasswordError" class="password-error-alert" style="display: none;">
+                                        <small id="confirmPasswordErrorMessage"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Membership Assignment Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-id-badge"></i>Membership Assignment
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="membershipId" class="form-label">
+                                        Assign Membership Plan
+                                    </label>
+                                    <select class="form-select" 
+                                            id="membershipId" 
+                                            th:field="*{membershipId}">
+                                        <option value="">-- No Membership --</option>
+                                        <option th:each="membership : ${memberships}" 
+                                                th:value="${membership.id}" 
+                                                th:text="${membership.name + ' - $' + membership.price}">
+                                        </option>
+                                    </select>
+                                    <small class="text-muted">Optional: Assign a membership plan to this member</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Status Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-cog"></i>Account Status
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="emailVerified" 
+                                               th:field="*{emailVerified}"
+                                               checked>
+                                        <label class="form-check-label" for="emailVerified">
+                                            <i class="fas fa-check-circle text-success me-1"></i>
+                                            Email Verified
+                                        </label>
+                                        <small class="d-block text-muted">
+                                            Check this to allow immediate login without email verification
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="accountLocked" 
+                                               th:field="*{accountLocked}">
+                                        <label class="form-check-label" for="accountLocked">
+                                            <i class="fas fa-lock text-danger me-1"></i>
+                                            Account Locked
+                                        </label>
+                                        <small class="d-block text-muted">
+                                            Check this to prevent the member from logging in
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <a th:href="@{/admin/dashboard}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i> Add Member
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-footer">
+    <div class="container">
+        <p class="mb-0">
+            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
+        </p>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const addMemberForm = document.getElementById('addMemberForm');
+    
+    // Phone number validation - only allow digits, max 10
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            // Remove any non-digit characters
+            let value = this.value.replace(/\D/g, '');
+            // Limit to 10 digits
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
+            this.value = value;
+        });
+        
+        phoneInput.addEventListener('keypress', function(e) {
+            // Only allow numeric keys
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    // Password validation with real-time feedback
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            validatePassword(this.value);
+            validatePasswordMatch();
+        });
+    }
+    
+    // Confirm password validation
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            validatePasswordMatch();
+        });
+    }
+    
+    // Form submission validation
+    if (addMemberForm) {
+        addMemberForm.addEventListener('submit', function(e) {
+            // Validate phone length
+            if (phoneInput.value.length !== 10) {
+                e.preventDefault();
+                phoneInput.classList.add('is-invalid');
+                alert('Phone number must be exactly 10 digits');
+                return false;
+            } else {
+                phoneInput.classList.remove('is-invalid');
+            }
+            
+            // Validate password strength
+            if (!isPasswordStrong(passwordInput.value)) {
+                e.preventDefault();
+                showPasswordError('Password does not meet the requirements');
+                return false;
+            }
+            
+            // Validate passwords match
+            if (confirmPasswordInput && passwordInput.value !== confirmPasswordInput.value) {
+                e.preventDefault();
+                showConfirmPasswordError('Passwords do not match');
+                return false;
+            }
+            
+            // Form is valid
+            return true;
+        });
+    }
+});
+
+function validatePassword(password) {
+    const requirements = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /\d/.test(password),
+        special: /[@$!%*?&#]/.test(password)
+    };
+    
+    // Update visual indicators
+    updateCheck('lengthCheck', requirements.length);
+    updateCheck('uppercaseCheck', requirements.uppercase);
+    updateCheck('lowercaseCheck', requirements.lowercase);
+    updateCheck('numberCheck', requirements.number);
+    updateCheck('specialCheck', requirements.special);
+    
+    // Update form control styling
+    const passwordInput = document.getElementById('password');
+    if (password.length > 0) {
+        if (isPasswordStrong(password)) {
+            passwordInput.classList.remove('is-invalid');
+            passwordInput.classList.add('is-valid');
+        } else {
+            passwordInput.classList.remove('is-valid');
+            passwordInput.classList.add('is-invalid');
+        }
+    } else {
+        passwordInput.classList.remove('is-valid', 'is-invalid');
+    }
+}
+
+function updateCheck(elementId, isValid) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    if (isValid) {
+        element.classList.remove('invalid');
+        element.classList.add('valid');
+        element.innerHTML = element.innerHTML.replace(
+            '<i class="fas fa-times"></i>',
+            '<i class="fas fa-check-circle"></i>'
+        );
+    } else {
+        element.classList.remove('valid');
+        element.classList.add('invalid');
+        element.innerHTML = element.innerHTML.replace(
+            '<i class="fas fa-check-circle"></i>',
+            '<i class="fas fa-times"></i>'
+        );
+    }
+}
+
+function isPasswordStrong(password) {
+    const lengthValid = password.length >= 8;
+    const uppercaseValid = /[A-Z]/.test(password);
+    const lowercaseValid = /[a-z]/.test(password);
+    const numberValid = /\d/.test(password);
+    const specialValid = /[@$!%*?&#]/.test(password);
+    
+    return lengthValid && uppercaseValid && lowercaseValid && numberValid && specialValid;
+}
+
+function showPasswordError(message) {
+    const passwordError = document.getElementById('passwordError');
+    const passwordErrorMessage = document.getElementById('passwordErrorMessage');
+    
+    if (passwordError && passwordErrorMessage) {
+        passwordErrorMessage.textContent = message;
+        passwordError.style.display = 'block';
+        
+        // Scroll to error
+        passwordError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function showConfirmPasswordError(message) {
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+    const confirmPasswordErrorMessage = document.getElementById('confirmPasswordErrorMessage');
+    
+    if (confirmPasswordError && confirmPasswordErrorMessage) {
+        confirmPasswordErrorMessage.textContent = message;
+        confirmPasswordError.style.display = 'block';
+        
+        // Scroll to error
+        confirmPasswordError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function validatePasswordMatch() {
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+    
+    if (!passwordInput || !confirmPasswordInput) return;
+    
+    if (confirmPasswordInput.value.length > 0) {
+        if (passwordInput.value === confirmPasswordInput.value) {
+            confirmPasswordInput.classList.remove('is-invalid');
+            confirmPasswordInput.classList.add('is-valid');
+            if (confirmPasswordError) {
+                confirmPasswordError.style.display = 'none';
+            }
+        } else {
+            confirmPasswordInput.classList.remove('is-valid');
+            confirmPasswordInput.classList.add('is-invalid');
+            if (confirmPasswordError) {
+                const confirmPasswordErrorMessage = document.getElementById('confirmPasswordErrorMessage');
+                if (confirmPasswordErrorMessage) {
+                    confirmPasswordErrorMessage.textContent = 'Passwords do not match';
+                }
+                confirmPasswordError.style.display = 'block';
+            }
+        }
+    } else {
+        confirmPasswordInput.classList.remove('is-valid', 'is-invalid');
+        if (confirmPasswordError) {
+            confirmPasswordError.style.display = 'none';
+        }
+    }
+}
+</script>

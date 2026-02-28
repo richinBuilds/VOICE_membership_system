@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for UserService
@@ -36,6 +37,9 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AccountLockoutService accountLockoutService;
 
     @InjectMocks
     private UserService userService;
@@ -56,7 +60,12 @@ class UserServiceTest {
                 .postalCode("12345")
                 .role(Role.USER.name())
                 .creation(new Date())
+                .emailVerified(true)
                 .build();
+        
+        // Mock account lockout service to return false (account not locked)
+        // Using lenient() since not all tests call this method
+        lenient().when(accountLockoutService.isAccountLocked(anyString())).thenReturn(false);
     }
 
     @Test
@@ -139,6 +148,7 @@ class UserServiceTest {
                 .password("adminPassword")
                 .role(Role.ADMIN.name())
                 .creation(new Date())
+                .emailVerified(true)
                 .build();
 
         when(userRepository.findByEmail("admin@example.com")).thenReturn(adminUser);

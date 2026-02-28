@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Complete your membership payment - VOICE Membership">
 
-    <title>Checkout - VOICE Membership System</title>
+    <title th:text="${mode == 'upgrade' ? 'Upgrade Membership - VOICE Membership System' : 'Checkout - VOICE Membership System'}">Checkout - VOICE Membership System</title>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -15,23 +15,69 @@
 
 <body class="checkout-page">
 
-<div class="checkout-container" data-testid="checkout-container">
+<!-- Navbar (only for upgrade mode) -->
+<nav th:if="${mode == 'upgrade'}" class="navbar navbar-expand-lg" th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-checkout-navbar' : null}">
+    <div class="container">
+
+        <a class="navbar-brand" th:href="@{/}" data-testid="navbar-brand">
+            <img th:src="@{/images/logo.png}" 
+                 alt="VOICE Logo"
+                 onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#nav"
+                aria-controls="nav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/profile}" data-testid="nav-profile">
+                        <i class="fas fa-user me-1"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit"
+                                class="btn btn-primary-custom btn-sm ms-2"
+                                data-testid="logout-btn">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </button>
+                    </form>
+                </li>
+
+            </ul>
+        </div>
+
+    </div>
+</nav>
+
+<div class="checkout-container" th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-checkout-container' : 'checkout-container'}">
 
     <div class="checkout-card">
 
         <!-- Header -->
         <div class="checkout-header">
-            <h1 class="checkout-title" data-testid="checkout-title">
-                <i class="fas fa-credit-card me-2"></i> Secure Checkout
+            <h1 class="checkout-title" th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-checkout-title' : 'checkout-title'}">
+                <i class="fas fa-credit-card me-2"></i> 
+                <span th:text="${mode == 'upgrade' ? 'Complete Your Upgrade' : 'Secure Checkout'}">Secure Checkout</span>
             </h1>
-            <p class="text-muted">Complete your membership purchase securely</p>
+            <p class="text-muted" th:text="${mode == 'upgrade' ? 'Secure payment to upgrade your membership' : 'Complete your membership purchase securely'}">Complete your membership purchase securely</p>
         </div>
 
         <!-- Error Alert -->
         <div th:if="${error}"
              class="alert alert-danger"
              role="alert"
-             data-testid="checkout-error">
+             th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-checkout-error' : 'checkout-error'}">
             <i class="fas fa-exclamation-circle me-2"></i>
             <span th:text="${error}">Payment error</span>
         </div>
@@ -39,155 +85,106 @@
         <div class="checkout-content">
 
             <!-- Payment Form -->
-            <div class="payment-form" data-testid="payment-form-section">
+            <div class="payment-form" th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-payment-form' : 'payment-form-section'}">
 
                 <h3 class="mb-4" style="color: var(--primary); font-size: 1.25rem;">
                     <i class="fas fa-lock me-2"></i> Payment Information
                 </h3>
 
-                <form th:action="@{/register/checkout}"
-                      method="post"
-                      id="checkoutForm"
-                      data-testid="checkout-form">
+                <input type="hidden" id="csrfToken" th:value="${_csrf.token}" />
+                <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}" />
+                <input type="hidden" id="membershipId" th:value="${mode == 'upgrade' ? upgradeMembership?.id : membership?.id}" />
+                <input type="hidden" id="checkoutMode" th:value="${mode}" />
 
-                    <input type="hidden"
-                           th:name="${_csrf.parameterName}"
-                           th:value="${_csrf.token}"/>
-
-                    <!-- Card Number -->
-                    <div class="form-floating">
-                        <input type="text"
-                               class="form-control"
-                               id="cardNumber"
-                               name="cardNumber"
-                               placeholder="1234 5678 9012 3456"
-                               maxlength="19"
-                               autocomplete="cc-number"
-                               required
-                               data-testid="card-number">
-                        <label for="cardNumber">
-                            <i class="fas fa-credit-card me-1"></i> Card Number
-                        </label>
+                <div class="mb-3" th:if="${paypalClientId == null || #strings.isEmpty(paypalClientId)}">
+                    <div class="alert alert-warning mb-0">
+                        PayPal is not configured. Please set PayPal client credentials.
                     </div>
+                </div>
 
-                    <!-- Cardholder Name -->
-                    <div class="form-floating">
-                        <input type="text"
-                               class="form-control"
-                               id="cardHolderName"
-                               name="cardHolderName"
-                               placeholder="John Doe"
-                               autocomplete="cc-name"
-                               required
-                               data-testid="cardholder-name">
-                        <label for="cardHolderName">
-                            <i class="fas fa-user me-1"></i> Cardholder Name
-                        </label>
-                    </div>
+                <div id="paymentError" class="alert alert-danger d-none" role="alert"></div>
+                <div id="paymentInfo" class="alert alert-info d-none" role="alert"></div>
+                <div id="paypal-button-container" th:if="${paypalClientId != null && !#strings.isEmpty(paypalClientId)}"></div>
 
-                    <!-- Expiry Date Row -->
-                    <div class="form-row">
-
-                        <div class="form-floating">
-                            <select class="form-control"
-                                    id="expiryMonth"
-                                    name="expiryMonth"
-                                    required
-                                    data-testid="expiry-month">
-                                <option value="">Month</option>
-                                <option th:each="i : ${#numbers.sequence(1, 12)}"
-                                        th:value="${i}"
-                                        th:text="${#numbers.formatInteger(i, 2)}">
-                                </option>
-                            </select>
-                            <label for="expiryMonth">Expiry Month</label>
-                        </div>
-
-                        <div class="form-floating">
-                            <select class="form-control"
-                                    id="expiryYear"
-                                    name="expiryYear"
-                                    required
-                                    data-testid="expiry-year">
-                                <option value="">Year</option>
-                                <option th:each="i : ${#numbers.sequence(2024, 2035)}"
-                                        th:value="${i}"
-                                        th:text="${i}">
-                                </option>
-                            </select>
-                            <label for="expiryYear">Expiry Year</label>
-                        </div>
-
-                    </div>
-
-                    <!-- CVV -->
-                    <div class="form-floating">
-                        <input type="text"
-                               class="form-control"
-                               id="cvv"
-                               name="cvv"
-                               placeholder="123"
-                               maxlength="4"
-                               autocomplete="cc-csc"
-                               required
-                               data-testid="cvv">
-                        <label for="cvv">
-                            <i class="fas fa-lock me-1"></i> CVV
-                        </label>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="btn-group-checkout">
-
-                        <a th:href="@{/register/step4}"
-                           class="btn btn-secondary-custom"
-                           data-testid="checkout-back-btn">
-                            <i class="fas fa-arrow-left me-1"></i> Back
-                        </a>
-
-                        <button type="submit"
-                                id="payButton"
-                                class="btn btn-primary-custom"
-                                data-testid="checkout-submit-btn">
-                            <i class="fas fa-check me-1"></i> Complete Payment
-                        </button>
-
-                    </div>
-
-                </form>
+                <div class="btn-group-checkout mt-3">
+                    <a th:href="${mode == 'upgrade' ? '/profile/upgrade-membership' : '/register/step4'}"
+                       class="btn btn-secondary-custom"
+                       th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-back-btn' : 'checkout-back-btn'}">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </a>
+                </div>
 
             </div>
 
             <!-- Order Summary -->
-            <div class="order-summary" data-testid="order-summary">
+            <div class="order-summary" th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-order-summary' : 'order-summary'}">
 
                 <h3 class="mb-4" style="font-size: 1.25rem;">
-                    <i class="fas fa-receipt me-2"></i> Order Summary
+                    <i class="fas fa-receipt me-2"></i> 
+                    <span th:text="${mode == 'upgrade' ? 'Upgrade Summary' : 'Order Summary'}">Order Summary</span>
                 </h3>
 
-                <div class="summary-item" th:if="${membership}">
-                    <span>Membership</span>
-                    <span th:text="${membership.name}">Plan Name</span>
+                <!-- Upgrade mode: Show current and new membership -->
+                <div th:if="${mode == 'upgrade'}">
+                    <!-- Current Membership -->
+                    <div class="summary-section mb-4 pb-4 border-bottom">
+                        <h6 class="text-muted mb-2">Current Membership</h6>
+                        <div class="summary-item">
+                            <span><i class="fas fa-star" style="color: #FFD700;"></i> Free Member</span>
+                            <span class="badge bg-success">Current</span>
+                        </div>
+                    </div>
+
+                    <!-- New Membership -->
+                    <div class="summary-section mb-4 pb-4 border-bottom">
+                        <h6 class="text-muted mb-2">New Membership</h6>
+                        <div class="summary-item" th:if="${upgradeMembership}">
+                            <span th:text="${upgradeMembership.name}">Premium Plan</span>
+                        </div>
+                        <p class="small text-muted mt-2" th:if="${upgradeMembership}" 
+                           th:text="${upgradeMembership.description}">
+                            Membership benefits description
+                        </p>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="summary-total" th:if="${upgradeMembership}">
+                        <span>Payment Amount</span>
+                        <span>$<span th:text="${upgradeMembership.price}" th:attr="data-testid=${mode == 'upgrade' ? 'upgrade-amount' : null}">20.00</span>/year</span>
+                    </div>
                 </div>
 
-                <div class="summary-item" th:if="${membership}">
-                    <span>Monthly Price</span>
-                    <span>$<span th:text="${membership.price}">0</span></span>
+                <!-- Registration mode: Show standard order summary -->
+                <div th:if="${mode != 'upgrade'}">
+                    <div class="summary-item" th:if="${membership}">
+                        <span>Membership</span>
+                        <span th:text="${membership.name}">Plan Name</span>
+                    </div>
+
+                    <div class="summary-item" th:if="${membership}">
+                        <span>Monthly Price</span>
+                        <span>$<span th:text="${membership.price}">0</span></span>
+                    </div>
+
+                    <div class="summary-total">
+                        <span>Total Due Today</span>
+                        <span>$<span th:text="${totalAmount}" data-testid="total-amount">0</span></span>
+                    </div>
                 </div>
 
-                <div class="summary-total">
-                    <span>Total Due Today</span>
-                    <span>$<span th:text="${totalAmount}" data-testid="total-amount">0</span></span>
-                </div>
-
+                <!-- Security Info -->
                 <div class="mt-4 pt-4 border-top border-light">
                     <p class="small mb-2" style="color: var(--bg-white);">
                         <i class="fas fa-shield-alt me-2"></i>
                         Your payment is secure and encrypted.
                     </p>
-                    <p class="small mb-0" style="color: var(--bg-white);">
+                    <p class="small mb-2" style="color: var(--bg-white);">
                         <i class="fas fa-lock me-2"></i>
                         We never store your full card details.
+                    </p>
+                    <p th:if="${mode == 'upgrade'}" class="small mb-0" style="color: var(--bg-white);">
+                        <i class="fas fa-check-circle me-2" style="color: var(--primary);"></i>
+                        Your account will be upgraded immediately after successful payment.
                     </p>
                 </div>
 
@@ -201,29 +198,85 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script th:if="${paypalClientId != null && !#strings.isEmpty(paypalClientId)}"
+        th:src="|https://www.paypal.com/sdk/js?client-id=${paypalClientId}&amp;currency=${paypalCurrency}|"></script>
 
 <script>
-// Format card number with spaces
-document.getElementById('cardNumber').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
-    let formatted = value.match(/.{1,4}/g);
-    e.target.value = formatted ? formatted.join(' ') : value;
-});
+const membershipIdElement = document.getElementById('membershipId');
+const csrfToken = document.getElementById('csrfToken')?.value;
+const csrfHeader = document.getElementById('csrfHeader')?.value;
+const checkoutMode = document.getElementById('checkoutMode')?.value;
+const errorBox = document.getElementById('paymentError');
+const infoBox = document.getElementById('paymentInfo');
 
-// CVV - numbers only
-document.getElementById('cvv').addEventListener('input', function(e) {
-    e.target.value = e.target.value.replace(/\D/g, '');
-});
+function showPaymentError(message) {
+    if (!errorBox) return;
+    errorBox.classList.remove('d-none');
+    errorBox.textContent = message || 'Payment failed. Please try again.';
+}
 
-// Prevent double form submission
-const form = document.getElementById('checkoutForm');
-const payBtn = document.getElementById('payButton');
+function showPaymentInfo(message) {
+    if (!infoBox) return;
+    infoBox.classList.remove('d-none');
+    infoBox.textContent = message;
+}
 
-if (form && payBtn) {
-    form.addEventListener('submit', function() {
-        payBtn.disabled = true;
-        payBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+if (window.paypal && membershipIdElement && membershipIdElement.value) {
+    const membershipId = Number(membershipIdElement.value);
+    
+    // Determine API endpoints based on mode
+    const isUpgradeMode = checkoutMode === 'upgrade';
+    const createOrderUrl = isUpgradeMode ? '/register/paypal/create-order' : '/register/paypal/checkout/create-order';
+    const captureOrderUrl = isUpgradeMode ? '/register/paypal/capture-order' : '/register/paypal/checkout/capture-order';
+    const successUrl = isUpgradeMode ? '/profile?upgrade=success' : '/register/verification-sent';
+
+    paypal.Buttons({
+        createOrder: async () => {
+            const response = await fetch(createOrderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ membershipId })
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.orderId) {
+                throw new Error(data.message || 'Could not create PayPal order');
+            }
+
+            return data.orderId;
+        },
+        onApprove: async (data) => {
+            const response = await fetch(captureOrderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    membershipId,
+                    orderId: data.orderID
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Payment verification failed');
+            }
+
+            window.location.href = result.redirectUrl || successUrl;
+        },
+        onError: (err) => {
+            showPaymentError(err?.message || 'PayPal checkout failed');
+        }
+    }).render('#paypal-button-container').catch((err) => {
+        showPaymentError(err?.message || 'Unable to load PayPal buttons');
     });
+} else if (membershipIdElement && membershipIdElement.value) {
+    showPaymentError('PayPal SDK did not load. Disable ad blocker/tracking protection, then refresh (Ctrl+F5).');
+    showPaymentInfo('If this persists, open Browser DevTools Console and check for blocked paypal.com scripts.');
 }
 </script>
 

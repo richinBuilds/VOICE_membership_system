@@ -1,6 +1,7 @@
 package org.voice.membership.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.thymeleaf.context.Context;
@@ -11,8 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 /**
- * Sends application emails such as password reset and membership upgrade
- * notices.
+ * Sends application emails such as password reset and verification notices.
  * Uses Thymeleaf templates and JavaMail to build and deliver messages.
  */
 public class EmailSenderService {
@@ -36,36 +36,8 @@ public class EmailSenderService {
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
+        } catch (MessagingException | MailException e) {
             throw new RuntimeException("Failed to send password reset email", e);
-        }
-    }
-
-    public void sendMembershipUpgradeConfirmation(String to, String userName, String membershipName,
-            String expiryDate) {
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setTo(to);
-            helper.setSubject("Membership Upgrade Successful - VOICE");
-
-            String htmlContent = "<html><body>" +
-                    "<h2>Congratulations " + userName + "!</h2>" +
-                    "<p>Your membership has been successfully upgraded to <strong>" + membershipName + "</strong>.</p>"
-                    +
-                    "<p><strong>Membership Details:</strong></p>" +
-                    "<ul>" +
-                    "<li>Status: Active/Paid</li>" +
-                    "<li>Expiry Date: " + expiryDate + "</li>" +
-                    "</ul>" +
-                    "<p>Thank you for choosing VOICE Membership System!</p>" +
-                    "<p>Best regards,<br>VOICE Team</p>" +
-                    "</body></html>";
-
-            helper.setText(htmlContent, true);
-            mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
-            e.printStackTrace();
         }
     }
 
@@ -83,8 +55,29 @@ public class EmailSenderService {
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
+        } catch (MessagingException | MailException e) {
             throw new RuntimeException("Failed to send verification email", e);
+        }
+    }
+
+    public void sendCustomEmail(String to, String subject, String messageBody, String fromName) {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject(subject);
+
+            String htmlContent = "<html><body>" +
+                    "<p>" + messageBody.replaceAll("\n", "<br>") + "</p>" +
+                    "<br>" +
+                    "<p>Sent from: " + fromName + "</p>" +
+                    "<p>---<br>VOICE Membership System</p>" +
+                    "</body></html>";
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+        } catch (MessagingException | MailException e) {
+            throw new RuntimeException("Failed to send custom email to " + to, e);
         }
     }
 }

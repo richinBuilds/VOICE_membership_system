@@ -65,6 +65,9 @@ public class User {
     @Column(name = "membership_expiry_date")
     private Date membershipExpiryDate;
 
+    @Column(name = "is_paid", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean paid = false;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Child> children;

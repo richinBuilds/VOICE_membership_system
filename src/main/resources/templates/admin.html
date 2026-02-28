@@ -62,6 +62,19 @@
 <!-- Admin dashboard: user statistics, filtering, and data table -->
 <div class="container mb-5">
     
+    <!-- Success/Error Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}">Success message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="stat-card">
@@ -99,6 +112,13 @@
                 <i class="fas fa-list me-2"></i> All Users
             </h3>
             <div>
+                <a th:href="@{/admin/add-member}" class="btn btn-primary-custom me-2">
+                    <i class="fas fa-user-plus me-2"></i>Add Member
+                </a>
+                <button class="btn btn-primary-custom me-2" type="button" data-bs-toggle="modal" data-bs-target="#sendEmailModal"
+                        id="sendEmailBtnMain" disabled>
+                    <i class="fas fa-envelope me-2"></i>Send Email to Selected
+                </button>
                 <a th:href="@{/admin/export-users}" class="btn btn-primary-custom me-2">
                     <i class="fas fa-file-excel me-2"></i>Export to Excel
                 </a>
@@ -169,6 +189,14 @@
                                 <i class="fas fa-times me-1"></i>Clear
                             </a>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Status</label>
+                            <select class="form-select" name="paymentStatus">
+                                <option value="">All Members</option>
+                                <option value="paid" th:selected="${paymentStatus == 'paid'}">Paid</option>
+                                <option value="unpaid" th:selected="${paymentStatus == 'unpaid'}">Unpaid</option>
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -178,6 +206,9 @@
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAllCheckbox" title="Select All" style="cursor: pointer;">
+                        </th>
                         <th>ID</th>
                         <th>Name</th>
                         <th>Email</th>
@@ -187,12 +218,18 @@
                         <th>Province</th>
                         <th>Children</th>
                         <th>Role</th>
+                        <th>Payment Status</th>
                         <th>Registration Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="user : ${users}">
+                        <td>
+                            <input type="checkbox" class="user-checkbox" th:value="${user.id}" 
+                                   style="cursor: pointer;" 
+                                   th:attr="data-user-email=${user.email}, data-user-name=${user.firstName + ' ' + user.lastName}">
+                        </td>
                         <td th:text="${user.id}">1</td>
                         <td th:text="${user.firstName + (user.middleName != null && !user.middleName.isEmpty() ? ' ' + user.middleName : '') + ' ' + user.lastName}">John Doe</td>
                         <td th:text="${user.email}">user@example.com</td>
@@ -217,7 +254,7 @@
                         </td>
                         <td>
                             <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
-                                <span class="badge bg-secondary" th:text="${#lists.size(user.children)} + ' child(ren)'">
+                                <span class="badge" style="background: var(--bg-light); color: var(--text-secondary); border: 1px solid var(--border-default);" th:text="${#lists.size(user.children)} + ' child(ren)'">
                                     2 child(ren)
                                 </span>
                                 <div class="mt-1">
@@ -235,9 +272,13 @@
                         </td>
                         <td>
                             <span class="badge" 
-                                  th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : ''}"
-                                  th:style="${user.role == 'USER' ? 'background: var(--primary); color: var(--bg-white);' : ''}"
+                                  th:style="${user.role == 'ADMIN' ? 'background: var(--text-secondary); color: var(--bg-white);' : 'background: var(--primary); color: var(--bg-white);'}"
                                   th:text="${user.role}">USER</span>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:style="${user.membership != null and !user.membership.isFree ? 'background: var(--primary); color: var(--bg-white);' : 'background: var(--bg-light); color: var(--text-secondary); border: 1px solid var(--border-default);'}"
+                                  th:text="${user.membership != null and !user.membership.isFree ? 'Paid' : 'Unpaid'}">Unpaid</span>
                         </td>
                         <td th:text="${#dates.format(user.creation, 'yyyy-MM-dd')}">2024-01-01</td>
                         <td>
@@ -247,7 +288,20 @@
                                     title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
-
+                            <a th:href="@{/admin/edit-member/{id}(id=${user.id})}"
+                               class="btn btn-sm btn-outline-primary"
+                               style="border-color: var(--primary); color: var(--primary);"
+                               title="Edit Profile">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger delete-member-btn"
+                                    th:attr="data-user-id=${user.id},
+                                             data-user-name=${user.firstName + ' ' + user.lastName},
+                                             data-user-role=${user.role}"
+                                    title="Delete Member"
+                                    th:disabled="${user.role == 'ADMIN'}">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -286,8 +340,113 @@
     </div>
 </div>
 
+<!-- Modal for delete confirmation -->
+<div class="modal fade" id="deleteMemberModal" tabindex="-1" aria-labelledby="deleteMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content delete-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMemberModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning-box">
+                    <i class="fas fa-user-times delete-icon"></i>
+                    <p class="delete-question">Are you sure you want to permanently delete this member?</p>
+                    <div class="member-info-box">
+                        <strong>Member:</strong> <span id="deleteMemberName"></span>
+                    </div>
+                    <p class="warning-text">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        This action cannot be undone!
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form id="deleteMemberForm" method="post" style="display: inline;">
+                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Member
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for sending email to selected members -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendEmailModalLabel">
+                    <i class="fas fa-envelope me-2"></i>Send Email to Selected Members
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label"><strong>Recipients</strong></label>
+                    <div id="selectedRecipientsDisplay" class="p-3 bg-light rounded" style="max-height: 150px; overflow-y: auto;">
+                        <p class="text-muted mb-0">No recipients selected</p>
+                    </div>
+                </div>
+                
+                <form id="sendEmailForm">
+                    <div class="mb-3">
+                        <label for="emailSubject" class="form-label">Email Subject <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="emailSubject" placeholder="Enter email subject" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="emailMessage" class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="emailMessage" rows="6" placeholder="Enter your message here..." required></textarea>
+                        <small class="text-muted">Maximum 2000 characters</small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Email will be sent from: <strong id="senderInfo"></strong></small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary-custom" id="sendEmailBtn">
+                    <i class="fas fa-paper-plane me-1"></i>Send Email
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Handle select all checkbox
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    
+    selectAllCheckbox.addEventListener('change', function() {
+        userCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSendEmailButton();
+    });
+    
+    // Handle individual checkbox changes
+    userCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSendEmailButton();
+            updateSelectAllCheckbox();
+        });
+    });
+    
     // Handle view user button clicks
     document.querySelectorAll('.view-user-btn').forEach(button => {
         button.addEventListener('click', function() {
@@ -295,7 +454,174 @@ document.addEventListener('DOMContentLoaded', function() {
             loadUserDetails(userId);
         });
     });
+    
+    // Handle delete member button clicks
+    document.querySelectorAll('.delete-member-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            const userRole = this.getAttribute('data-user-role');
+            
+            // Prevent deleting admin accounts
+            if (userRole === 'ADMIN') {
+                alert('Cannot delete admin accounts!');
+                return;
+            }
+            
+            showDeleteConfirmation(userId, userName);
+        });
+    });
+    
+    // Handle send email button
+    document.getElementById('sendEmailBtn').addEventListener('click', function() {
+        sendBulkEmail();
+    });
+    
+    // Set sender info when modal opens
+    const sendEmailModal = document.getElementById('sendEmailModal');
+    sendEmailModal.addEventListener('show.bs.modal', function() {
+        const adminName = document.querySelector('.admin-badge').textContent.replace('ADMIN', '').trim();
+        document.getElementById('senderInfo').textContent = adminName || 'Admin';
+    });
 });
+
+function updateSendEmailButton() {
+    const selectedCount = document.querySelectorAll('.user-checkbox:checked').length;
+    const sendEmailBtn = document.getElementById('sendEmailBtnMain');
+    
+    sendEmailBtn.disabled = selectedCount === 0;
+    sendEmailBtn.textContent = selectedCount > 0 
+        ? '✉️ Send Email to ' + selectedCount + ' Member(s)' 
+        : '✉️ Send Email to Selected';
+    
+    updateSelectedRecipientsDisplay();
+}
+
+function updateSelectAllCheckbox() {
+    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    if (selectedCheckboxes.length === allCheckboxes.length && allCheckboxes.length > 0) {
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.checked = false;
+    }
+}
+
+function updateSelectedRecipientsDisplay() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const display = document.getElementById('selectedRecipientsDisplay');
+    
+    if (selectedCheckboxes.length === 0) {
+        display.innerHTML = '<p class="text-muted mb-0">No recipients selected</p>';
+        return;
+    }
+    
+    let html = '<div class="list-group list-group-flush">';
+    selectedCheckboxes.forEach(checkbox => {
+        const recipientName = checkbox.getAttribute('data-user-name');
+        const recipientEmail = checkbox.getAttribute('data-user-email');
+        html += `
+            <div class="list-group-item px-0 py-2">
+                <i class="fas fa-user me-2"></i>
+                <strong>${recipientName}</strong>
+                <br>
+                <small class="text-muted">${recipientEmail}</small>
+            </div>
+        `;
+    });
+    html += '</div>';
+    display.innerHTML = html;
+}
+
+function sendBulkEmail() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one member');
+        return;
+    }
+    
+    const subject = document.getElementById('emailSubject').value.trim();
+    const message = document.getElementById('emailMessage').value.trim();
+    
+    if (!subject) {
+        alert('Please enter an email subject');
+        return;
+    }
+    
+    if (!message) {
+        alert('Please enter a message');
+        return;
+    }
+    
+    if (message.length > 2000) {
+        alert('Message cannot exceed 2000 characters');
+        return;
+    }
+    
+    const recipientIds = Array.from(selectedCheckboxes).map(checkbox => parseInt(checkbox.value));
+    
+    // Show loading state
+    const sendBtn = document.getElementById('sendEmailBtn');
+    const originalText = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+    
+    fetch('/admin/send-bulk-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value || ''
+        },
+        body: JSON.stringify({
+            recipientIds: recipientIds,
+            subject: subject,
+            messageBody: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        
+        if (data.status === 'success') {
+            alert(data.message);
+            
+            // Close modal and reset form
+            bootstrap.Modal.getInstance(document.getElementById('sendEmailModal')).hide();
+            document.getElementById('sendEmailForm').reset();
+            
+            // Uncheck all checkboxes
+            document.querySelectorAll('.user-checkbox').forEach(checkbox => checkbox.checked = false);
+            document.getElementById('selectAllCheckbox').checked = false;
+            updateSendEmailButton();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        alert('Error sending emails: ' + error.message);
+    });
+}
+
+function showDeleteConfirmation(userId, userName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteMemberModal'));
+    const form = document.getElementById('deleteMemberForm');
+    const nameSpan = document.getElementById('deleteMemberName');
+    
+    // Set member name in modal
+    nameSpan.textContent = userName;
+    
+    // Set form action
+    form.action = '/admin/delete-member/' + userId;
+    
+    // Show modal
+    modal.show();
+}
 
 function loadUserDetails(userId) {
     const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
@@ -371,7 +697,7 @@ function generateUserDetailsHTML(user) {
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small">Role</label>
                             <div>
-                                <span class="badge ${user.role === 'ADMIN' ? 'bg-danger' : ''}" style="${user.role === 'USER' ? 'background: var(--primary); color: var(--bg-white);' : ''}">
+                                <span class="badge" style="${user.role === 'ADMIN' ? 'background: var(--text-secondary); color: var(--bg-white);' : 'background: var(--primary); color: var(--bg-white);'}">
                                     ${user.role}
                                 </span>
                             </div>
@@ -418,7 +744,7 @@ function generateUserDetailsHTML(user) {
                 <div class="card-header text-white" style="background-color: var(--primary);">
                     <h6 class="mb-0">
                         <i class="fas fa-child me-2"></i>Children Information
-                        <span class="badge bg-light ms-2" style="color: #000000 !important;">${user.children ? user.children.length : 0}</span>
+                        <span class="badge" style="background: rgba(255,255,255,0.2); color: var(--bg-white); border: 1px solid rgba(255,255,255,0.3);">${user.children ? user.children.length : 0}</span>
                     </h6>
                 </div>
                 <div class="card-body">

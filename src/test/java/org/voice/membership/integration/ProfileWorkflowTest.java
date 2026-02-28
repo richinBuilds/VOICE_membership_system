@@ -186,10 +186,21 @@ class ProfileWorkflowTest {
                                 .with(csrf())
                                 .param("membershipId", String.valueOf(paidMembership.getId())))
                                 .andExpect(status().isOk())
-                                .andExpect(view().name("upgrade-checkout"))
+                                .andExpect(view().name("checkout"))
                                 .andExpect(model().attributeExists("upgradeMembership"));
 
                 User updatedUser = userRepository.findByEmail("integration@example.com");
                 assertThat(updatedUser.getMembership().getId()).isEqualTo(freeMembership.getId());
+        }
+
+        @Test
+        @WithMockUser(username = "integration@example.com", roles = "USER")
+        void testProfilePageWithUpgradeSuccessParameter() throws Exception {
+                // Verify that profile page accepts upgrade=success parameter for showing payment success modal
+                mockMvc.perform(get("/profile")
+                                .param("upgrade", "success"))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("profile"))
+                                .andExpect(model().attributeExists("user"));
         }
 }

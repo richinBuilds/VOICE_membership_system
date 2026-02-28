@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.voice.membership.config.TestEmailConfig;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.UserRepository;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Import(TestEmailConfig.class)
 class AuthenticationWorkflowTest {
 
     @Autowired
@@ -59,6 +62,7 @@ class AuthenticationWorkflowTest {
                 .phone("1234567890")
                 .role(Role.USER.name())
                 .creation(new Date())
+                .emailVerified(true)
                 .build();
 
         testUser = userRepository.save(testUser);
