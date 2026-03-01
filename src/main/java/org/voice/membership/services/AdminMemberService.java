@@ -9,6 +9,9 @@ import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.MembershipRepository;
+import org.voice.membership.repositories.MembershipPaymentTransactionRepository;
+import org.voice.membership.repositories.VerificationTokenRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.voice.membership.repositories.UserRepository;
 
 import java.util.Date;
@@ -24,6 +27,8 @@ public class AdminMemberService {
 
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
+    private final MembershipPaymentTransactionRepository paymentTransactionRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -135,6 +140,7 @@ public class AdminMemberService {
      * @param userId the user ID to delete
      * @return the deleted user, or null if user not found or is admin
      */
+    @Transactional
     public User deleteMember(Integer userId) {
         User user = userRepository.findById(userId).orElse(null);
 
@@ -146,6 +152,10 @@ public class AdminMemberService {
         if (user.getRole() != null && user.getRole().equals(Role.ADMIN.name())) {
             return null; // Cannot delete admin
         }
+
+        // Remove dependent records that do not cascade from User
+        paymentTransactionRepository.deleteByUser_Id(userId);
+        verificationTokenRepository.deleteByUser(user);
 
         userRepository.delete(user);
         return user;
