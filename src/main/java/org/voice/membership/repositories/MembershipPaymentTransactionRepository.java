@@ -13,4 +13,6 @@ public interface MembershipPaymentTransactionRepository extends JpaRepository<Me
     Optional<MembershipPaymentTransaction> findByPaypalCaptureId(String paypalCaptureId);
 
     boolean existsByUser_IdAndMembership_IdAndStatus(int userId, int membershipId, String status);
+
+    void deleteByUser_Id(int userId);
 }
