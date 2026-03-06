@@ -15,6 +15,25 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
+    
+    <style>
+        /* Teal color for tabs */
+        #userTabs .nav-link {
+            color: #008080;
+            font-weight: 500;
+        }
+        
+        #userTabs .nav-link:hover {
+            color: #006666;
+            border-color: #008080;
+        }
+        
+        #userTabs .nav-link.active {
+            color: #008080;
+            border-color: #008080 #008080 #fff;
+            font-weight: 600;
+        }
+    </style>
 </head>
 
 <body style="background: var(--bg-bone);">
@@ -76,7 +95,7 @@
     </div>
     
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -90,15 +109,43 @@
             </div>
         </div>
         
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-1">Active Members</h6>
-                        <h2 class="mb-0" th:text="${totalUsers}">0</h2>
+                        <h6 class="text-muted mb-1">Regular Users</h6>
+                        <h2 class="mb-0" th:text="${userCount}">0</h2>
                     </div>
                     <div class="stat-icon">
-                        <i class="fas fa-user-check"></i>
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Admin Accounts</h6>
+                        <h2 class="mb-0" th:text="${adminCount}">0</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Filtered Results</h6>
+                        <h2 class="mb-0" th:text="${#lists.size(users)}">0</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-filter"></i>
                     </div>
                 </div>
             </div>
@@ -107,11 +154,63 @@
 
     <!-- User management table with filtering, export, and detail view -->
     <div class="table-card">
+        <!-- Tabs for Admin and User views -->
+        <ul class="nav nav-tabs mb-4" id="userTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" 
+                        th:classappend="${role == null or role == '' ? 'active' : ''}"
+                        id="all-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#all-users" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="all-users" 
+                        th:attr="aria-selected=${role == null or role == '' ? 'true' : 'false'}"
+                        onclick="filterByRole('')">
+                    <i class="fas fa-users me-2"></i>All Users
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" 
+                        th:classappend="${role == 'USER' ? 'active' : ''}"
+                        id="users-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#user-users" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="user-users" 
+                        th:attr="aria-selected=${role == 'USER' ? 'true' : 'false'}"
+                        onclick="filterByRole('USER')">
+                    <i class="fas fa-user me-2"></i>Users
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" 
+                        th:classappend="${role == 'ADMIN' ? 'active' : ''}"
+                        id="admins-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#admin-users" 
+                        type="button" 
+                        role="tab" 
+                        aria-controls="admin-users" 
+                        th:attr="aria-selected=${role == 'ADMIN' ? 'true' : 'false'}"
+                        onclick="filterByRole('ADMIN')">
+                    <i class="fas fa-user-shield me-2"></i>Admins
+                </button>
+            </li>
+        </ul>
+        
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="mb-0">
-                <i class="fas fa-list me-2"></i> All Users
+                <i class="fas fa-list me-2"></i>
+                <span th:if="${role == null or role == ''}">All Users</span>
+                <span th:if="${role == 'USER'}">Regular Users</span>
+                <span th:if="${role == 'ADMIN'}">Admin Accounts</span>
             </h3>
             <div>
+                <button class="btn btn-primary-custom me-2" type="button" id="toggleSelectAllBtn" onclick="toggleSelectAll()">
+                    <i class="fas fa-check-square me-1" id="toggleSelectIcon"></i><span id="toggleSelectText">Select All</span>
+                </button>
                 <a th:href="@{/admin/add-member}" class="btn btn-primary-custom me-2">
                     <i class="fas fa-user-plus me-2"></i>Add Member
                 </a>
@@ -132,6 +231,7 @@
         <div class="collapse mb-4" id="filterPanel">
             <div class="card card-body bg-light">
                 <form id="filterForm" th:action="@{/admin/dashboard}" method="get">
+                    <input type="hidden" name="role" id="roleFilter" th:value="${role}">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Address</label>
@@ -149,6 +249,11 @@
                                    th:value="${province}" placeholder="Search by province...">
                         </div>
                         <div class="col-md-4">
+                            <label class="form-label">Chapter</label>
+                            <input type="text" class="form-control" name="chapter" 
+                                   th:value="${chapter}" placeholder="Search by chapter...">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">Child Age Range</label>
                             <div class="input-group">
                                 <input type="number" class="form-control" name="minAge" 
@@ -160,12 +265,12 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Hearing Loss Type</label>
-                            <select class="form-select" name="hearingLossType">
-                                <option value="">All Types</option>
-                                <option value="Mild" th:selected="${hearingLossType == 'Mild'}">Mild</option>
-                                <option value="Moderate" th:selected="${hearingLossType == 'Moderate'}">Moderate</option>
-                                <option value="Severe" th:selected="${hearingLossType == 'Severe'}">Severe</option>
-                                <option value="Profound" th:selected="${hearingLossType == 'Profound'}">Profound</option>
+                            <select class="form-select" name="hearingLossType" th:value="${hearingLossType}">
+                                <option value="" selected>All Types</option>
+                                <option value="Mild">Mild</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Severe">Severe</option>
+                                <option value="Profound">Profound</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -191,10 +296,10 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Payment Status</label>
-                            <select class="form-select" name="paymentStatus">
-                                <option value="">All Members</option>
-                                <option value="paid" th:selected="${paymentStatus == 'paid'}">Paid</option>
-                                <option value="unpaid" th:selected="${paymentStatus == 'unpaid'}">Unpaid</option>
+                            <select class="form-select" name="paymentStatus" th:value="${paymentStatus}">
+                                <option value="" selected>All Status</option>
+                                <option value="paid">Paid</option>
+                                <option value="unpaid">Unpaid</option>
                             </select>
                         </div>
                     </div>
@@ -216,6 +321,7 @@
                         <th>Address</th>
                         <th>City</th>
                         <th>Province</th>
+                        <th>Chapter</th>
                         <th>Children</th>
                         <th>Role</th>
                         <th>Payment Status</th>
@@ -251,6 +357,10 @@
                         <td>
                             <span th:if="${user.province != null and !#strings.isEmpty(user.province)}" th:text="${user.province}">Ontario</span>
                             <span class="text-muted" th:if="${user.province == null or #strings.isEmpty(user.province)}">N/A</span>
+                        </td>
+                        <td>
+                            <span th:if="${user.chapter != null and !#strings.isEmpty(user.chapter)}" th:text="${user.chapter}">Greater Vancouver</span>
+                            <span class="text-muted" th:if="${user.chapter == null or #strings.isEmpty(user.chapter)}">N/A</span>
                         </td>
                         <td>
                             <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
@@ -428,26 +538,37 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle select all checkbox
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const userCheckboxes = document.querySelectorAll('.user-checkbox');
     
-    selectAllCheckbox.addEventListener('change', function() {
-        userCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function(event) {
+            const userCheckboxes = document.querySelectorAll('.user-checkbox');
+            
+            console.log('Select All changed, member count:', userCheckboxes.length);
+            console.log('Checkbox state:', this.checked);
+            
+            if (userCheckboxes.length === 0) {
+                alert('No members exist. Please add members to the system first.');
+                this.checked = false; 
+                return;
+            }
+            
+            userCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateSendEmailButton();
+            updateToggleButton();
         });
-        updateSendEmailButton();
-    });
+    }
     
-    // Handle individual checkbox changes
-    userCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('user-checkbox')) {
             updateSendEmailButton();
             updateSelectAllCheckbox();
-        });
+            updateToggleButton();
+        }
     });
     
-    // Handle view user button clicks
     document.querySelectorAll('.view-user-btn').forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-user-id');
@@ -455,14 +576,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Handle delete member button clicks
     document.querySelectorAll('.delete-member-btn').forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-user-id');
             const userName = this.getAttribute('data-user-name');
             const userRole = this.getAttribute('data-user-role');
             
-            // Prevent deleting admin accounts
             if (userRole === 'ADMIN') {
                 alert('Cannot delete admin accounts!');
                 return;
@@ -472,12 +591,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Handle send email button
     document.getElementById('sendEmailBtn').addEventListener('click', function() {
         sendBulkEmail();
     });
     
-    // Set sender info when modal opens
     const sendEmailModal = document.getElementById('sendEmailModal');
     sendEmailModal.addEventListener('show.bs.modal', function() {
         const adminName = document.querySelector('.admin-badge').textContent.replace('ADMIN', '').trim();
@@ -562,8 +679,6 @@ function sendBulkEmail() {
     }
     
     const recipientIds = Array.from(selectedCheckboxes).map(checkbox => parseInt(checkbox.value));
-    
-    // Show loading state
     const sendBtn = document.getElementById('sendEmailBtn');
     const originalText = sendBtn.innerHTML;
     sendBtn.disabled = true;
@@ -589,11 +704,9 @@ function sendBulkEmail() {
         if (data.status === 'success') {
             alert(data.message);
             
-            // Close modal and reset form
             bootstrap.Modal.getInstance(document.getElementById('sendEmailModal')).hide();
             document.getElementById('sendEmailForm').reset();
             
-            // Uncheck all checkboxes
             document.querySelectorAll('.user-checkbox').forEach(checkbox => checkbox.checked = false);
             document.getElementById('selectAllCheckbox').checked = false;
             updateSendEmailButton();
@@ -613,13 +726,8 @@ function showDeleteConfirmation(userId, userName) {
     const form = document.getElementById('deleteMemberForm');
     const nameSpan = document.getElementById('deleteMemberName');
     
-    // Set member name in modal
     nameSpan.textContent = userName;
-    
-    // Set form action
     form.action = '/admin/delete-member/' + userId;
-    
-    // Show modal
     modal.show();
 }
 
@@ -627,7 +735,6 @@ function loadUserDetails(userId) {
     const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
     const content = document.getElementById('userDetailsContent');
     
-    // Show loading spinner
     content.innerHTML = `
         <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
@@ -847,6 +954,69 @@ function generateUserDetailsHTML(user) {
     `;
     
     return html;
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const toggleBtn = document.getElementById('toggleSelectAllBtn');
+    const toggleIcon = document.getElementById('toggleSelectIcon');
+    const toggleText = document.getElementById('toggleSelectText');
+    
+    console.log('Toggle Select All clicked, member count:', userCheckboxes.length);
+    
+    if (userCheckboxes.length === 0) {
+        alert('No members exist. Please add members to the system first.');
+        return;
+    }
+    
+    const allSelected = Array.from(userCheckboxes).every(checkbox => checkbox.checked);
+    
+    if (allSelected) {
+        selectAllCheckbox.checked = false;
+        userCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        toggleIcon.className = 'fas fa-check-square me-1';
+        toggleText.textContent = 'Select All';
+    } else {
+        selectAllCheckbox.checked = true;
+        userCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        toggleIcon.className = 'fas fa-times-circle me-1';
+        toggleText.textContent = 'Deselect All';
+    }
+    
+    updateSendEmailButton();
+}
+
+function updateToggleButton() {
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const toggleIcon = document.getElementById('toggleSelectIcon');
+    const toggleText = document.getElementById('toggleSelectText');
+    
+    const allSelected = Array.from(userCheckboxes).every(checkbox => checkbox.checked);
+    
+    if (allSelected && userCheckboxes.length > 0) {
+        toggleIcon.className = 'fas fa-times-circle me-1';
+        toggleText.textContent = 'Deselect All';
+    } else {
+        toggleIcon.className = 'fas fa-check-square me-1';
+        toggleText.textContent = 'Select All';
+    }
+}
+
+function filterByRole(role) {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (role) {
+        urlParams.set('role', role);
+    } else {
+        urlParams.delete('role');
+    }
+    
+    window.location.href = '/admin/dashboard?' + urlParams.toString();
 }
 </script>
 

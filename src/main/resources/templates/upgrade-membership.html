@@ -84,9 +84,7 @@
                 <h4 th:text="'Welcome, ' + ${userName}" data-testid="welcome-message">
                     Welcome, User
                 </h4>
-                <p class="text-muted mb-0">
-                    Upgrade to Premium Membership
-                </p>
+                <p class="text-muted mb-0">Upgrade to Premium Membership</p>
             </div>
 
         </div>
@@ -107,14 +105,14 @@
         <div class="card-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: var(--bg-white); padding: 1.25rem 1.5rem; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
             <h5 class="mb-0" style="font-weight: 600; display: flex; align-items: center;">
                 <i class="fas fa-star me-2" style="color: #FFD700;"></i>
-                Current Membership
+                <span>Current Membership</span>
             </h5>
         </div>
         <div class="card-body" style="padding: 1.5rem;">
-            <div class="fs-5 fw-bold" th:text="${currentMembership.getName()}" data-testid="current-membership-type" style="color: var(--text-primary);">
+            <div class="fs-5 fw-bold" th:text="${currentMembership?.getName()}" data-testid="current-membership-type" style="color: var(--text-primary);">
                 Free Membership
             </div>
-            <p class="text-muted mt-2 mb-0" th:text="${currentMembership.getDescription()}">
+            <p class="text-muted mt-2 mb-0" th:text="${currentMembership?.getDescription()}">
                 Enjoy basic benefits as a free member
             </p>
         </div>

@@ -38,6 +38,8 @@ public class AdminAddMemberRequest {
 
     @NotBlank(message = "Postal code is required")
     private String postalCode;
+    
+    private String chapter;
 
     @NotBlank(message = "Password is required")
     @Pattern(

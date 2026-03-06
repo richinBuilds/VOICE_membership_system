@@ -27,9 +27,15 @@ public class UserService implements UserDetailsService {
     @Autowired
     private AccountLockoutService accountLockoutService;
 
+    @Autowired
+    private MembershipService membershipService;
+
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmail(email);
         if (user != null) {
+            // Check and downgrade expired memberships automatically
+            membershipService.downgradeExpiredMembership(user);
+
             // Check if account is locked
             if (accountLockoutService.isAccountLocked(email)) {
                 long remainingMinutes = accountLockoutService.getRemainingLockoutTime(email);

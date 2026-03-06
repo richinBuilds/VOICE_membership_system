@@ -2,6 +2,11 @@ package org.voice.membership.services;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.voice.membership.repositories.MembershipRepository;
+import org.voice.membership.repositories.UserRepository;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -11,15 +16,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit tests for MembershipService
- * Tests membership expiry calculations, date formatting, and expiry status checks
+ * Tests membership expiry calculations, date formatting, and expiry status
+ * checks
  */
+@ExtendWith(MockitoExtension.class)
 class MembershipServiceTest {
+
+    @Mock
+    private MembershipRepository membershipRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     private MembershipService membershipService;
 
     @BeforeEach
     void setUp() {
-        membershipService = new MembershipService();
+        membershipService = new MembershipService(membershipRepository, userRepository);
     }
 
     // ==================== calculateMembershipExpiry Tests ====================

@@ -1,10 +1,16 @@
 package org.voice.membership.services;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.voice.membership.entities.Membership;
+import org.voice.membership.entities.User;
+import org.voice.membership.repositories.MembershipRepository;
+import org.voice.membership.repositories.UserRepository;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Service for membership-related business logic.
@@ -12,7 +18,11 @@ import java.util.Date;
  * lifecycle operations.
  */
 @Service
+@RequiredArgsConstructor
 public class MembershipService {
+
+    private final MembershipRepository membershipRepository;
+    private final UserRepository userRepository;
 
     /**
      * Calculate membership expiry date from a start date.
@@ -59,5 +69,48 @@ public class MembershipService {
         }
 
         return new Date().after(expiryDate);
+    }
+
+    /**
+     * Check if user's paid membership has expired and downgrade to free if needed.
+     * This method should be called when a user logs in or accesses their profile.
+     * 
+     * @param user The user to check and potentially downgrade
+     * @return true if downgrade occurred, false otherwise
+     */
+    public boolean downgradeExpiredMembership(User user) {
+        if (user == null || user.getMembership() == null) {
+            return false;
+        }
+
+        Membership currentMembership = user.getMembership();
+
+        // Only check paid memberships
+        if (currentMembership.isFree()) {
+            return false;
+        }
+
+        // Check if membership has expired
+        Date expiryDate = user.getMembershipExpiryDate();
+        if (expiryDate != null && isMembershipExpired(expiryDate)) {
+            // Get the free membership
+            List<Membership> freeMemberships = membershipRepository.findByIsFree(true);
+            if (!freeMemberships.isEmpty()) {
+                Membership freeMembership = freeMemberships.get(0);
+
+                // Downgrade to free membership
+                user.setMembership(freeMembership);
+                user.setPaid(false);
+                user.setMembershipExpiryDate(null);
+                user.setMembershipStartDate(null);
+
+                // Save the changes
+                userRepository.save(user);
+
+                return true;
+            }
+        }
+
+        return false;
     }
 }

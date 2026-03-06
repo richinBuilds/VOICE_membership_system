@@ -64,6 +64,11 @@ public class ProfileController {
                 return "redirect:/login";
             }
 
+            // Check and downgrade expired memberships automatically
+            membershipService.downgradeExpiredMembership(user);
+            // Reload user to get updated membership info
+            user = userRepository.findByEmail(principal.getName());
+
             model.addAttribute("user", user);
             String fullName = user.getFirstName() +
                     (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
@@ -94,8 +99,9 @@ public class ProfileController {
                 if (!membership.isFree()) {
                     model.addAttribute("membershipStatus", "Paid");
 
-                    if (user.getCreation() != null) {
-                        Date expiryDate = membershipService.calculateMembershipExpiry(user.getCreation());
+                    // Use the actual membershipExpiryDate from the user record
+                    Date expiryDate = user.getMembershipExpiryDate();
+                    if (expiryDate != null) {
                         model.addAttribute("membershipExpiryDate", membershipService.formatMembershipDate(expiryDate));
                     } else {
                         model.addAttribute("membershipExpiryDate", "-");
@@ -106,6 +112,7 @@ public class ProfileController {
                     model.addAttribute("membershipStatus", "Free");
                     model.addAttribute("membershipExpiryDate", "No expiry");
                     model.addAttribute("showBenefits", true);
+                    model.addAttribute("isMembershipExpired", false);
                     model.addAttribute("membershipBenefit",
                             membership.getDescription() != null ? membership.getDescription() : "-");
                 }
@@ -114,6 +121,7 @@ public class ProfileController {
                 model.addAttribute("membershipType", "No Membership Yet");
                 model.addAttribute("membershipExpiryDate", "-");
                 model.addAttribute("showBenefits", false);
+                model.addAttribute("isMembershipExpired", false);
             }
 
             return "profile";
@@ -320,6 +328,7 @@ public class ProfileController {
                     +
                     " " + user.getLastName();
             model.addAttribute("userName", fullName);
+            model.addAttribute("mode", "upgrade");
 
             return "upgrade-membership";
         } catch (Exception e) {
@@ -351,15 +360,13 @@ public class ProfileController {
             Membership paidMembership = paidMembershipOpt.get();
 
             model.addAttribute("user", user);
-            model.addAttribute("upgradeMembership", paidMembership);
+            model.addAttribute("membership", user.getMembership()); // Current membership
+            model.addAttribute("upgradeMembership", paidMembership); // New membership
             String fullName = user.getFirstName() +
                     (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
                     +
                     " " + user.getLastName();
             model.addAttribute("userName", fullName);
-            model.addAttribute("membershipName", paidMembership.getName());
-            model.addAttribute("membershipPrice", paidMembership.getPrice());
-            model.addAttribute("membershipDescription", paidMembership.getDescription());
             model.addAttribute("paypalClientId", payPalProperties.getClientId());
             model.addAttribute("paypalCurrency", payPalProperties.getCurrency());
             model.addAttribute("mode", "upgrade");

@@ -71,13 +71,15 @@ public class AdminController {
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String province,
+            @RequestParam(required = false) String chapter,
             @RequestParam(required = false) Integer minAge,
             @RequestParam(required = false) Integer maxAge,
             @RequestParam(required = false) String hearingLossType,
             @RequestParam(required = false) String equipmentType,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) String paymentStatus) {
+            @RequestParam(required = false) String paymentStatus,
+            @RequestParam(required = false) String role) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String adminEmail = auth.getName();
@@ -89,16 +91,24 @@ public class AdminController {
 
         List<User> allUsers = userRepository.findAll();
 
-        List<User> filteredUsers = userFilterService.filterUsers(allUsers, address, city, province, minAge, maxAge,
+        List<User> filteredUsers = userFilterService.filterUsers(allUsers, address, city, province, chapter, minAge,
+                maxAge,
                 hearingLossType, equipmentType,
-                startDate, endDate, paymentStatus);
+                startDate, endDate, paymentStatus, role);
+
+        // Count users by role
+        long adminCount = allUsers.stream().filter(u -> "ADMIN".equalsIgnoreCase(u.getRole())).count();
+        long userCount = allUsers.stream().filter(u -> "USER".equalsIgnoreCase(u.getRole())).count();
 
         model.addAttribute("totalUsers", allUsers.size());
+        model.addAttribute("adminCount", adminCount);
+        model.addAttribute("userCount", userCount);
         model.addAttribute("users", filteredUsers);
 
         model.addAttribute("address", address);
         model.addAttribute("city", city);
         model.addAttribute("province", province);
+        model.addAttribute("chapter", chapter);
         model.addAttribute("minAge", minAge);
         model.addAttribute("maxAge", maxAge);
         model.addAttribute("hearingLossType", hearingLossType);
@@ -106,6 +116,7 @@ public class AdminController {
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
         model.addAttribute("paymentStatus", paymentStatus);
+        model.addAttribute("role", role);
 
         return "admin";
     }
@@ -172,6 +183,7 @@ public class AdminController {
                     .city(user.getCity())
                     .province(user.getProvince())
                     .postalCode(user.getPostalCode())
+                    .chapter(user.getChapter())
                     .membershipId(user.getMembership() != null ? user.getMembership().getId() : null)
                     .emailVerified(user.isEmailVerified())
                     .accountLocked(user.isAccountLocked())
@@ -322,8 +334,8 @@ public class AdminController {
 
             // Check if passwords match
             if (!memberRequest.getPassword().equals(memberRequest.getConfirmPassword())) {
-                redirectAttributes.addFlashAttribute("error", 
-                    "Passwords do not match. Please ensure both password fields are identical.");
+                redirectAttributes.addFlashAttribute("error",
+                        "Passwords do not match. Please ensure both password fields are identical.");
                 return "redirect:/admin/add-member";
             }
 
@@ -385,8 +397,16 @@ public class AdminController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error",
-                    "System error occurred while deleting the member. Please try again.");
+            String errorMessage = "System error occurred while deleting the member. ";
+
+            // Add specific error details
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                errorMessage += "Details: " + e.getCause().getMessage();
+            } else if (e.getMessage() != null) {
+                errorMessage += "Details: " + e.getMessage();
+            }
+
+            redirectAttributes.addFlashAttribute("error", errorMessage);
             return "redirect:/admin/dashboard";
         }
     }

@@ -44,6 +44,10 @@ public class User {
     private String province;
     @Column(name = "postal_code")
     private String postalCode;
+    
+    @Column(name = "chapter")
+    private String chapter;
+    
     private String role;
     private Date creation;
 

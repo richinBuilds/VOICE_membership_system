@@ -3,13 +3,13 @@ package org.voice.membership.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.voice.membership.dtos.AdminAddMemberRequest;
 import org.voice.membership.dtos.AdminUpdateUserRequest;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
-import org.voice.membership.repositories.MembershipRepository;
-import org.voice.membership.repositories.UserRepository;
+import org.voice.membership.repositories.*;
 
 import java.util.Date;
 import java.util.List;
@@ -25,6 +25,12 @@ public class AdminMemberService {
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ChildRepository childRepository;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final MembershipPaymentTransactionRepository paymentTransactionRepository;
+    private final MembershipService membershipService;
 
     /**
      * Create a new member account.
@@ -49,6 +55,7 @@ public class AdminMemberService {
                 .phone(memberRequest.getPhone())
                 .address(memberRequest.getAddress())
                 .postalCode(memberRequest.getPostalCode())
+                .chapter(memberRequest.getChapter())
                 .role(Role.USER.name())
                 .emailVerified(memberRequest.getEmailVerified())
                 .accountLocked(memberRequest.getAccountLocked())
@@ -60,6 +67,14 @@ public class AdminMemberService {
             Membership membership = membershipRepository.findById(memberRequest.getMembershipId()).orElse(null);
             if (membership != null) {
                 newUser.setMembership(membership);
+                
+                // Set membership dates for paid memberships
+                if (!membership.isFree()) {
+                    Date now = new Date();
+                    newUser.setPaid(true);
+                    newUser.setMembershipStartDate(now);
+                    newUser.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
+                }
             }
         }
 
@@ -69,7 +84,7 @@ public class AdminMemberService {
     /**
      * Update an existing member's profile.
      * 
-     * @param userId the user ID to update
+     * @param userId        the user ID to update
      * @param updateRequest the updated member details
      * @return the updated user, or null if user not found or email conflict
      */
@@ -100,13 +115,30 @@ public class AdminMemberService {
         user.setCity(updateRequest.getCity());
         user.setProvince(updateRequest.getProvince());
         user.setPostalCode(updateRequest.getPostalCode());
+        user.setChapter(updateRequest.getChapter());
 
         // Update membership if changed
         if (updateRequest.getMembershipId() != null) {
             Membership membership = membershipRepository.findById(updateRequest.getMembershipId()).orElse(null);
             user.setMembership(membership);
+            
+            // Set membership dates for paid memberships
+            if (membership != null && !membership.isFree()) {
+                Date now = new Date();
+                user.setPaid(true);
+                user.setMembershipStartDate(now);
+                user.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
+            } else if (membership != null && membership.isFree()) {
+                // Clear dates for free membership
+                user.setPaid(false);
+                user.setMembershipStartDate(null);
+                user.setMembershipExpiryDate(null);
+            }
         } else {
             user.setMembership(null);
+            user.setPaid(false);
+            user.setMembershipStartDate(null);
+            user.setMembershipExpiryDate(null);
         }
 
         // Update email verification status
@@ -135,6 +167,7 @@ public class AdminMemberService {
      * @param userId the user ID to delete
      * @return the deleted user, or null if user not found or is admin
      */
+    @Transactional
     public User deleteMember(Integer userId) {
         User user = userRepository.findById(userId).orElse(null);
 
@@ -147,6 +180,26 @@ public class AdminMemberService {
             return null; // Cannot delete admin
         }
 
+        // Delete all related entities first to avoid foreign key constraint violations
+
+        // 1. Delete children
+        childRepository.deleteAll(childRepository.findByUser(user));
+
+        // 2. Delete cart items first, then cart
+        cartRepository.findByUser(user).ifPresent(cart -> {
+            // Delete cart items using bulk delete to avoid orphan removal issues
+            cartItemRepository.deleteByCartId(cart.getId());
+            // Then delete the cart
+            cartRepository.delete(cart);
+        });
+
+        // 3. Delete verification token
+        verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
+
+        // 4. Delete payment transactions
+        paymentTransactionRepository.deleteByUser_Id(userId);
+
+        // 5. Finally delete the user
         userRepository.delete(user);
         return user;
     }
