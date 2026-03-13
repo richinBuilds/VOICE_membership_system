@@ -41,6 +41,9 @@ class UserServiceTest {
     @Mock
     private AccountLockoutService accountLockoutService;
 
+    @Mock
+    private MembershipService membershipService;
+
     @InjectMocks
     private UserService userService;
 
@@ -66,6 +69,10 @@ class UserServiceTest {
         // Mock account lockout service to return false (account not locked)
         // Using lenient() since not all tests call this method
         lenient().when(accountLockoutService.isAccountLocked(anyString())).thenReturn(false);
+        
+        // Mock membership service downgrade method
+        // Using lenient() since not all tests call this method
+        lenient().doNothing().when(membershipService).downgradeExpiredMembership(any(User.class));
     }
 
     @Test

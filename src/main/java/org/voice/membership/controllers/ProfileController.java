@@ -362,6 +362,8 @@ public class ProfileController {
             model.addAttribute("user", user);
             model.addAttribute("membership", user.getMembership()); // Current membership
             model.addAttribute("upgradeMembership", paidMembership); // New membership
+            model.addAttribute("membershipName", paidMembership.getName());
+            model.addAttribute("membershipPrice", paidMembership.getPrice());
             String fullName = user.getFirstName() +
                     (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
                     +

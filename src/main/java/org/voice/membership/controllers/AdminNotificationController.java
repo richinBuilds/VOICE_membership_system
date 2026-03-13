@@ -97,11 +97,14 @@ public class AdminNotificationController {
     /**
      * Dismiss all notifications
      */
-    @DeleteMapping("/dismiss-all")
+    @PostMapping("/dismiss-all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> dismissAllNotifications() {
         notificationService.dismissAllNotifications();
-        return ResponseEntity.ok(Map.of("message", "All notifications dismissed"));
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "All notifications dismissed");
+        return ResponseEntity.ok(response);
     }
 
     /**

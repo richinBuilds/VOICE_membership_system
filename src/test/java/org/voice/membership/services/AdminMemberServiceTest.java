@@ -16,6 +16,11 @@ import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
+import org.voice.membership.repositories.ChildRepository;
+import org.voice.membership.repositories.CartRepository;
+import org.voice.membership.repositories.CartItemRepository;
+import org.voice.membership.repositories.VerificationTokenRepository;
+import org.voice.membership.repositories.MembershipPaymentTransactionRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +46,27 @@ class AdminMemberServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private ChildRepository childRepository;
+
+    @Mock
+    private CartRepository cartRepository;
+
+    @Mock
+    private CartItemRepository cartItemRepository;
+
+    @Mock
+    private VerificationTokenRepository verificationTokenRepository;
+
+    @Mock
+    private MembershipPaymentTransactionRepository paymentTransactionRepository;
+
+    @Mock
+    private MembershipService membershipService;
+
+    @Mock
+    private AdminNotificationService adminNotificationService;
+
     @InjectMocks
     private AdminMemberService adminMemberService;
 
@@ -55,6 +81,7 @@ class AdminMemberServiceTest {
         testMembership = new Membership();
         testMembership.setId(1);
         testMembership.setName("Premium");
+        testMembership.setFree(false);
 
         testUser = new User();
         testUser.setId(10);
@@ -86,6 +113,8 @@ class AdminMemberServiceTest {
         when(membershipRepository.findById(1)).thenReturn(Optional.of(testMembership));
         when(passwordEncoder.encode("password123")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(membershipService.calculateMembershipExpiry(any(java.util.Date.class)))
+                .thenReturn(new java.util.Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000));
 
         // Act
         User created = adminMemberService.createMember(request);
@@ -199,6 +228,8 @@ class AdminMemberServiceTest {
         when(userRepository.findAllByEmailIgnoreCase("updated@example.com")).thenReturn(new ArrayList<>());
         when(membershipRepository.findById(1)).thenReturn(Optional.of(testMembership));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(membershipService.calculateMembershipExpiry(any(java.util.Date.class)))
+                .thenReturn(new java.util.Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000));
 
         // Act
         User updated = adminMemberService.updateMember(10, request);
@@ -301,6 +332,11 @@ class AdminMemberServiceTest {
     void deleteMember_WithValidUser_ShouldDeleteAndReturnUser() {
         // Arrange
         when(userRepository.findById(10)).thenReturn(Optional.of(testUser));
+        when(childRepository.findByUser(testUser)).thenReturn(new ArrayList<>());
+        when(cartRepository.findByUser(testUser)).thenReturn(Optional.empty());
+        when(verificationTokenRepository.findByUser(testUser)).thenReturn(Optional.empty());
+        doNothing().when(paymentTransactionRepository).deleteByUser_Id(10);
+        doNothing().when(userRepository).delete(testUser);
 
         // Act
         User deleted = adminMemberService.deleteMember(10);

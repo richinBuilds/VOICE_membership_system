@@ -38,6 +38,9 @@
 
 <body style="background: var(--bg-bone);">
 
+<!-- CSRF Token for AJAX requests -->
+<input type="hidden" id="csrf-token" name="_csrf" th:value="${_csrf.token}" />
+
 <nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" th:href="@{/}">
@@ -1084,7 +1087,8 @@ function dismissAllNotifications() {
     fetch('/api/admin/notifications/dismiss-all', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value || ''
         },
         credentials: 'include'
     })
