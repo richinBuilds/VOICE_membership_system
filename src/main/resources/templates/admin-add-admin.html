@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create Additional Admin Account - VOICE Admin">
+
+    <title>Create Admin Account - VOICE Admin</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+
+<body class="admin-add-member-page">
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">
+            <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="50" onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item me-3">
+                    <span class="admin-badge">
+                        <i class="fas fa-shield-alt me-1"></i> ADMIN
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/dashboard}">
+                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Admin Add Admin Header -->
+<div class="admin-header">
+    <div class="container">
+        <h1><i class="fas fa-user-shield me-2"></i> Create Admin Account</h1>
+        <p class="mb-0" style="color: var(--bg-white);">
+            Create an additional admin account to share administrative responsibilities
+        </p>
+    </div>
+</div>
+
+<div class="container my-5">
+    
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Create Admin Account</li>
+        </ol>
+    </nav>
+    
+    <!-- Error Alert with Field-Specific Errors -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <!-- Add Admin Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card add-member-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-shield me-2"></i> New Admin Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/add-admin}" 
+                          th:object="${adminRequest}" 
+                          method="post"
+                          id="addAdminForm">
+                        
+                        <!-- Personal Information Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-id-card"></i>Personal Information
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="firstName" class="form-label">
+                                        First Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           th:field="*{firstName}"
+                                           required>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="middleName" class="form-label">
+                                        Middle Name
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="middleName" 
+                                           th:field="*{middleName}">
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="lastName" class="form-label">
+                                        Last Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           th:field="*{lastName}"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Login Credentials Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-envelope"></i>Login Email
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label for="email" class="form-label">
+                                        Email Address <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           th:field="*{email}"
+                                           required>
+                                    <small class="text-muted">This will be the admin's login email</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Section -->
+                        <div class="form-section">
+                            <h6 class="form-section-header">
+                                <i class="fas fa-lock"></i>Security
+                            </h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="password" class="form-label">
+                                        Password <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="password" 
+                                           th:field="*{password}"
+                                           required>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-check-circle text-success me-1"></i>Requirements:
+                                    </small>
+                                    <ul class="password-requirements">
+                                        <li id="lengthCheck" class="invalid"><i class="fas fa-times"></i>Minimum 8 characters</li>
+                                        <li id="uppercaseCheck" class="invalid"><i class="fas fa-times"></i>At least one uppercase letter (A-Z)</li>
+                                        <li id="lowercaseCheck" class="invalid"><i class="fas fa-times"></i>At least one lowercase letter (a-z)</li>
+                                        <li id="numberCheck" class="invalid"><i class="fas fa-times"></i>At least one number (0-9)</li>
+                                        <li id="specialCheck" class="invalid"><i class="fas fa-times"></i>At least one special character (@$!%*?&#)</li>
+                                    </ul>
+                                    <div id="passwordError" class="password-error-alert" style="display: none;">
+                                        <small id="passwordErrorMessage"></small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="confirmPassword" class="form-label">
+                                        Confirm Password <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="confirmPassword" 
+                                           th:field="*{confirmPassword}"
+                                           required>
+                                    <small class="text-muted d-block mt-2">
+                                        Re-enter the password to confirm
+                                    </small>
+                                    <div id="confirmPasswordError" class="password-error-alert" style="display: none;">
+                                        <small id="confirmPasswordErrorMessage"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Information Notice -->
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> The new admin account will be created with full administrative privileges and email verification will be enabled by default.
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <a th:href="@{/admin/dashboard?role=ADMIN}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-shield me-2"></i> Create Admin Account
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-footer">
+    <div class="container">
+        <p class="mb-0">
+            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
+        </p>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const addAdminForm = document.getElementById('addAdminForm');
+    
+    // Password validation with real-time feedback
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            validatePassword(this.value);
+            validatePasswordMatch();
+        });
+    }
+    
+    // Confirm password validation
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            validatePasswordMatch();
+        });
+    }
+    
+    // Form submission validation
+    if (addAdminForm) {
+        addAdminForm.addEventListener('submit', function(e) {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Check if password meets all requirements
+            const hasMinLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[@$!%*?&#]/.test(password);
+            
+            if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+                e.preventDefault();
+                alert('Password does not meet all requirements. Please check the password requirements.');
+                return false;
+            }
+            
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match. Please ensure both password fields are identical.');
+                return false;
+            }
+            
+            return true;
+        });
+    }
+    
+    /**
+     * Validate password against requirements
+     */
+    function validatePassword(password) {
+        const lengthCheck = document.getElementById('lengthCheck');
+        const uppercaseCheck = document.getElementById('uppercaseCheck');
+        const lowercaseCheck = document.getElementById('lowercaseCheck');
+        const numberCheck = document.getElementById('numberCheck');
+        const specialCheck = document.getElementById('specialCheck');
+        const passwordError = document.getElementById('passwordError');
+        
+        // Check minimum length
+        if (password.length >= 8) {
+            lengthCheck.classList.remove('invalid');
+            lengthCheck.classList.add('valid');
+            lengthCheck.innerHTML = '<i class="fas fa-check"></i>Minimum 8 characters';
+        } else {
+            lengthCheck.classList.remove('valid');
+            lengthCheck.classList.add('invalid');
+            lengthCheck.innerHTML = '<i class="fas fa-times"></i>Minimum 8 characters';
+        }
+        
+        // Check uppercase
+        if (/[A-Z]/.test(password)) {
+            uppercaseCheck.classList.remove('invalid');
+            uppercaseCheck.classList.add('valid');
+            uppercaseCheck.innerHTML = '<i class="fas fa-check"></i>At least one uppercase letter (A-Z)';
+        } else {
+            uppercaseCheck.classList.remove('valid');
+            uppercaseCheck.classList.add('invalid');
+            uppercaseCheck.innerHTML = '<i class="fas fa-times"></i>At least one uppercase letter (A-Z)';
+        }
+        
+        // Check lowercase
+        if (/[a-z]/.test(password)) {
+            lowercaseCheck.classList.remove('invalid');
+            lowercaseCheck.classList.add('valid');
+            lowercaseCheck.innerHTML = '<i class="fas fa-check"></i>At least one lowercase letter (a-z)';
+        } else {
+            lowercaseCheck.classList.remove('valid');
+            lowercaseCheck.classList.add('invalid');
+            lowercaseCheck.innerHTML = '<i class="fas fa-times"></i>At least one lowercase letter (a-z)';
+        }
+        
+        // Check number
+        if (/[0-9]/.test(password)) {
+            numberCheck.classList.remove('invalid');
+            numberCheck.classList.add('valid');
+            numberCheck.innerHTML = '<i class="fas fa-check"></i>At least one number (0-9)';
+        } else {
+            numberCheck.classList.remove('valid');
+            numberCheck.classList.add('invalid');
+            numberCheck.innerHTML = '<i class="fas fa-times"></i>At least one number (0-9)';
+        }
+        
+        // Check special character
+        if (/[@$!%*?&#]/.test(password)) {
+            specialCheck.classList.remove('invalid');
+            specialCheck.classList.add('valid');
+            specialCheck.innerHTML = '<i class="fas fa-check"></i>At least one special character (@$!%*?&#)';
+        } else {
+            specialCheck.classList.remove('valid');
+            specialCheck.classList.add('invalid');
+            specialCheck.innerHTML = '<i class="fas fa-times"></i>At least one special character (@$!%*?&#)';
+        }
+    }
+    
+    /**
+     * Validate password match
+     */
+    function validatePasswordMatch() {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
+        const confirmPasswordErrorMessage = document.getElementById('confirmPasswordErrorMessage');
+        
+        if (confirmPassword.length === 0) {
+            confirmPasswordError.style.display = 'none';
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            confirmPasswordError.style.display = 'block';
+            confirmPasswordErrorMessage.textContent = 'Passwords do not match';
+        } else {
+            confirmPasswordError.style.display = 'none';
+        }
+    }
+});
+</script>
+
+</body>
+</html>

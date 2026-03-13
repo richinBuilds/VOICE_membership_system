@@ -16,6 +16,7 @@ import org.voice.membership.entities.User;
 import org.voice.membership.repositories.MembershipPaymentTransactionRepository;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
+import org.voice.membership.services.AdminNotificationService;
 import org.voice.membership.services.PayPalService;
 import org.voice.membership.services.MembershipService;
 
@@ -38,6 +39,7 @@ public class PayPalController {
     private final PayPalProperties payPalProperties;
     private final ObjectMapper objectMapper;
     private final MembershipService membershipService;
+    private final AdminNotificationService adminNotificationService;
 
     @PostMapping("/register/paypal/create-order")
     public ResponseEntity<Map<String, Object>> createOrder(@RequestBody CreatePayPalOrderRequest request,
@@ -243,6 +245,13 @@ public class PayPalController {
         user.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
 
         userRepository.save(user);
+
+        // Send instant notification to admin
+        try {
+            adminNotificationService.createInstantNotification(user);
+        } catch (Exception e) {
+            log.error("Failed to create instant admin notification for user {}", user.getId(), e);
+        }
     }
 
     private Map<String, String> normalizeHeaders(Map<String, String> headers) {
