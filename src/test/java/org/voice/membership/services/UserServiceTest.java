@@ -70,9 +70,9 @@ class UserServiceTest {
         // Using lenient() since not all tests call this method
         lenient().when(accountLockoutService.isAccountLocked(anyString())).thenReturn(false);
         
-        // Mock membership service downgrade method
+        // Mock membership service downgrade method (returns false - no downgrade)
         // Using lenient() since not all tests call this method
-        lenient().doNothing().when(membershipService).downgradeExpiredMembership(any(User.class));
+        lenient().when(membershipService.downgradeExpiredMembership(any(User.class))).thenReturn(false);
     }
 
     @Test

@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.voice.membership.dtos.AdminAddMemberRequest;
+import org.voice.membership.dtos.AdminAddAdminRequest;
 import org.voice.membership.dtos.AdminUpdateUserRequest;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
@@ -203,6 +204,221 @@ class AdminMemberServiceTest {
         // Assert
         assertThat(created).isNotNull();
         assertThat(created.getMembership()).isNull();
+    }
+
+    // ==================== createAdmin Tests ====================
+
+    @Test
+    void createAdmin_WithValidData_ShouldCreateAdminUser() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setFirstName("Admin");
+        request.setMiddleName("A");
+        request.setLastName("User");
+        request.setEmail("admin@example.com");
+        request.setPassword("AdminPass123!");
+        request.setConfirmPassword("AdminPass123!");
+
+        when(userRepository.findByEmail("admin@example.com")).thenReturn(null);
+        when(passwordEncoder.encode("AdminPass123!")).thenReturn("encoded-admin-password");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(100);
+            return user;
+        });
+
+        // Act
+        User created = adminMemberService.createAdmin(request);
+
+        // Assert
+        assertThat(created).isNotNull();
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getFirstName()).isEqualTo("Admin");
+        assertThat(savedUser.getMiddleName()).isEqualTo("A");
+        assertThat(savedUser.getLastName()).isEqualTo("User");
+        assertThat(savedUser.getEmail()).isEqualTo("admin@example.com");
+        assertThat(savedUser.getPassword()).isEqualTo("encoded-admin-password");
+        assertThat(savedUser.getRole()).isEqualTo(Role.ADMIN.name());
+        assertThat(savedUser.isEmailVerified()).isTrue();
+        assertThat(savedUser.isAccountLocked()).isFalse();
+        assertThat(savedUser.getPhone()).isEqualTo("N/A");
+        assertThat(savedUser.getAddress()).isEqualTo("N/A");
+        assertThat(savedUser.getPostalCode()).isEqualTo("N/A");
+        assertThat(savedUser.getCreation()).isNotNull();
+        assertThat(created.getId()).isEqualTo(100);
+    }
+
+    @Test
+    void createAdmin_WithExistingEmail_ShouldReturnNull() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setEmail("existing-admin@example.com");
+
+        User existingAdmin = new User();
+        existingAdmin.setEmail("existing-admin@example.com");
+        existingAdmin.setRole(Role.ADMIN.name());
+
+        when(userRepository.findByEmail("existing-admin@example.com")).thenReturn(existingAdmin);
+
+        // Act
+        User created = adminMemberService.createAdmin(request);
+
+        // Assert
+        assertThat(created).isNull();
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void createAdmin_WithoutMiddleName_ShouldCreateSuccessfully() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setFirstName("Simple");
+        request.setMiddleName(null);
+        request.setLastName("Admin");
+        request.setEmail("simple-admin@example.com");
+        request.setPassword("SecurePass123!");
+        request.setConfirmPassword("SecurePass123!");
+
+        when(userRepository.findByEmail("simple-admin@example.com")).thenReturn(null);
+        when(passwordEncoder.encode("SecurePass123!")).thenReturn("encoded-password");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User created = adminMemberService.createAdmin(request);
+
+        // Assert
+        assertThat(created).isNotNull();
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getFirstName()).isEqualTo("Simple");
+        assertThat(savedUser.getMiddleName()).isNull();
+        assertThat(savedUser.getLastName()).isEqualTo("Admin");
+        assertThat(savedUser.getRole()).isEqualTo(Role.ADMIN.name());
+    }
+
+    @Test
+    void createAdmin_ShouldEncodePassword() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setFirstName("Test");
+        request.setLastName("Admin");
+        request.setEmail("test-admin@example.com");
+        request.setPassword("PlainTextPassword123!");
+        request.setConfirmPassword("PlainTextPassword123!");
+
+        when(userRepository.findByEmail("test-admin@example.com")).thenReturn(null);
+        when(passwordEncoder.encode("PlainTextPassword123!")).thenReturn("super-encrypted-password");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User created = adminMemberService.createAdmin(request);
+
+        // Assert
+        assertThat(created).isNotNull();
+        verify(passwordEncoder).encode("PlainTextPassword123!");
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+        assertThat(savedUser.getPassword()).isEqualTo("super-encrypted-password");
+        assertThat(savedUser.getPassword()).isNotEqualTo("PlainTextPassword123!");
+    }
+
+    @Test
+    void createAdmin_ShouldSetEmailVerifiedToTrue() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setFirstName("Verified");
+        request.setLastName("Admin");
+        request.setEmail("verified-admin@example.com");
+        request.setPassword("Password123!");
+        request.setConfirmPassword("Password123!");
+
+        when(userRepository.findByEmail("verified-admin@example.com")).thenReturn(null);
+        when(passwordEncoder.encode("Password123!")).thenReturn("encoded");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User created = adminMemberService.createAdmin(request);
+
+        // Assert
+        assertThat(created).isNotNull();
+        assertThat(created.isEmailVerified()).isTrue();
+    }
+
+    @Test
+    void createAdmin_ShouldSetAccountLockedToFalse() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setFirstName("Unlocked");
+        request.setLastName("Admin");
+        request.setEmail("unlocked-admin@example.com");
+        request.setPassword("Password123!");
+        request.setConfirmPassword("Password123!");
+
+        when(userRepository.findByEmail("unlocked-admin@example.com")).thenReturn(null);
+        when(passwordEncoder.encode("Password123!")).thenReturn("encoded");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User created = adminMemberService.createAdmin(request);
+
+        // Assert
+        assertThat(created).isNotNull();
+        assertThat(created.isAccountLocked()).isFalse();
+    }
+
+    @Test
+    void createAdmin_ShouldSetCreationDate() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setFirstName("New");
+        request.setLastName("Admin");
+        request.setEmail("new-admin@example.com");
+        request.setPassword("Password123!");
+        request.setConfirmPassword("Password123!");
+
+        when(userRepository.findByEmail("new-admin@example.com")).thenReturn(null);
+        when(passwordEncoder.encode("Password123!")).thenReturn("encoded");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        java.util.Date beforeCreation = new java.util.Date();
+        User created = adminMemberService.createAdmin(request);
+        java.util.Date afterCreation = new java.util.Date();
+
+        // Assert
+        assertThat(created).isNotNull();
+        assertThat(created.getCreation()).isNotNull();
+        assertThat(created.getCreation()).isBetween(beforeCreation, afterCreation, true, true);
+    }
+
+    @Test
+    void createAdmin_ShouldSetDefaultContactFields() {
+        // Arrange
+        AdminAddAdminRequest request = new AdminAddAdminRequest();
+        request.setFirstName("Default");
+        request.setLastName("Admin");
+        request.setEmail("default-admin@example.com");
+        request.setPassword("Password123!");
+        request.setConfirmPassword("Password123!");
+
+        when(userRepository.findByEmail("default-admin@example.com")).thenReturn(null);
+        when(passwordEncoder.encode("Password123!")).thenReturn("encoded");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User created = adminMemberService.createAdmin(request);
+
+        // Assert
+        assertThat(created).isNotNull();
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getPhone()).isEqualTo("N/A");
+        assertThat(savedUser.getAddress()).isEqualTo("N/A");
+        assertThat(savedUser.getPostalCode()).isEqualTo("N/A");
     }
 
     // ==================== updateMember Tests ====================
