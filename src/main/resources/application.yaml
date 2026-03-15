@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: Study$2024
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -19,8 +19,8 @@ spring:
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 587
-    username: 618ab0d6165c0a
-    password: a397cf37b87941
+    username: ${MAILTRAP_USERNAME}
+    password: ${MAILTRAP_PASSWORD}
     properties:
       mail:
         smtp:
@@ -61,7 +61,7 @@ account:
 
 paypal:
   mode: sandbox
-  client-id: AeWdq-DATMId23ATWIRW6kEhawHMJGKY0qLTOJan4m3S0uERLFhvEPj295pwHpYac1PAoNqk22b179Lp
-  client-secret: EC5S9EDZYXfsstRkUwDfvOs7mvj8j2UQINrNbhR7vE6O_qSHkU0tHnHYGwMnoMXxz4caTn3OQF1OWn1F
+  client-id: ${PAYPAL_CLIENT_ID:}
+  client-secret: ${PAYPAL_CLIENT_SECRET:}
   webhook-id:
   currency: CAD
