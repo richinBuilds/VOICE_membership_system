@@ -30,6 +30,7 @@ import org.voice.membership.services.UserFilterService;
 import org.voice.membership.services.AdminExportService;
 import org.voice.membership.services.AdminMemberService;
 import org.voice.membership.services.AdminNotificationService;
+import org.voice.membership.services.MembershipRenewalSchedulerService;
 import org.voice.membership.entities.AdminNotification;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +71,9 @@ public class AdminController {
 
     @Autowired
     private AdminNotificationService adminNotificationService;
+
+    @Autowired
+    private MembershipRenewalSchedulerService membershipRenewalSchedulerService;
 
     @GetMapping("/dashboard")
     public String adminDashboard(
@@ -723,5 +727,56 @@ public class AdminController {
         model.addAttribute("newUsers", newUsers);
 
         return "admin-notifications";
+    }
+
+    /**
+     * Manually trigger the membership renewal reminder job.
+     * Returns a detailed breakdown per reminder window so you can see exactly
+     * how many members were found and whether emails were sent successfully.
+     */
+    @PostMapping("/trigger-renewal-reminders")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> triggerRenewalReminders() {
+        try {
+            log.info("Admin manually triggered membership renewal reminder job");
+            Map<String, Object> result = membershipRenewalSchedulerService.sendRenewalReminders();
+            result.put("status", "success");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error triggering renewal reminders: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
+    }
+
+    /**
+     * Preview which paid members have memberships expiring within the next N days
+     * WITHOUT sending any emails. Defaults to 30 days.
+     * Use this to verify your test data before triggering the job.
+     *
+     * Example: GET /admin/renewal-reminders/preview?withinDays=10
+     */
+    @GetMapping("/renewal-reminders/preview")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> previewRenewalReminders(
+            @RequestParam(defaultValue = "30") int withinDays) {
+        try {
+            var members = membershipRenewalSchedulerService.previewExpiringMembers(withinDays);
+            Map<String, Object> result = new HashMap<>();
+            result.put("status", "success");
+            result.put("withinDays", withinDays);
+            result.put("membersFound", members.size());
+            result.put("members", members);
+            result.put("note", "No emails were sent. Use POST /admin/trigger-renewal-reminders to send.");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error previewing renewal reminders: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
     }
 }

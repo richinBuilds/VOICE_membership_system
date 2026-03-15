@@ -80,4 +80,38 @@ public class EmailSenderService {
             throw new RuntimeException("Failed to send custom email to " + to, e);
         }
     }
+
+    /**
+     * Send a membership renewal reminder email to a paid member approaching expiry.
+     *
+     * @param to              Recipient email address
+     * @param userName        Member's first name
+     * @param membershipName  Name of the membership plan (e.g. "Premium Membership")
+     * @param expiryDate      Human-readable expiry date string (e.g. "April 10, 2026")
+     * @param daysUntilExpiry Number of days remaining until expiry
+     * @param renewalUrl      URL to the renewal / upgrade page
+     */
+    public void sendRenewalReminderEmail(String to, String userName, String membershipName,
+                                         String expiryDate, long daysUntilExpiry, String renewalUrl) {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("Membership Renewal Reminder - VOICE");
+
+            Context context = new Context();
+            context.setVariable("userName", userName);
+            context.setVariable("membershipName", membershipName);
+            context.setVariable("expiryDate", expiryDate);
+            context.setVariable("daysUntilExpiry", daysUntilExpiry);
+            context.setVariable("renewalUrl", renewalUrl);
+
+            String htmlContent = templateEngine.process("membership-renewal-reminder", context);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(mimeMessage);
+        } catch (MessagingException | MailException e) {
+            throw new RuntimeException("Failed to send renewal reminder email to " + to, e);
+        }
+    }
 }

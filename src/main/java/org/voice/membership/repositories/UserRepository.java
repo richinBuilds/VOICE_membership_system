@@ -33,4 +33,12 @@ public interface UserRepository extends JpaRepository<User, Integer> {
         */
        @Query("SELECT u FROM User u WHERE u.creation BETWEEN :startDate AND :endDate ORDER BY u.creation DESC")
        List<User> findNewMembersBetweenDates(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
+
+       /**
+        * Find paid members whose membership expiry date falls within the given date window.
+        * Used for sending renewal reminder emails (e.g., 30, 14, or 7 days before expiry).
+        */
+       @Query("SELECT u FROM User u WHERE u.paid = true AND u.membership IS NOT NULL " +
+                     "AND u.membership.isFree = false AND u.membershipExpiryDate BETWEEN :startDate AND :endDate")
+       List<User> findPaidMembersExpiringBetween(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 }
