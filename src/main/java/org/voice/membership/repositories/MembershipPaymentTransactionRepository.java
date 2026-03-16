@@ -18,8 +18,5 @@ public interface MembershipPaymentTransactionRepository extends JpaRepository<Me
 
     boolean existsByUser_IdAndMembership_IdAndStatus(int userId, int membershipId, String status);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM MembershipPaymentTransaction m WHERE m.user.id = :userId")
-    void deleteByUser_Id(@Param("userId") int userId);
+    void deleteByUser_Id(int userId);
 }

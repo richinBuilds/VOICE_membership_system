@@ -10,7 +10,11 @@ import org.voice.membership.dtos.AdminUpdateUserRequest;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
-import org.voice.membership.repositories.*;
+import org.voice.membership.repositories.MembershipRepository;
+import org.voice.membership.repositories.MembershipPaymentTransactionRepository;
+import org.voice.membership.repositories.VerificationTokenRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.voice.membership.repositories.UserRepository;
 
 import java.util.Date;
 import java.util.List;
@@ -26,6 +30,8 @@ public class AdminMemberService {
 
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
+    private final MembershipPaymentTransactionRepository paymentTransactionRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ChildRepository childRepository;
     private final CartRepository cartRepository;
@@ -217,26 +223,10 @@ public class AdminMemberService {
             return null; // Cannot delete admin
         }
 
-        // Delete all related entities first to avoid foreign key constraint violations
-
-        // 1. Delete children
-        childRepository.deleteAll(childRepository.findByUser(user));
-
-        // 2. Delete cart items first, then cart
-        cartRepository.findByUser(user).ifPresent(cart -> {
-            // Delete cart items using bulk delete to avoid orphan removal issues
-            cartItemRepository.deleteByCartId(cart.getId());
-            // Then delete the cart
-            cartRepository.delete(cart);
-        });
-
-        // 3. Delete verification token
-        verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
-
-        // 4. Delete payment transactions
+        // Remove dependent records that do not cascade from User
         paymentTransactionRepository.deleteByUser_Id(userId);
+        verificationTokenRepository.deleteByUser(user);
 
-        // 5. Finally delete the user
         userRepository.delete(user);
         return user;
     }
