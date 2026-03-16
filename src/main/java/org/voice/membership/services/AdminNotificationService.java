@@ -98,24 +98,28 @@ public class AdminNotificationService {
         String message = String.format("New %s member: %s joined with %s membership",
                 membershipType, userName, membershipName);
 
-        // Set periodStart to 5 seconds before now so the just-saved user's creation
-        // timestamp (which is a few ms earlier) always falls within the BETWEEN range.
-        // Without this buffer, the BETWEEN query misses the user in Docker because
-        // container overhead makes user.creation slightly older than periodStart.
+        // Anchor instant notification window around user creation time.
+        // This avoids Docker/DB timestamp precision and latency edge cases.
+        Date anchor = user.getCreation() != null ? user.getCreation() : new Date();
         Calendar startCal = Calendar.getInstance();
-        startCal.add(Calendar.SECOND, -5);
+        startCal.setTime(anchor);
+        startCal.add(Calendar.MINUTE, -1);
         Date periodStart = startCal.getTime();
-        Date periodEnd = new Date();
+
+        Calendar endCal = Calendar.getInstance();
+        endCal.setTime(anchor);
+        endCal.add(Calendar.MINUTE, 1);
+        Date periodEnd = endCal.getTime();
 
         AdminNotification notification = AdminNotification.builder()
-            .message(message)
-            .notificationType("INSTANT")
-            .newMembersCount(1)
-            .periodStart(periodStart)
-            .periodEnd(periodEnd)
-            .read(false)
-            .dismissed(false)
-            .build();
+                .message(message)
+                .notificationType("INSTANT")
+                .newMembersCount(1)
+                .periodStart(periodStart)
+                .periodEnd(periodEnd)
+                .read(false)
+                .dismissed(false)
+                .build();
 
         notificationRepository.save(notification);
         log.info("Created instant notification for new {} member: {} ({})", membershipType, userName, user.getEmail());
@@ -278,13 +282,21 @@ public class AdminNotificationService {
     }
 
     /**
-     * Get new paid members for a notification period
+     * Get members for a notification period.
+     * INSTANT notifications include both paid and free users,
+     * while DAILY/WEEKLY include paid users only.
      */
     @Transactional(readOnly = true)
     public List<User> getNewPaidMembersForNotification(Long notificationId) {
         AdminNotification notification = notificationRepository.findById(notificationId).orElse(null);
         if (notification == null) {
             return List.of();
+        }
+
+        if ("INSTANT".equalsIgnoreCase(notification.getNotificationType())) {
+            return userRepository.findNewMembersBetweenDates(
+                    notification.getPeriodStart(),
+                    notification.getPeriodEnd());
         }
 
         return userRepository.findNewPaidMembersBetweenDates(
