@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Renewal Reminder - VOICE</title>
+</head>
+
+<body style="margin: 0; padding: 0; background: linear-gradient(135deg, #5B4CC4, #764ba2); font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;">
+
+<div style="width: 100%; padding: 40px 15px; box-sizing: border-box;">
+
+    <div style="background: #ffffff; max-width: 560px; margin: 0 auto; padding: 40px 32px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); text-align: center;">
+
+        <!-- Logo / Brand -->
+        <div style="margin-bottom: 28px;">
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #5B4CC4, #764ba2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(91, 76, 196, 0.3);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Greeting -->
+        <h1 style="color: #1F2937; font-size: 26px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px;">
+            Hi <span th:text="${userName}">Member</span>!
+        </h1>
+
+        <!-- Alert Badge -->
+        <div th:if="${daysUntilExpiry <= 7}" style="display: inline-block; background: #FEF3C7; color: #92400E; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px;">
+            <span th:if="${daysUntilExpiry == 1}">&#x26A0;&#xFE0F; Expires Tomorrow!</span>
+            <span th:if="${daysUntilExpiry > 1}" th:text="'&#x26A0;&#xFE0F; Expires in ' + ${daysUntilExpiry} + ' days'">&#x26A0;&#xFE0F; Expires Soon</span>
+        </div>
+
+        <div th:if="${daysUntilExpiry > 7}" style="display: inline-block; background: #DBEAFE; color: #1E40AF; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px;">
+            <span>&#x1F4C5; Renewal Reminder</span>
+        </div>
+
+        <!-- Main Message -->
+        <p style="color: #4B5563; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+            Your <strong th:text="${membershipName}">Premium Membership</strong> is set to expire on:
+        </p>
+
+        <!-- Expiry Date Box -->
+        <div style="background: linear-gradient(135deg, #F3F4F6, #E5E7EB); padding: 20px; border-radius: 12px; margin: 0 0 24px 0; border-left: 4px solid #5B4CC4;">
+            <div style="color: #6B7280; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                Membership Expires
+            </div>
+            <div style="color: #1F2937; font-size: 24px; font-weight: 700;">
+                <span th:text="${expiryDate}">March 15, 2026</span>
+            </div>
+        </div>
+
+        <!-- Urgency Message -->
+        <p th:if="${daysUntilExpiry <= 3}" style="color: #DC2626; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0; font-weight: 600;">
+            Don't lose access to your membership benefits! Renew today to continue enjoying all features.
+        </p>
+
+        <p th:if="${daysUntilExpiry > 3}" style="color: #4B5563; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+            To continue enjoying your membership benefits, please renew before the expiration date.
+        </p>
+
+        <!-- Renew Button -->
+        <a th:href="${renewalUrl}"
+           style="display: inline-block; margin: 8px 0 24px 0; padding: 14px 40px; background: linear-gradient(135deg, #5B4CC4, #764ba2); color: #ffffff; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 6px 20px rgba(91, 76, 196, 0.35);">
+            Renew My Membership
+        </a>
+
+        <!-- Benefits Reminder -->
+        <div style="background: #F9FAFB; padding: 20px; border-radius: 12px; margin: 0 0 24px 0; text-align: left;">
+            <h3 style="color: #1F2937; font-size: 16px; font-weight: 700; margin: 0 0 12px 0; text-align: center;">
+                What You'll Keep With Renewal:
+            </h3>
+            <ul style="color: #4B5563; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 24px;">
+                <li>Full access to all membership resources</li>
+                <li>Exclusive member-only events and workshops</li>
+                <li>Priority support from our team</li>
+                <li>Community networking opportunities</li>
+                <li>Member discounts and special offers</li>
+            </ul>
+        </div>
+
+        <!-- Alternative Link -->
+        <p style="color: #9CA3AF; font-size: 13px; line-height: 1.5; margin: 24px 0;">
+            Or copy and paste this link into your browser:<br>
+            <a th:href="${renewalUrl}"
+               style="color: #5B4CC4; text-decoration: none; word-break: break-all;"
+               th:text="${renewalUrl}">
+                renewal link
+            </a>
+        </p>
+
+        <!-- Help Section -->
+        <div style="border-top: 1px solid #E5E7EB; padding-top: 24px; margin-top: 24px;">
+            <p style="color: #6B7280; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">
+                Need help or have questions about renewing?
+            </p>
+            <p style="color: #6B7280; font-size: 14px; line-height: 1.6; margin: 0;">
+                Contact us at
+                <a href="mailto:support@voicefordeafkids.com" style="color: #5B4CC4; text-decoration: none;">
+                    support@voicefordeafkids.com
+                </a>
+            </p>
+        </div>
+
+        <!-- Divider -->
+        <div style="height: 1px; background: #E5E7EB; margin: 28px 0;"></div>
+
+        <!-- Footer -->
+        <p style="font-size: 13px; color: #9CA3AF; line-height: 1.5; margin: 0;">
+            This is an automated reminder from the VOICE Membership System.<br>
+            You're receiving this because your membership is expiring soon.
+        </p>
+
+        <!-- Copyright -->
+        <p style="font-size: 12px; color: #D1D5DB; margin: 16px 0 0 0;">
+            &copy; 2026 VOICE for Children who are Deaf and Hard of Hearing
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>

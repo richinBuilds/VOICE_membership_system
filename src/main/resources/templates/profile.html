@@ -101,6 +101,19 @@
                 aria-label="Close"></button>
     </div>
 
+    <!-- Success Alert for Upgrade -->
+    <div th:if="${param.upgrade == 'success'}"
+         class="alert alert-success"
+         role="alert"
+         data-testid="upgrade-success-alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>Success!</strong> Your membership has been upgraded successfully. Enjoy all premium benefits!
+        <button type="button" 
+                class="btn-close" 
+                data-bs-dismiss="alert" 
+                aria-label="Close"></button>
+    </div>
+
     <!-- Success Alert for Cancellation -->
     <div th:if="${param.cancelled == 'true'}"
          class="alert alert-success"

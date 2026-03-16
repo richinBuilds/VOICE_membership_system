@@ -1,18 +1,16 @@
 package org.voice.membership.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.voice.membership.dtos.AdminAddMemberRequest;
 import org.voice.membership.dtos.AdminUpdateUserRequest;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
-import org.voice.membership.repositories.MembershipRepository;
-import org.voice.membership.repositories.MembershipPaymentTransactionRepository;
-import org.voice.membership.repositories.VerificationTokenRepository;
-import org.springframework.transaction.annotation.Transactional;
-import org.voice.membership.repositories.UserRepository;
+import org.voice.membership.repositories.*;
 
 import java.util.Date;
 import java.util.List;
@@ -21,15 +19,21 @@ import java.util.List;
  * Service for admin member management operations.
  * Handles creating, updating, and deleting user accounts by administrators.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminMemberService {
 
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
-    private final MembershipPaymentTransactionRepository paymentTransactionRepository;
-    private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ChildRepository childRepository;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final MembershipPaymentTransactionRepository paymentTransactionRepository;
+    private final MembershipService membershipService;
+    private final AdminNotificationService adminNotificationService;
 
     /**
      * Create a new member account.
@@ -54,6 +58,7 @@ public class AdminMemberService {
                 .phone(memberRequest.getPhone())
                 .address(memberRequest.getAddress())
                 .postalCode(memberRequest.getPostalCode())
+                .chapter(memberRequest.getChapter())
                 .role(Role.USER.name())
                 .emailVerified(memberRequest.getEmailVerified())
                 .accountLocked(memberRequest.getAccountLocked())
@@ -65,16 +70,33 @@ public class AdminMemberService {
             Membership membership = membershipRepository.findById(memberRequest.getMembershipId()).orElse(null);
             if (membership != null) {
                 newUser.setMembership(membership);
+
+                // Set membership dates for paid memberships
+                if (!membership.isFree()) {
+                    Date now = new Date();
+                    newUser.setPaid(true);
+                    newUser.setMembershipStartDate(now);
+                    newUser.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
+                }
             }
         }
 
-        return userRepository.save(newUser);
+        User savedUser = userRepository.save(newUser);
+
+        // Send instant notification to admin for new member
+        try {
+            adminNotificationService.createInstantNotification(savedUser);
+        } catch (Exception e) {
+            log.error("Failed to create instant admin notification for user {}", savedUser.getId(), e);
+        }
+
+        return savedUser;
     }
 
     /**
      * Update an existing member's profile.
      * 
-     * @param userId the user ID to update
+     * @param userId        the user ID to update
      * @param updateRequest the updated member details
      * @return the updated user, or null if user not found or email conflict
      */
@@ -105,13 +127,44 @@ public class AdminMemberService {
         user.setCity(updateRequest.getCity());
         user.setProvince(updateRequest.getProvince());
         user.setPostalCode(updateRequest.getPostalCode());
+        user.setChapter(updateRequest.getChapter());
+
+        // Track if membership is being changed
+        Integer previousMembershipId = user.getMembership() != null ? user.getMembership().getId() : null;
+        boolean membershipChanged = false;
 
         // Update membership if changed
         if (updateRequest.getMembershipId() != null) {
             Membership membership = membershipRepository.findById(updateRequest.getMembershipId()).orElse(null);
             user.setMembership(membership);
+
+            // Set membership dates for paid memberships
+            if (membership != null && !membership.isFree()) {
+                Date now = new Date();
+                user.setPaid(true);
+                user.setMembershipStartDate(now);
+                user.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
+            } else if (membership != null && membership.isFree()) {
+                // Clear dates for free membership
+                user.setPaid(false);
+                user.setMembershipStartDate(null);
+                user.setMembershipExpiryDate(null);
+            }
+            
+            // Check if membership actually changed
+            if (!updateRequest.getMembershipId().equals(previousMembershipId)) {
+                membershipChanged = true;
+            }
         } else {
             user.setMembership(null);
+            user.setPaid(false);
+            user.setMembershipStartDate(null);
+            user.setMembershipExpiryDate(null);
+            
+            // Membership was removed
+            if (previousMembershipId != null) {
+                membershipChanged = true;
+            }
         }
 
         // Update email verification status
@@ -130,7 +183,18 @@ public class AdminMemberService {
         }
 
         // Save the updated user
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Send instant notification to admin if membership was changed
+        if (membershipChanged) {
+            try {
+                adminNotificationService.createInstantNotification(updatedUser);
+            } catch (Exception e) {
+                log.error("Failed to create instant admin notification for user {}", updatedUser.getId(), e);
+            }
+        }
+
+        return updatedUser;
     }
 
     /**
@@ -153,12 +217,60 @@ public class AdminMemberService {
             return null; // Cannot delete admin
         }
 
-        // Remove dependent records that do not cascade from User
-        paymentTransactionRepository.deleteByUser_Id(userId);
-        verificationTokenRepository.deleteByUser(user);
+        // Delete all related entities first to avoid foreign key constraint violations
 
+        // 1. Delete children
+        childRepository.deleteAll(childRepository.findByUser(user));
+
+        // 2. Delete cart items first, then cart
+        cartRepository.findByUser(user).ifPresent(cart -> {
+            // Delete cart items using bulk delete to avoid orphan removal issues
+            cartItemRepository.deleteByCartId(cart.getId());
+            // Then delete the cart
+            cartRepository.delete(cart);
+        });
+
+        // 3. Delete verification token
+        verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
+
+        // 4. Delete payment transactions
+        paymentTransactionRepository.deleteByUser_Id(userId);
+
+        // 5. Finally delete the user
         userRepository.delete(user);
         return user;
+    }
+
+    /**
+     * Create a new admin account.
+     * 
+     * @param adminRequest the admin details
+     * @return the created admin user, or null if email already exists
+     */
+    public User createAdmin(org.voice.membership.dtos.AdminAddAdminRequest adminRequest) {
+        // Check if email already exists
+        User existingUser = userRepository.findByEmail(adminRequest.getEmail());
+        if (existingUser != null) {
+            return null; // Email conflict
+        }
+
+        // Create new admin user
+        User newAdmin = User.builder()
+                .firstName(adminRequest.getFirstName())
+                .middleName(adminRequest.getMiddleName())
+                .lastName(adminRequest.getLastName())
+                .email(adminRequest.getEmail())
+                .password(passwordEncoder.encode(adminRequest.getPassword()))
+                .phone("N/A")
+                .address("N/A")
+                .postalCode("N/A")
+                .role(Role.ADMIN.name())
+                .emailVerified(true)
+                .accountLocked(false)
+                .creation(new Date())
+                .build();
+
+        return userRepository.save(newAdmin);
     }
 
     /**

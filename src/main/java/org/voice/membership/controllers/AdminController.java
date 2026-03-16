@@ -19,17 +19,21 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.voice.membership.dtos.AdminUpdateUserRequest;
 import org.voice.membership.dtos.AdminAddMemberRequest;
+import org.voice.membership.dtos.AdminAddAdminRequest;
 import org.voice.membership.dtos.BulkEmailRequest;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
-import org.voice.membership.entities.Membership;
 import org.voice.membership.repositories.UserRepository;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.services.EmailSenderService;
 import org.voice.membership.services.UserFilterService;
 import org.voice.membership.services.AdminExportService;
 import org.voice.membership.services.AdminMemberService;
+import org.voice.membership.services.AdminNotificationService;
+import org.voice.membership.services.MembershipRenewalSchedulerService;
+import org.voice.membership.entities.AdminNotification;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -38,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Controller
 @RequestMapping("/admin")
 /**
@@ -64,6 +69,12 @@ public class AdminController {
     @Autowired
     private AdminMemberService adminMemberService;
 
+    @Autowired
+    private AdminNotificationService adminNotificationService;
+
+    @Autowired
+    private MembershipRenewalSchedulerService membershipRenewalSchedulerService;
+
     @GetMapping("/dashboard")
     public String adminDashboard(
             Model model,
@@ -71,13 +82,15 @@ public class AdminController {
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String province,
+            @RequestParam(required = false) String chapter,
             @RequestParam(required = false) Integer minAge,
             @RequestParam(required = false) Integer maxAge,
             @RequestParam(required = false) String hearingLossType,
             @RequestParam(required = false) String equipmentType,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) String paymentStatus) {
+            @RequestParam(required = false) String paymentStatus,
+            @RequestParam(required = false) String role) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String adminEmail = auth.getName();
@@ -89,16 +102,24 @@ public class AdminController {
 
         List<User> allUsers = userRepository.findAll();
 
-        List<User> filteredUsers = userFilterService.filterUsers(allUsers, address, city, province, minAge, maxAge,
+        List<User> filteredUsers = userFilterService.filterUsers(allUsers, address, city, province, chapter, minAge,
+                maxAge,
                 hearingLossType, equipmentType,
-                startDate, endDate, paymentStatus);
+                startDate, endDate, paymentStatus, role);
+
+        // Count users by role
+        long adminCount = allUsers.stream().filter(u -> "ADMIN".equalsIgnoreCase(u.getRole())).count();
+        long userCount = allUsers.stream().filter(u -> "USER".equalsIgnoreCase(u.getRole())).count();
 
         model.addAttribute("totalUsers", allUsers.size());
+        model.addAttribute("adminCount", adminCount);
+        model.addAttribute("userCount", userCount);
         model.addAttribute("users", filteredUsers);
 
         model.addAttribute("address", address);
         model.addAttribute("city", city);
         model.addAttribute("province", province);
+        model.addAttribute("chapter", chapter);
         model.addAttribute("minAge", minAge);
         model.addAttribute("maxAge", maxAge);
         model.addAttribute("hearingLossType", hearingLossType);
@@ -106,6 +127,7 @@ public class AdminController {
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
         model.addAttribute("paymentStatus", paymentStatus);
+        model.addAttribute("role", role);
 
         return "admin";
     }
@@ -172,6 +194,7 @@ public class AdminController {
                     .city(user.getCity())
                     .province(user.getProvince())
                     .postalCode(user.getPostalCode())
+                    .chapter(user.getChapter())
                     .membershipId(user.getMembership() != null ? user.getMembership().getId() : null)
                     .emailVerified(user.isEmailVerified())
                     .accountLocked(user.isAccountLocked())
@@ -322,8 +345,8 @@ public class AdminController {
 
             // Check if passwords match
             if (!memberRequest.getPassword().equals(memberRequest.getConfirmPassword())) {
-                redirectAttributes.addFlashAttribute("error", 
-                    "Passwords do not match. Please ensure both password fields are identical.");
+                redirectAttributes.addFlashAttribute("error",
+                        "Passwords do not match. Please ensure both password fields are identical.");
                 return "redirect:/admin/add-member";
             }
 
@@ -385,9 +408,96 @@ public class AdminController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error",
-                    "System error occurred while deleting the member. Please try again.");
+            String errorMessage = "System error occurred while deleting the member. ";
+
+            // Add specific error details
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                errorMessage += "Details: " + e.getCause().getMessage();
+            } else if (e.getMessage() != null) {
+                errorMessage += "Details: " + e.getMessage();
+            }
+
+            redirectAttributes.addFlashAttribute("error", errorMessage);
             return "redirect:/admin/dashboard";
+        }
+    }
+
+    /**
+     * Display the add admin form for creating a new admin account.
+     * 
+     * @param model the model to add attributes
+     * @return the add admin page template name
+     */
+    @GetMapping("/add-admin")
+    public String showAddAdminForm(Model model, Principal principal) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = auth.getName();
+        User admin = userRepository.findByEmail(adminEmail);
+
+        String adminName = adminMemberService.formatAdminName(admin);
+
+        model.addAttribute("adminName", adminName);
+        model.addAttribute("adminEmail", adminEmail);
+        model.addAttribute("adminRequest", new AdminAddAdminRequest());
+
+        return "admin-add-admin";
+    }
+
+    /**
+     * Handle add admin form submission.
+     * Creates a new admin account with the provided details.
+     * 
+     * @param adminRequest       the validated admin data
+     * @param bindingResult      validation results
+     * @param redirectAttributes flash attributes for success/error messages
+     * @return redirect to admin dashboard
+     */
+    @PostMapping("/add-admin")
+    public String addAdmin(
+            @Valid @ModelAttribute("adminRequest") AdminAddAdminRequest adminRequest,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Model model,
+            Principal principal) {
+
+        try {
+            // Check for validation errors
+            if (bindingResult.hasErrors()) {
+                StringBuilder errorMessage = new StringBuilder("Validation errors: ");
+                for (FieldError error : bindingResult.getFieldErrors()) {
+                    errorMessage.append(error.getField()).append(" - ").append(error.getDefaultMessage()).append("; ");
+                }
+                redirectAttributes.addFlashAttribute("error", errorMessage.toString());
+                return "redirect:/admin/add-admin";
+            }
+
+            // Check if passwords match
+            if (!adminRequest.getPassword().equals(adminRequest.getConfirmPassword())) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Passwords do not match. Please ensure both password fields are identical.");
+                return "redirect:/admin/add-admin";
+            }
+
+            // Attempt to create admin using service
+            User newAdmin = adminMemberService.createAdmin(adminRequest);
+
+            if (newAdmin == null) {
+                // Email already exists
+                redirectAttributes.addFlashAttribute("error",
+                        "An admin account with email " + adminRequest.getEmail() + " already exists in the system.");
+                return "redirect:/admin/add-admin";
+            }
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Admin account for " + newAdmin.getFirstName() + " " + newAdmin.getLastName()
+                            + " has been successfully created.");
+            return "redirect:/admin/dashboard?role=ADMIN";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error",
+                    "System error occurred while creating the admin account. Please try again.");
+            return "redirect:/admin/add-admin";
         }
     }
 
@@ -486,6 +596,187 @@ public class AdminController {
             response.put("status", "error");
             response.put("message", "Server error: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    // ==================== Notification API Endpoints ====================
+
+    /**
+     * Get all unread notifications for admin
+     */
+    @GetMapping("/api/admin/notifications/unread")
+    @ResponseBody
+    public ResponseEntity<List<AdminNotification>> getUnreadNotifications() {
+        List<AdminNotification> notifications = adminNotificationService.getUnreadNotifications();
+        return ResponseEntity.ok(notifications);
+    }
+
+    /**
+     * Get notification count
+     */
+    @GetMapping("/api/admin/notifications/count")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getNotificationCount() {
+        long count = adminNotificationService.getUnreadCount();
+        Map<String, Object> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Mark a notification as read
+     */
+    @PostMapping("/api/admin/notifications/{id}/read")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> markNotificationAsRead(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            adminNotificationService.markAsRead(id);
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Dismiss all notifications
+     */
+    @PostMapping("/api/admin/notifications/dismiss-all")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> dismissAllNotifications() {
+        Map<String, String> response = new HashMap<>();
+        try {
+            log.info("Dismissing all notifications");
+            adminNotificationService.dismissAllNotifications();
+            response.put("status", "success");
+            response.put("message", "All notifications dismissed");
+            log.info("Successfully dismissed all notifications");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to dismiss notifications: {}", e.getMessage(), e);
+            response.put("status", "error");
+            response.put("message", "Failed to dismiss notifications: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Dismiss a single notification
+     */
+    @PostMapping("/api/admin/notifications/{id}/dismiss")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> dismissNotification(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            adminNotificationService.dismissNotification(id);
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get notification details with associated users
+     */
+    @GetMapping("/api/admin/notifications/{id}/details")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getNotificationDetails(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            AdminNotification notification = adminNotificationService.getNotificationById(id);
+            if (notification == null) {
+                response.put("status", "error");
+                response.put("message", "Notification not found");
+                return ResponseEntity.notFound().build();
+            }
+
+            List<User> newMembers = adminNotificationService.getNewPaidMembersForNotification(id);
+
+            response.put("notification", notification);
+            response.put("users", newMembers);
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Admin Notifications Dashboard Page
+     */
+    @GetMapping("/notifications")
+    public String notificationsDashboard(Model model, Principal principal) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = auth.getName();
+        User admin = userRepository.findByEmail(adminEmail);
+
+        String adminName = adminMemberService.formatAdminName(admin);
+        model.addAttribute("adminName", adminName);
+        model.addAttribute("adminEmail", adminEmail);
+
+        // Get all new users from unread notifications
+        List<User> newUsers = adminNotificationService.getAllNewUsersFromNotifications();
+        model.addAttribute("newUsers", newUsers);
+
+        return "admin-notifications";
+    }
+
+    /**
+     * Manually trigger the membership renewal reminder job.
+     * Returns a detailed breakdown per reminder window so you can see exactly
+     * how many members were found and whether emails were sent successfully.
+     */
+    @PostMapping("/trigger-renewal-reminders")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> triggerRenewalReminders() {
+        try {
+            log.info("Admin manually triggered membership renewal reminder job");
+            Map<String, Object> result = membershipRenewalSchedulerService.sendRenewalReminders();
+            result.put("status", "success");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error triggering renewal reminders: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
+    }
+
+    /**
+     * Preview which paid members have memberships expiring within the next N days
+     * WITHOUT sending any emails. Defaults to 30 days.
+     * Use this to verify your test data before triggering the job.
+     *
+     * Example: GET /admin/renewal-reminders/preview?withinDays=10
+     */
+    @GetMapping("/renewal-reminders/preview")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> previewRenewalReminders(
+            @RequestParam(defaultValue = "30") int withinDays) {
+        try {
+            var members = membershipRenewalSchedulerService.previewExpiringMembers(withinDays);
+            Map<String, Object> result = new HashMap<>();
+            result.put("status", "success");
+            result.put("withinDays", withinDays);
+            result.put("membersFound", members.size());
+            result.put("members", members);
+            result.put("note", "No emails were sent. Use POST /admin/trigger-renewal-reminders to send.");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error previewing renewal reminders: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
         }
     }
 }

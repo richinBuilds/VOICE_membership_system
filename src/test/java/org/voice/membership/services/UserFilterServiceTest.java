@@ -49,8 +49,10 @@ class UserFilterServiceTest {
         user1.setCity("Toronto");
         user1.setProvince("ON");
         user1.setPostalCode("M1M1M1");
+        user1.setChapter("Greater Toronto");
         user1.setCreation(sdf.parse("2024-01-15"));
         user1.setMembership(paidMembership);
+        user1.setRole("USER");
 
         Child child1a = Child.builder()
                 .id(1)
@@ -70,8 +72,10 @@ class UserFilterServiceTest {
         user2.setCity("Vancouver");
         user2.setProvince("BC");
         user2.setPostalCode("V5V5V5");
+        user2.setChapter("Greater Vancouver");
         user2.setCreation(sdf.parse("2024-03-20"));
         user2.setMembership(freeMembership);
+        user2.setRole("ADMIN");
 
         Child child2a = Child.builder()
                 .id(2)
@@ -91,8 +95,10 @@ class UserFilterServiceTest {
         user3.setCity("Montreal");
         user3.setProvince("QC");
         user3.setPostalCode("H1H1H1");
+        user3.setChapter("Montreal Central");
         user3.setCreation(sdf.parse("2024-06-10"));
         user3.setMembership(null);
+        user3.setRole("USER");
 
         Child child3a = Child.builder()
                 .id(3)
@@ -113,7 +119,7 @@ class UserFilterServiceTest {
     void filterUsers_ByAddress_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, "Main St", null, null, null, null, null, null, null, null, null);
+                testUsers, "Main St", null, null, null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -124,7 +130,7 @@ class UserFilterServiceTest {
     void filterUsers_ByPostalCode_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, "V5V5V5", null, null, null, null, null, null, null, null, null);
+                testUsers, "V5V5V5", null, null, null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -135,7 +141,7 @@ class UserFilterServiceTest {
     void filterUsers_ByAddressPartial_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, "Elm", null, null, null, null, null, null, null, null, null);
+                testUsers, "Elm", null, null, null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -146,7 +152,7 @@ class UserFilterServiceTest {
     void filterUsers_WithNullAddress_ShouldReturnAllUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, null, null, null);
+                testUsers, null, null, null, null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(testUsers.size());
@@ -158,7 +164,7 @@ class UserFilterServiceTest {
     void filterUsers_ByCity_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, "Toronto", null, null, null, null, null, null, null, null);
+                testUsers, null, "Toronto", null, null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -169,7 +175,7 @@ class UserFilterServiceTest {
     void filterUsers_ByCityPartial_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, "van", null, null, null, null, null, null, null, null);
+                testUsers, null, "van", null, null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -182,7 +188,7 @@ class UserFilterServiceTest {
     void filterUsers_ByProvince_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, "ON", null, null, null, null, null, null, null);
+                testUsers, null, null, "ON", null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -193,11 +199,34 @@ class UserFilterServiceTest {
     void filterUsers_ByProvincePartial_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, "bc", null, null, null, null, null, null, null);
+                testUsers, null, null, "bc", null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
         assertThat(filtered.get(0).getProvince()).isEqualToIgnoringCase("bc");
+    }
+
+    // ==================== Chapter Filter Tests ====================
+
+    @Test
+    void filterUsers_ByChapter_ShouldReturnMatchingUsers() {
+        // Act
+        List<User> filtered = userFilterService.filterUsers(
+                testUsers, null, null, null, "Greater Vancouver", null, null, null, null, null, null, null, null);
+
+        // Assert
+        assertThat(filtered).hasSize(1);
+        assertThat(filtered.get(0).getChapter()).isEqualTo("Greater Vancouver");
+    }
+
+    @Test
+    void filterUsers_ByChapterPartial_ShouldReturnMatchingUsers() {
+        // Act
+        List<User> filtered = userFilterService.filterUsers(
+                testUsers, null, null, null, "greater", null, null, null, null, null, null, null, null);
+
+        // Assert
+        assertThat(filtered).hasSize(2); // Greater Toronto and Greater Vancouver
     }
 
     // ==================== Child Age Filter Tests ====================
@@ -206,7 +235,7 @@ class UserFilterServiceTest {
     void filterUsers_ByMinAge_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, 10, null, null, null, null, null, null);
+                testUsers, null, null, null, null, 10, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -217,7 +246,7 @@ class UserFilterServiceTest {
     void filterUsers_ByMaxAge_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, 6, null, null, null, null, null);
+                testUsers, null, null, null, null, null, 6, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -228,7 +257,7 @@ class UserFilterServiceTest {
     void filterUsers_ByAgeRange_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, 6, 10, null, null, null, null, null);
+                testUsers, null, null, null, null, 6, 10, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -245,7 +274,7 @@ class UserFilterServiceTest {
 
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, 5, 10, null, null, null, null, null);
+                testUsers, null, null, null, null, 5, 10, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).doesNotContain(userWithoutChildren);
@@ -257,7 +286,7 @@ class UserFilterServiceTest {
     void filterUsers_ByHearingLossType_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, "Sensorineural", null, null, null, null);
+                testUsers, null, null, null, null, null, null, "Sensorineural", null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -268,7 +297,7 @@ class UserFilterServiceTest {
     void filterUsers_ByHearingLossTypeCaseInsensitive_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, "conductive", null, null, null, null);
+                testUsers, null, null, null, null, null, null, "conductive", null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -282,7 +311,7 @@ class UserFilterServiceTest {
     void filterUsers_ByEquipmentType_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, "Hearing Aid", null, null, null);
+                testUsers, null, null, null, null, null, null, null, "Hearing Aid", null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -293,7 +322,7 @@ class UserFilterServiceTest {
     void filterUsers_ByEquipmentTypeCaseInsensitive_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, "cochlear implant", null, null, null);
+                testUsers, null, null, null, null, null, null, null, "cochlear implant", null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -307,7 +336,7 @@ class UserFilterServiceTest {
     void filterUsers_ByStartDate_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, "2024-03-01", null, null);
+                testUsers, null, null, null, null, null, null, null, null, "2024-03-01", null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(2); // user2 and user3
@@ -317,7 +346,7 @@ class UserFilterServiceTest {
     void filterUsers_ByEndDate_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, null, "2024-03-31", null);
+                testUsers, null, null, null, null, null, null, null, null, null, "2024-03-31", null, null);
 
         // Assert
         assertThat(filtered).hasSize(2); // user1 and user2
@@ -327,7 +356,7 @@ class UserFilterServiceTest {
     void filterUsers_ByDateRange_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, "2024-02-01", "2024-05-31", null);
+                testUsers, null, null, null, null, null, null, null, null, "2024-02-01", "2024-05-31", null, null);
 
         // Assert
         assertThat(filtered).hasSize(1); // only user2
@@ -337,7 +366,7 @@ class UserFilterServiceTest {
     void filterUsers_WithInvalidDate_ShouldReturnAllUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, "invalid-date", null, null);
+                testUsers, null, null, null, null, null, null, null, null, "invalid-date", null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(testUsers.size());
@@ -349,7 +378,7 @@ class UserFilterServiceTest {
     void filterUsers_ByPaidStatus_ShouldReturnPaidMembers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, null, null, "paid");
+                testUsers, null, null, null, null, null, null, null, null, null, null, "paid", null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -361,7 +390,7 @@ class UserFilterServiceTest {
     void filterUsers_ByUnpaidStatus_ShouldReturnUnpaidMembers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, null, null, "unpaid");
+                testUsers, null, null, null, null, null, null, null, null, null, null, "unpaid", null);
 
         // Assert
         assertThat(filtered).hasSize(2); // user2 (free) and user3 (null)
@@ -373,7 +402,7 @@ class UserFilterServiceTest {
     void filterUsers_WithMultipleFilters_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, "Toronto", "ON", null, null, null, null, null, null, "paid");
+                testUsers, null, "Toronto", "ON", null, null, null, null, null, null, null, "paid", null);
 
         // Assert
         assertThat(filtered).hasSize(1);
@@ -386,7 +415,7 @@ class UserFilterServiceTest {
     void filterUsers_WithAllNullFilters_ShouldReturnAllUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, null, null, null, null, null, null, null);
+                testUsers, null, null, null, null, null, null, null, null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(testUsers.size());
@@ -396,10 +425,55 @@ class UserFilterServiceTest {
     void filterUsers_WithCombinedChildFilters_ShouldReturnMatchingUsers() {
         // Act
         List<User> filtered = userFilterService.filterUsers(
-                testUsers, null, null, null, 8, 12, "Mixed", null, null, null, null);
+                testUsers, null, null, null, null, 8, 12, "Mixed", null, null, null, null, null);
 
         // Assert
         assertThat(filtered).hasSize(1);
         assertThat(filtered.get(0).getId()).isEqualTo(3);
+    }
+
+    // ==================== Role Filter Tests ====================
+
+    @Test
+    void filterUsers_ByUserRole_ShouldReturnOnlyUsers() {
+        // Act
+        List<User> filtered = userFilterService.filterUsers(
+                testUsers, null, null, null, null, null, null, null, null, null, null, null, "USER");
+
+        // Assert
+        assertThat(filtered).hasSize(2);
+        assertThat(filtered).allMatch(user -> "USER".equals(user.getRole()));
+    }
+
+    @Test
+    void filterUsers_ByAdminRole_ShouldReturnOnlyAdmins() {
+        // Act
+        List<User> filtered = userFilterService.filterUsers(
+                testUsers, null, null, null, null, null, null, null, null, null, null, null, "ADMIN");
+
+        // Assert
+        assertThat(filtered).hasSize(1);
+        assertThat(filtered.get(0).getRole()).isEqualTo("ADMIN");
+    }
+
+    @Test
+    void filterUsers_ByRoleCaseInsensitive_ShouldReturnMatchingUsers() {
+        // Act
+        List<User> filtered = userFilterService.filterUsers(
+                testUsers, null, null, null, null, null, null, null, null, null, null, null, "user");
+
+        // Assert
+        assertThat(filtered).hasSize(2);
+        assertThat(filtered).allMatch(user -> "USER".equalsIgnoreCase(user.getRole()));
+    }
+
+    @Test
+    void filterUsers_WithNullRole_ShouldReturnAllUsers() {
+        // Act
+        List<User> filtered = userFilterService.filterUsers(
+                testUsers, null, null, null, null, null, null, null, null, null, null, null, null);
+
+        // Assert
+        assertThat(filtered).hasSize(testUsers.size());
     }
 }

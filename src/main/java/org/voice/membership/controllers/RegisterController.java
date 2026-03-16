@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.voice.membership.dtos.*;
 import org.voice.membership.entities.*;
 import org.voice.membership.repositories.*;
+import org.voice.membership.services.AdminNotificationService;
 import org.voice.membership.services.EmailSenderService;
 import org.voice.membership.services.PayPalService;
 import org.voice.membership.services.MembershipService;
@@ -83,6 +84,9 @@ public class RegisterController {
 
     @Autowired
     private ChildService childService;
+
+    @Autowired
+    private AdminNotificationService adminNotificationService;
 
     @GetMapping
     public String showRegister(Model model, HttpSession session) {
@@ -518,6 +522,14 @@ public class RegisterController {
 
             user = userRepository.save(user);
 
+            // Send instant notification to admin for new member registration
+            try {
+                adminNotificationService.createInstantNotification(user);
+            } catch (Exception e) {
+                // Log error but don't fail registration
+                System.err.println("Failed to create instant admin notification: " + e.getMessage());
+            }
+
             // Create payment transaction if payment was completed during registration
             String paypalOrderId = (String) session.getAttribute("paypalOrderId");
             String paypalCaptureId = (String) session.getAttribute("paypalCaptureId");
@@ -609,7 +621,7 @@ public class RegisterController {
 
             // Do NOT auto-login - user must verify email first
             boolean paymentCompleted = Boolean.TRUE.equals(session.getAttribute("registrationPaymentCompleted"));
-            
+
             session.removeAttribute("registrationData");
             session.removeAttribute("registrationPaymentRef");
             session.removeAttribute("registrationPayPalOrderId");

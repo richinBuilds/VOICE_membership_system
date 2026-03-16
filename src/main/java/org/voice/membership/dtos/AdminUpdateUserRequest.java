@@ -49,6 +49,8 @@ public class AdminUpdateUserRequest {
              message = "Valid Canadian postal code, e.g., A1A 1A1")
     private String postalCode;
     
+    private String chapter;
+    
     // Membership information (admin can change membership)
     private Integer membershipId;
     

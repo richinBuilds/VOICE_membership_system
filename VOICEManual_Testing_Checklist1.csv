@@ -1,0 +1,265 @@
+﻿Test ID,Page/Module,Test Case Description,Steps to Test,Expected Result,Pass/Fail
+TC001,Landing Page,Landing page loads correctly,"1. Open browser
+2. Navigate to http://localhost:8080/",Landing page displays with VOICE tagline and navigation menu,Pass
+TC002,Landing Page,Navigation menu visible,Check top navigation bar,"Menu shows: Home, Login, Register buttons",
+TC003,Landing Page,Login button redirects,"Click ""Sign In"" button",Redirects to /Sign In page,Pass
+TC004,Landing Page,Register button redirects,"Click ""Join Now"" button",Redirects to /register page,Pass
+TC005,Registration - Step 1,Registration form loads,Navigate to /register,"Registration form displays with fields: Name, Email, Password, Confirm Password",Pass
+TC006,Registration - Step 1,Empty form validation,"1. Leave all fields empty
+2. Click Submit",Validation errors appear for all required fields,Pass
+TC007,Registration - Step 1,Email format validation,"1. Enter invalid email (e.g., ""test"")
+2. Fill other fields
+3. Submit","Error message: ""Please enter a valid email address""",Pass
+TC008,Registration - Step 1,Password strength validation,"1. Enter weak password (e.g., ""123"")
+2. Fill other fields
+3. Submit",Error message about password requirements,Pass
+TC009,Registration - Step 1,Password match validation,"1. Enter password: ""Test@123""
+2. Enter confirm: ""Test@456""
+3. Submit","Error message: ""Passwords do not match""",Pass
+TC010,Registration - Step 1,Duplicate email validation,"1. Enter email that already exists
+2. Fill other fields
+3. Submit","Error message: ""Email already exists""",Pass
+TC011,Registration - Step 1,Valid form submission,"1. Fill all fields correctly
+2. Submit",Redirects to Step 2 (Children information),Pass
+TC012,Registration - Step 2,Children form loads,Complete Step 1 and proceed,"Step 2 displays with ""Add Child"" button and progress indicator",Pass
+TC013,Registration - Step 2,Add child form appears,"Click ""Add Another Child"" button","Form displays with fields: Child Name, DOB, Hearing Loss Type, Equipment Type",Pass
+TC014,Registration - Step 2,Child form validation,"1. Leave child form empty
+2. Click Next",Proceeds to step 3 (Membership selection),Pass
+TC015,Registration - Step 2,Add child successfully,"1. Fill child information
+2. Click Add",Child appears in list below form,Pass
+TC016,Registration - Step 2,Add multiple children,"1. Add first child
+2. Add second child",Both children appear in list,Pass
+,,,,,
+TC018,Registration - Step 2,Skip to Step 3,"Click ""Next"" without adding children",Proceeds to Step 3 (Membership selection),Pass
+TC019,Registration - Step 3,Membership options display,Proceed from Step 2,Displays membership types: Free and Premium,Pass
+TC020,Registration - Step 3,Free membership selection,"1. Select Free membership
+2. Click Continue",Proceeds to Step 4 (Summary),Pass
+TC021,Registration - Step 3,Paid membership selection,"1. Select Premium
+2. Click Next",Redirects to checkout page,Pass
+TC022,Registration - Step 4,Registration summary display,Complete Steps 1-3 with free membership,Displays summary of:  Membership type,Pass
+TC023,Registration - Step 4,Back button works,"Click ""Back"" button",Returns to previous step,Pass
+TC024,Registration - Step 4,Complete registration,"Click ""Complete Registration""","Account created, auto-login, redirect to profile page",Pass
+TC025,Login Page,Login page loads,Navigate to /login,Login form displays with Email and Password fields,Pass
+TC026,Login Page,Empty login validation,"1. Leave fields empty
+2. Click Login",Validation errors appear,Pass
+TC027,Login Page,Invalid credentials,"1. Enter wrong email/password
+2. Click Login","Error message: ""Invalid credentials""",Pass
+TC028,Login Page,Valid login,"1. Enter correct credentials
+2. Click Login",Redirects to profile page,Pass
+TC029,Login Page,Remember me checkbox,"1. Check ""Remember Me""
+2. Login
+3. Close browser
+4. Reopen",User remains logged in,Pass
+TC030,Login Page,Forgot password link,"Click ""Forgot Password"" link",Redirects to /forgot-password page,Pass
+TC031,Forgot Password,Forgot password page loads,Navigate to /forgot-password,Form displays with Email field,Pass
+TC032,Forgot Password,Email validation,"1. Enter invalid email
+2. Submit",Error message appears,Pass
+TC033,Forgot Password,Non-existent email,"1. Enter email not in system
+2. Submit","Message: ""If email exists, reset link sent""",Pass
+TC034,Forgot Password,Valid email submission,"1. Enter registered email
+2. Submit","Success message displayed, email sent with reset link",Pass
+TC035,Reset Password,Reset password page loads,"1. Receive reset email
+2. Click link",Reset password form displays,Pass
+TC036,Reset Password,Password validation,"1. Enter weak password
+2. Submit",Error message about password requirements,Pass
+TC037,Reset Password,Password match validation,"1. Enter mismatched passwords
+2. Submit","Error message: ""Passwords do not match""",Pass
+TC038,Reset Password,Successful password reset,"1. Enter valid matching passwords
+2. Submit","Success message, redirects to login",Pass
+TC039,Profile Page,Profile page loads,Login and navigate to /profile,Profile page displays user information and children list,Pass
+TC040,Profile Page,User info displayed,Check profile page,"Shows: Name, Email, Phone, Address, Postal Code, Member Since",Pass
+TC041,Profile Page,Membership info displayed,Check membership section,"Shows: Membership type, Status, Expiry date (if paid)",Pass
+TC042,Profile Page,Children list displayed,Check children section,"Lists all children with: Name, Age, Hearing Loss Type, Equipment",Pass
+TC043,Profile Page,Edit profile button,"Click ""Edit Profile"" button",Redirects to /profile/edit,Pass
+TC044,Profile Page,Add child button,"Click ""Add Child"" button",Redirects to child add form,Pass
+TC045,Profile Page,Edit child button,"Click ""Edit"" on a child",Redirects to edit child form,Pass
+TC046,Profile Page,Delete child button,"1. Click ""Delete"" on a child
+2. Confirm",Child is removed from list,Pass
+TC047,Profile Page,Upgrade membership button,"Click ""Upgrade Membership"" button",Redirects to membership upgrade page,Pass
+TC048,Edit Profile,Edit profile page loads,Navigate to /profile/edit,Form displays with current user information,Pass
+TC049,Edit Profile,Cancel edit,"Click ""Cancel"" button",Returns to profile page without changes,Pass
+TC050,Edit Profile,Update with invalid data,"1. Enter invalid email
+2. Submit",Validation error appears,Pass
+TC051,Edit Profile,Update profile successfully,"1. Modify user information
+2. Click Save","Success message, redirects to profile with updated info",Pass
+TC052,Add/Edit Child,Add child form loads,Click Add Child from profile,"Form displays with fields: Name, DOB, Hearing Loss, Equipment",Pass
+TC053,Add/Edit Child,Child form validation,"1. Leave fields empty
+2. Submit",Validation errors appear,Pass
+TC054,Add/Edit Child,Add child successfully,"1. Fill child information
+2. Submit","Child added, redirects to profile",Pass
+TC055,Add/Edit Child,Edit child loads data,Click Edit on existing child,Form pre-filled with child data,Pass
+TC056,Add/Edit Child,Update child successfully,"1. Modify child information
+2. Submit","Child updated, redirects to profile",Pass
+TC057,Upgrade Membership,Upgrade page loads,Navigate to upgrade membership,Displays available membership upgrades,Pass
+TC058,Upgrade Membership,Select upgrade option,Select a membership tier,Redirects to checkout,Pass
+TC059,Checkout,Checkout page loads,Proceed from membership selection,Displays order summary and payment form,Pass
+TC060,Checkout,Payment validation,"1. Leave payment fields empty
+2. Submit",Validation errors appear,Pass
+TC061,Checkout,Successful payment,"1. Fill payment information
+2. Complete checkout","Payment processed, membership updated, redirect to profile",Pass
+TC062,Admin Dashboard,Admin login,1. Login with admin credentials,Access granted to admin dashboard,Pass
+TC063,Admin Dashboard,Dashboard loads,Navigate to /admin/dashboard,Dashboard displays with user statistics and filters,Pass
+TC064,Admin Dashboard,User list displayed,Check user table,All registered users listed with details,Pass
+TC065,Admin Dashboard,Filter by address,"1. Enter address in filter
+2. Apply",User list filtered by address,Pass
+TC066,Admin Dashboard,Filter by age range,"1. Enter min/max age
+2. Apply",Users filtered by children age range,Pass
+TC067,Admin Dashboard,Filter by hearing loss type,"1. Select hearing loss type
+2. Apply",Users filtered accordingly,Pass
+TC068,Admin Dashboard,Filter by equipment type,"1. Select equipment type
+2. Apply",Users filtered accordingly,Pass
+TC069,Admin Dashboard,Filter by registration date,"1. Enter date range
+2. Apply",Users filtered by registration date,Pass
+TC070,Admin Dashboard,View user details,Click on a user,User detail modal/page appears,Pass
+TC071,Admin Dashboard,Export users to Excel,"Click ""Export Users"" button",Excel file downloads with user data,Pass
+TC072,Navigation,Logout functionality,"Click ""Logout"" button","User logged out, redirects to home page",Pass
+TC073,Security,Access protected page while logged out,Navigate to /profile without login,Redirects to login page,Pass
+TC074,Security,Access admin page as regular user,"Login as non-admin, try /admin/dashboard",Access denied or redirect,Pass
+TC075,Responsive Design,Mobile view - Landing page,Open on mobile device/resize browser,Page is responsive and usable,Pass
+TC076,Responsive Design,Mobile view - Registration,Complete registration on mobile,Forms are usable and properly formatted,Pass
+TC077,Responsive Design,Mobile view - Profile,View profile on mobile,Profile displays correctly on small screen,Pass
+TC078,Session Management,Session timeout,"1. Login
+2. Wait for session timeout
+3. Try to access page",Redirects to login,Pass
+TC079,Data Persistence,Registration data persists,"1. Register user
+2. Logout
+3. Login",User data is saved and retrieved correctly,Pass
+TC080,Error Handling,Server error handling,Trigger a server error,Error page displays with appropriate message,Pass
+TC081,Registration - Email Verification,Verification email sent after registration,"1. Complete registration with valid email
+2. Check inbox for verification email
+3. Click verification link",Verification email received and account marked as verified,Pass
+TC082,Upgrade Membership - PayPal,Successful upgrade via PayPal from profile,"1. Login with free membership user
+2. Go to Profile page
+3. Click ""Upgrade Membership""
+4. Select Premium membership and continue to checkout
+5. Complete PayPal payment successfully",User redirected back to profile,Pass
+TC083,Checkout - PayPal Cancel,User cancels payment on PayPal page,"1. Start Premium membership checkout
+2. When redirected to PayPal, click Cancel/Back
+3. Return to application",User returned to site with clear message,Pass
+TC084,Checkout - PayPal Failure,Handle PayPal payment failure,"1. Start Premium membership checkout
+2. Simulate declined payment on PayPal (or use test card that fails)
+3. Return to application",User sees error message about payment failure,Pass
+TC085,Upgrade Membership - Already Paid,Prevent upgrade when already paid member,"1. Login as user with active paid membership
+2. Try to access upgrade page or start Premium checkout",System blocks upgrade (e.g.,Pass
+TC086,Security - PayPal Endpoints Without Login,Protect PayPal order endpoints,"1. Open new browser/incognito (not logged in)
+2. Directly call /register/paypal/create-order via browser or tool
+3. Directly call /register/paypal/capture-order",Requests are redirected to login or return 302/401,Pass
+TC087,Checkout - Invalid Membership for PayPal,Block PayPal for free membership,"1. From registration Step 3, select Free membership
+2. Try to proceed to PayPal checkout (if possible via URL tampering)",System returns validation error (e.g.,Pass
+TC088,Admin Dashboard - Paid Members,Admin view of upgraded membership,"1. Complete a successful Premium payment for a user
+2. Login as admin
+3. Open admin dashboard and locate the user",User appears as paid in admin list with correct membership and expiry date,Pass
+TC089,Admin - User Create,Admin can create a new user record,"1. Login as admin
+2. Navigate to admin user management/create user page
+3. Fill required fields and submit",New user appears in user list and can log in with provided credentials,Pass
+TC090,Admin - User Update,Admin can edit existing user details,"1. Login as admin
+2. Open admin dashboard user list
+3. Click Edit on a user and change some fields
+4. Save changes",Updated user details are saved and visible on profile/admin list,Pass
+TC091,Admin - User Delete/Deactivate,Admin can deactivate or delete a user safely,"1. Login as admin
+2. Open admin dashboard user list
+3. Click Delete/Deactivate on a user and confirm","User no longer appears as active (or is removed), and that account cannot log in any more",Pass
+TC092,Admin - Membership Create,Admin can create new membership plan,"1. Login as admin
+2. Navigate to membership management
+3. Click Add Membership and fill details
+4. Save",New membership plan appears in membership list and is selectable on registration/upgrade,Pass
+TC093,Admin - Membership Update,Admin can edit membership plan details,"1. Login as admin
+2. Open membership management
+3. Edit existing membership (e.g., price, description)
+4. Save",Changes are reflected on registration and upgrade pages (new price/description shown),Pass
+TC094,Admin - Membership Deactivate,Admin can deactivate membership plan,"1. Login as admin
+2. Open membership management
+3. Deactivate a membership plan",Deactivated plan no longer appears as selectable option for new registrations/upgrades,Pass
+TC095,Membership Cancellation - Request,User can request membership cancellation from profile,"1. Login as paid member
+2. Go to Profile page
+3. Click Cancel Membership option/button
+4. Confirm request if prompted",Cancellation request is recorded; user sees confirmation message and pending/ending status,Pass
+TC096,Membership Cancellation - Effective,Membership is ended correctly after cancellation is processed,"1. Complete a cancellation request
+2. Wait until effective date or trigger processing (per system design)
+3. Reopen profile page","Membership status shows cancelled/expired, paid benefits removed, and user no longer marked as paid",Pass
+TC097,Membership Cancellation - Access Control,Cancelled user cannot access paid-only features,"1. After cancellation is effective
+2. Try to access any paid-only page or feature (e.g., premium resources)",System blocks access or shows message indicating membership is not active,Pass
+TC098,Admin - View Cancellations,Admin can view cancelled memberships list,"1. Login as admin
+2. Open admin dashboard or reports section for cancellations",Admin sees list of cancelled memberships with user,Pass
+TC099,Admin Notifications,Admin receives notification on new member registration,"1. Login as admin
+2. Have a new user complete registration
+3. Check admin dashboard notifications",Admin sees notification about new member registration with member name,Pass
+TC100,Admin Notifications,Notification contains member details,"1. Login as admin
+2. Click on new member notification",Notification shows member name and registration date,Pass
+TC101,Admin Notifications,Multiple notifications display correctly,"1. Login as admin
+2. Have multiple users register
+3. Check notifications panel",All notifications appear in chronological order with most recent first,Pass
+TC102,Admin Notifications,Mark notification as read,"1. Login as admin
+2. View a notification
+3. Click dismiss all button",All notification should delete,Pass
+TC104,Create Admin Accounts,Admin can access create admin page,"1. Login as admin
+2. Navigate to admin management section
+3. Click Create Admin button",Redirects to create admin form,Pass
+TC105,Create Admin Accounts,Create new admin account with valid data,"1. Login as admin
+2. Navigate to create admin page
+3. Fill all required fields (name, email, password)
+4. Submit form","New admin account created successfully, confirmation message displayed",Pass
+TC106,Create Admin Accounts,Validation for duplicate admin email,"1. Login as admin
+2. Try to create admin with existing email
+3. Submit",Error message: Email already exists,Pass
+TC107,Create Admin Accounts,Password requirements validation for admin,"1. Login as admin
+2. Create admin with weak password
+3. Submit",Error message about password requirements appears,Pass
+TC108,Create Admin Accounts,New admin can login successfully,"1. Create a new admin account
+2. Logout
+3. Login with new admin credentials",New admin can login and access admin dashboard,Pass
+TC109,Create Admin Accounts,Non-admin cannot create admin accounts,"1. Login as regular user
+2. Try to access create admin page (via URL)",Access denied or redirect to unauthorized page,Pass
+TC110,Create Admin Accounts,New admin appears in admin list,"1. Create new admin account
+2. Navigate to admin list/admin tab",New admin appears in the admin accounts list,Pass
+TC111,Select/Deselect Members,Select all checkbox functionality,"1. Login as admin
+2. Navigate to members list
+3. Click Select All checkbox",All member checkboxes are checked,Pass
+TC112,Select/Deselect Members,Deselect all checkbox functionality,"1. Login as admin
+2. Select all members
+3. Click Select All checkbox again",All member checkboxes are unchecked,Pass
+TC113,Select/Deselect Members,Individual selection after select all,"1. Login as admin
+2. Click Select All
+3. Uncheck one individual member",Select All checkbox becomes unchecked or indeterminate; other members remain selected,Pass
+TC114,Select/Deselect Members,Individual deselection works correctly,"1. Login as admin
+2. Manually select several members
+3. Deselect one member",Selected member is deselected while others remain selected,Pass
+TC115,Select/Deselect Members,Bulk action with selected members,"1. Login as admin
+2. Select multiple members using checkboxes
+3. Click bulk action button (e.g., Send Email)
+4. Complete action",Bulk action applies to all selected members only,Pass
+TC116,Select/Deselect Members,Selection state after applying filter,"1. Login as admin
+2. Select some members
+3. Apply a filter
+4. Clear filter",Selection is cleared when filter is applied (expected behavior) or persists (if designed that way),Pass
+TC117,Filter by Chapter,Chapter filter displays,"1. Login as admin
+2. Navigate to members list
+3. Check filter options",Can able to write chapter in field,Pass
+TC118,Filter by Chapter,Filter members by specific chapter,"1. Login as admin
+2. Select a chapter from filter dropdown
+3. Apply filter",Only members from selected chapter are displayed in the list,Pass
+TC120,Filter by Chapter,Multiple members in same chapter,"1. Login as admin
+2. Filter by chapter with multiple members
+3. Check results",All members belonging to that chapter are displayed,Pass
+TC121,Filter by Chapter,No results for empty chapter,"1. Login as admin
+2. Filter by chapter with no members",Message displayed indicating no members ,Pass
+TC122,Admin/User Tabs,Admin tab displays only admin accounts,"1. Login as admin
+2. Navigate to dashboard
+3. Click Admin tab",Only users with admin role are displayed in the list,Pass
+TC123,Admin/User Tabs,User tab displays only regular users,"1. Login as admin
+2. Navigate to dashboard
+3. Click User/Members tab",Only users with regular user role are displayed in the list,Pass
+TC124,Admin/User Tabs,Tab switching works correctly,"1. Login as admin
+2. Click Admin tab
+3. Click User tab
+4. Switch back to Admin tab",Tabs switch correctly and display appropriate accounts each time,Pass
+TC125,Admin/User Tabs,User count accurate on each tab,"1. Login as admin
+2. Check Admin tab
+3. Check User tab",Correct count displayed for admins and users; counts match actual number in each list,Pass
+TC126,Admin/User Tabs,Filters work within each tab,"1. Login as admin
+2. Go to User tab
+3. Apply chapter filter
+4. Switch to Admin tab",Filters work independently on each tab; User tab filters don't affect Admin tab,Pass
+TC127,Admin/User Tabs,Export works for each tab separately,"1. Login as admin
+2. Go to Admin tab and export
+3. Go to User tab and export",Admin export contains only admins; User export contains only regular users,Pass

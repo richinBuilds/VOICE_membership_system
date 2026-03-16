@@ -10,7 +10,11 @@ package org.voice.membership.repositories;
 import org.voice.membership.entities.CartItem;
 import org.voice.membership.entities.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,7 +24,10 @@ public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
 
     void deleteByCart(Cart cart);
 
-    void deleteByCartId(Integer cartId);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM CartItem ci WHERE ci.cart.id = :cartId")
+    void deleteByCartId(@Param("cartId") Integer cartId);
 
     List<CartItem> findByCartId(Integer cartId);
 }

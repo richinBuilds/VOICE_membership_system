@@ -24,6 +24,7 @@ public class UserFilterService {
      * @param address         Filter by address or postal code
      * @param city            Filter by city
      * @param province        Filter by province
+     * @param chapter         Filter by chapter
      * @param minAge          Minimum child age
      * @param maxAge          Maximum child age
      * @param hearingLossType Filter by hearing loss type
@@ -31,21 +32,24 @@ public class UserFilterService {
      * @param startDate       Filter by registration start date (yyyy-MM-dd)
      * @param endDate         Filter by registration end date (yyyy-MM-dd)
      * @param paymentStatus   Filter by payment status ("paid" or "unpaid")
+     * @param role            Filter by user role ("ADMIN" or "USER")
      * @return Filtered list of users
      */
-    public List<User> filterUsers(List<User> users, String address, String city, String province,
+    public List<User> filterUsers(List<User> users, String address, String city, String province, String chapter,
             Integer minAge, Integer maxAge,
             String hearingLossType, String equipmentType,
-            String startDate, String endDate, String paymentStatus) {
+            String startDate, String endDate, String paymentStatus, String role) {
         return users.stream()
                 .filter(user -> filterByAddress(user, address))
                 .filter(user -> filterByCity(user, city))
                 .filter(user -> filterByProvince(user, province))
+                .filter(user -> filterByChapter(user, chapter))
                 .filter(user -> filterByChildAge(user, minAge, maxAge))
                 .filter(user -> filterByHearingLossType(user, hearingLossType))
                 .filter(user -> filterByEquipmentType(user, equipmentType))
                 .filter(user -> filterByRegistrationDate(user, startDate, endDate))
                 .filter(user -> filterByPaymentStatus(user, paymentStatus))
+                .filter(user -> filterByRole(user, role))
                 .collect(Collectors.toList());
     }
 
@@ -84,6 +88,17 @@ public class UserFilterService {
         }
         String userProvince = user.getProvince();
         return userProvince != null && userProvince.toLowerCase().contains(province.toLowerCase());
+    }
+
+    /**
+     * Filter by chapter.
+     */
+    private boolean filterByChapter(User user, String chapter) {
+        if (chapter == null || chapter.trim().isEmpty()) {
+            return true;
+        }
+        String userChapter = user.getChapter();
+        return userChapter != null && userChapter.toLowerCase().contains(chapter.toLowerCase());
     }
 
     /**
@@ -210,5 +225,19 @@ public class UserFilterService {
         }
 
         return true;
+    }
+
+    /**
+     * Filter by user role.
+     * 
+     * @param role User role ("ADMIN" or "USER")
+     */
+    private boolean filterByRole(User user, String role) {
+        if (role == null || role.trim().isEmpty()) {
+            return true;
+        }
+        
+        String userRole = user.getRole();
+        return role.equalsIgnoreCase(userRole);
     }
 }

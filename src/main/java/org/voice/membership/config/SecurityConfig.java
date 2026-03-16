@@ -44,6 +44,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/paypal/webhook").permitAll()
 
                                                 .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
+                                                .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
 
                                                 .requestMatchers("/profile/**")
                                                 .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
@@ -67,7 +68,8 @@ public class SecurityConfig {
                                                 .rememberMeCookieName("VOICE_REMEMBER_ME")
                                                 .useSecureCookie(false) // Set to true in production with HTTPS
                                                 .alwaysRemember(false))
-                                .csrf(csrf -> csrf.ignoringRequestMatchers("/logout", "/api/paypal/webhook"))
+                                .csrf(csrf -> csrf.ignoringRequestMatchers("/logout", "/api/paypal/webhook",
+                                                "/api/admin/notifications/**"))
                                 .build();
         }
 

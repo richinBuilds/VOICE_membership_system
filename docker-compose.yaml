@@ -35,6 +35,8 @@ services:
       - APP_BASE_URL=${APP_BASE_URL}
       - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
       - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET}
+      - TZ=${TZ:-America/Toronto}
+      - JAVA_TOOL_OPTIONS=-Duser.timezone=${TZ:-America/Toronto}
 
   #   - SPRING_MAIL_USERNAME=${MAIL_USERNAME}    #use when using real email account#
   #   - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}   #use when using real email account#

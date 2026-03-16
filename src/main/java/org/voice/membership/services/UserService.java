@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +28,16 @@ public class UserService implements UserDetailsService {
     @Autowired
     private AccountLockoutService accountLockoutService;
 
+    @Autowired
+    private MembershipService membershipService;
+
+    @Transactional
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmail(email);
         if (user != null) {
+            // Check and downgrade expired memberships automatically
+            membershipService.downgradeExpiredMembership(user);
+
             // Check if account is locked
             if (accountLockoutService.isAccountLocked(email)) {
                 long remainingMinutes = accountLockoutService.getRemainingLockoutTime(email);
