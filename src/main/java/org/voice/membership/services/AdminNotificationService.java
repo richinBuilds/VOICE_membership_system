@@ -294,9 +294,27 @@ public class AdminNotificationService {
         }
 
         if ("INSTANT".equalsIgnoreCase(notification.getNotificationType())) {
-            return userRepository.findNewMembersBetweenDates(
+            List<User> users = userRepository.findNewMembersBetweenDates(
                     notification.getPeriodStart(),
                     notification.getPeriodEnd());
+
+            // Backward compatibility for old INSTANT notifications that were stored
+            // with an overly narrow period in production/Docker.
+            if (users.isEmpty()) {
+                Calendar fallbackStartCal = Calendar.getInstance();
+                fallbackStartCal.setTime(notification.getCreatedAt());
+                fallbackStartCal.add(Calendar.MINUTE, -5);
+
+                Calendar fallbackEndCal = Calendar.getInstance();
+                fallbackEndCal.setTime(notification.getCreatedAt());
+                fallbackEndCal.add(Calendar.MINUTE, 5);
+
+                users = userRepository.findNewMembersBetweenDates(
+                        fallbackStartCal.getTime(),
+                        fallbackEndCal.getTime());
+            }
+
+            return users;
         }
 
         return userRepository.findNewPaidMembersBetweenDates(
