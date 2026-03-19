@@ -31,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/voice-membership:v2
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/voice-membership:v3

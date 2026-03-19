@@ -98,12 +98,25 @@ public class AdminNotificationService {
         String message = String.format("New %s member: %s joined with %s membership",
                 membershipType, userName, membershipName);
 
+        // Anchor instant notification window around user creation time.
+        // This avoids Docker/DB timestamp precision and latency edge cases.
+        Date anchor = user.getCreation() != null ? user.getCreation() : new Date();
+        Calendar startCal = Calendar.getInstance();
+        startCal.setTime(anchor);
+        startCal.add(Calendar.MINUTE, -1);
+        Date periodStart = startCal.getTime();
+
+        Calendar endCal = Calendar.getInstance();
+        endCal.setTime(anchor);
+        endCal.add(Calendar.MINUTE, 1);
+        Date periodEnd = endCal.getTime();
+
         AdminNotification notification = AdminNotification.builder()
                 .message(message)
                 .notificationType("INSTANT")
                 .newMembersCount(1)
-                .periodStart(new Date())
-                .periodEnd(new Date())
+                .periodStart(periodStart)
+                .periodEnd(periodEnd)
                 .read(false)
                 .dismissed(false)
                 .build();
@@ -269,13 +282,39 @@ public class AdminNotificationService {
     }
 
     /**
-     * Get new paid members for a notification period
+     * Get members for a notification period.
+     * INSTANT notifications include both paid and free users,
+     * while DAILY/WEEKLY include paid users only.
      */
     @Transactional(readOnly = true)
     public List<User> getNewPaidMembersForNotification(Long notificationId) {
         AdminNotification notification = notificationRepository.findById(notificationId).orElse(null);
         if (notification == null) {
             return List.of();
+        }
+
+        if ("INSTANT".equalsIgnoreCase(notification.getNotificationType())) {
+            List<User> users = userRepository.findNewMembersBetweenDates(
+                    notification.getPeriodStart(),
+                    notification.getPeriodEnd());
+
+            // Backward compatibility for old INSTANT notifications that were stored
+            // with an overly narrow period in production/Docker.
+            if (users.isEmpty()) {
+                Calendar fallbackStartCal = Calendar.getInstance();
+                fallbackStartCal.setTime(notification.getCreatedAt());
+                fallbackStartCal.add(Calendar.MINUTE, -5);
+
+                Calendar fallbackEndCal = Calendar.getInstance();
+                fallbackEndCal.setTime(notification.getCreatedAt());
+                fallbackEndCal.add(Calendar.MINUTE, 5);
+
+                users = userRepository.findNewMembersBetweenDates(
+                        fallbackStartCal.getTime(),
+                        fallbackEndCal.getTime());
+            }
+
+            return users;
         }
 
         return userRepository.findNewPaidMembersBetweenDates(

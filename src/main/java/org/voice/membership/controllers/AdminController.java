@@ -32,6 +32,7 @@ import org.voice.membership.services.UserFilterService;
 import org.voice.membership.services.AdminExportService;
 import org.voice.membership.services.AdminMemberService;
 import org.voice.membership.services.AdminNotificationService;
+import org.voice.membership.services.MembershipRenewalSchedulerService;
 import org.voice.membership.entities.AdminNotification;
 import org.voice.membership.services.LandingPageService;
 import jakarta.validation.Valid;
@@ -76,6 +77,9 @@ public class AdminController {
 
     @Autowired
     private LandingPageService landingPageService;
+
+    @Autowired
+    private MembershipRenewalSchedulerService membershipRenewalSchedulerService;
 
     @GetMapping("/dashboard")
     public String adminDashboard(
@@ -739,9 +743,9 @@ public class AdminController {
         User admin = userRepository.findByEmail(adminEmail);
         model.addAttribute("adminName", adminMemberService.formatAdminName(admin));
 
-        model.addAttribute("heroTitle",      landingPageService.getHeroTitle());
-        model.addAttribute("heroTagline",    landingPageService.getHeroTagline());
-        model.addAttribute("benefitsTitle",  landingPageService.getBenefitsTitle());
+        model.addAttribute("heroTitle", landingPageService.getHeroTitle());
+        model.addAttribute("heroTagline", landingPageService.getHeroTagline());
+        model.addAttribute("benefitsTitle", landingPageService.getBenefitsTitle());
         model.addAttribute("reasonsHeading", landingPageService.getReasonsHeading());
         model.addAttribute("reasonsContent", landingPageService.getReasonsContent());
 
@@ -757,9 +761,9 @@ public class AdminController {
             @RequestParam String reasonsContent,
             RedirectAttributes redirectAttributes) {
 
-        landingPageService.updateContent("hero_title",      heroTitle);
-        landingPageService.updateContent("hero_tagline",    heroTagline);
-        landingPageService.updateContent("benefits_title",  benefitsTitle);
+        landingPageService.updateContent("hero_title", heroTitle);
+        landingPageService.updateContent("hero_tagline", heroTagline);
+        landingPageService.updateContent("benefits_title", benefitsTitle);
         landingPageService.updateContent("reasons_heading", reasonsHeading);
         landingPageService.updateContent("reasons_content", reasonsContent);
 
@@ -820,5 +824,85 @@ public class AdminController {
         membershipRepository.save(membership);
         redirectAttributes.addFlashAttribute("success", "'" + membership.getName() + "' plan updated successfully.");
         return "redirect:/admin/memberships";
+    }
+
+    // -----------------------------------------------------------------------
+    // Renewal Email Editor
+    // -----------------------------------------------------------------------
+
+    @GetMapping("/renewal-email")
+    public String renewalEmailEditor(Model model, Principal principal) {
+        String adminEmail = principal.getName();
+        User admin = userRepository.findByEmail(adminEmail);
+        model.addAttribute("adminName", adminMemberService.formatAdminName(admin));
+        model.addAttribute("renewalSubject", landingPageService.getRenewalEmailSubject());
+        model.addAttribute("renewalBody", landingPageService.getRenewalEmailBody());
+        return "admin-renewal-email";
+    }
+
+    @PostMapping("/renewal-email/save")
+    public String saveRenewalEmail(
+            @RequestParam("renewalSubject") String subject,
+            @RequestParam("renewalBody") String body,
+            RedirectAttributes redirectAttributes) {
+        landingPageService.updateContent("renewal_email_subject", subject.trim());
+        landingPageService.updateContent("renewal_email_body", body.trim());
+        redirectAttributes.addFlashAttribute("success", "Renewal reminder email updated successfully.");
+        return "redirect:/admin/renewal-email";
+    }
+
+    // -----------------------------------------------------------------------
+    // Renewal Reminder Trigger / Preview
+    // -----------------------------------------------------------------------
+
+    /**
+     * Manually trigger the membership renewal reminder job.
+     * Returns a detailed breakdown per reminder window so you can see exactly
+     * how many members were found and whether emails were sent successfully.
+     */
+    @PostMapping("/trigger-renewal-reminders")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> triggerRenewalReminders() {
+        try {
+            log.info("Admin manually triggered membership renewal reminder job");
+            Map<String, Object> result = membershipRenewalSchedulerService.sendRenewalReminders();
+            result.put("status", "success");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error triggering renewal reminders: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
+    }
+
+    /**
+     * Preview which paid members have memberships expiring within the next N days
+     * WITHOUT sending any emails. Defaults to 30 days.
+     * Use this to verify your test data before triggering the job.
+     *
+     * Example: GET /admin/renewal-reminders/preview?withinDays=10
+     */
+    @GetMapping("/renewal-reminders/preview")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> previewRenewalReminders(
+            @RequestParam(defaultValue = "30") int withinDays) {
+        try {
+            var members = membershipRenewalSchedulerService.previewExpiringMembers(withinDays);
+            Map<String, Object> result = new HashMap<>();
+            result.put("status", "success");
+            result.put("withinDays", withinDays);
+            result.put("membersFound", members.size());
+            result.put("members", members);
+            result.put("note", "No emails were sent. Use POST /admin/trigger-renewal-reminders to send.");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error previewing renewal reminders: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
     }
 }

@@ -17,7 +17,7 @@ spring:
         format_sql: true
 
   mail:
-    host: smtp.gmail.com
+    host: sandbox.smtp.mailtrap.io
     port: 587
     username:
     password:
@@ -27,9 +27,6 @@ spring:
           auth: true
           starttls:
             enable: true
-            required: true
-          ssl:
-            trust: smtp.gmail.com
 
 server:
   port: 8080
@@ -63,7 +60,7 @@ account:
 
 paypal:
   mode: sandbox
-  client-id:
-  client-secret:
+  client-id: ${PAYPAL_CLIENT_ID:}
+  client-secret: ${PAYPAL_CLIENT_SECRET:}
   webhook-id:
   currency: CAD

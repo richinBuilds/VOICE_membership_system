@@ -65,6 +65,14 @@ public class LandingPageService {
         return getContentByKey("reasons_content");
     }
 
+    public String getRenewalEmailSubject() {
+        return getContentByKey("renewal_email_subject");
+    }
+
+    public String getRenewalEmailBody() {
+        return getContentByKey("renewal_email_body");
+    }
+
     public Map<String, String> getAllContent() {
         Map<String, String> map = new LinkedHashMap<>();
         map.put("hero_title", getHeroTitle());
@@ -111,6 +119,25 @@ public class LandingPageService {
             landingPageContentRepository.save(LandingPageContent.builder()
                     .key("reasons_heading")
                     .value("10 Great Reasons to Be a Member")
+                    .active(true).build());
+        }
+        if (landingPageContentRepository.findByKey("renewal_email_subject").isEmpty()) {
+            landingPageContentRepository.save(LandingPageContent.builder()
+                    .key("renewal_email_subject")
+                    .value("Your VOICE Membership Expires in {daysUntilExpiry} Day(s) \u2014 Action Required")
+                    .active(true).build());
+        }
+        if (landingPageContentRepository.findByKey("renewal_email_body").isEmpty()) {
+            String defaultBody = "Dear {memberName},\n\n"
+                    + "This is a friendly reminder that your {membershipName} with VOICE expires on {expiryDate} \u2014 that's in {daysUntilExpiry} day(s).\n\n"
+                    + "Renewing your membership ensures you continue to enjoy all the benefits and resources that VOICE has to offer.\n\n"
+                    + "Renew here: {renewalUrl}\n\n"
+                    + "If you have already renewed, please disregard this message.\n\n"
+                    + "Thank you for being a valued member of VOICE!\n\n"
+                    + "Warm regards,\nThe VOICE Team";
+            landingPageContentRepository.save(LandingPageContent.builder()
+                    .key("renewal_email_body")
+                    .value(defaultBody)
                     .active(true).build());
         }
         if (landingPageContentRepository.findByKey("reasons_content").isEmpty()) {

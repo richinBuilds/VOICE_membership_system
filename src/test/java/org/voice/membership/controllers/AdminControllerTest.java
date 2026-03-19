@@ -12,10 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
+import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -43,6 +45,9 @@ class AdminControllerTest {
 
         @Autowired
         private UserRepository userRepository;
+
+        @Autowired
+        private MembershipRepository membershipRepository;
 
         @Autowired
         private ObjectMapper objectMapper;
@@ -1060,5 +1065,79 @@ class AdminControllerTest {
                                 .andExpect(jsonPath("$.failureCount").value("2"))
                                 .andExpect(jsonPath("$.message")
                                                 .value(containsString("Failed to send to 2 recipient(s)")));
+        }
+
+        // ==================== Renewal Reminder Endpoint Tests ====================
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void triggerRenewalReminders_WithNoExpiringMembers_ShouldReturnSuccessWithZeroCounts() throws Exception {
+                // No paid members in the test DB, so all window counts should be 0
+                mockMvc.perform(post("/admin/trigger-renewal-reminders")
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.totalMembersFound").value(0))
+                                .andExpect(jsonPath("$.totalEmailsSent").value(0))
+                                .andExpect(jsonPath("$.totalEmailsFailed").value(0))
+                                .andExpect(jsonPath("$.windows").exists());
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void previewRenewalReminders_WithExpiringMember_ShouldReturnMemberDetails() throws Exception {
+                // Arrange: find the paid membership plan and create a paid member expiring in 5 days
+                var paidMembership = membershipRepository.findAll().stream()
+                                .filter(m -> !m.isFree())
+                                .findFirst()
+                                .orElse(null);
+
+                if (paidMembership != null) {
+                        Calendar cal = Calendar.getInstance();
+                        cal.add(Calendar.DAY_OF_MONTH, 5);
+
+                        User expiringMember = User.builder()
+                                        .firstName("Expiring")
+                                        .lastName("Member")
+                                        .email("expiring@example.com")
+                                        .password("Test1234!")
+                                        .role(Role.USER.name())
+                                        .paid(true)
+                                        .membership(paidMembership)
+                                        .membershipExpiryDate(cal.getTime())
+                                        .membershipStartDate(new Date())
+                                        .creation(new Date())
+                                        .build();
+                        userRepository.save(expiringMember);
+
+                        mockMvc.perform(get("/admin/renewal-reminders/preview")
+                                        .param("withinDays", "10"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.status").value("success"))
+                                        .andExpect(jsonPath("$.withinDays").value(10))
+                                        .andExpect(jsonPath("$.membersFound").value(greaterThanOrEqualTo(1)))
+                                        .andExpect(jsonPath("$.members[0].email").value("expiring@example.com"))
+                                        .andExpect(jsonPath("$.members[0].paid").value(true))
+                                        .andExpect(jsonPath("$.note").exists());
+                }
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void previewRenewalReminders_WithNoExpiringMembers_ShouldReturnEmptyList() throws Exception {
+                mockMvc.perform(get("/admin/renewal-reminders/preview")
+                                .param("withinDays", "5"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.membersFound").value(0))
+                                .andExpect(jsonPath("$.members").isArray());
+        }
+
+        @Test
+        @WithMockUser(username = "user@example.com", roles = "USER")
+        void triggerRenewalReminders_WithNonAdminUser_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(post("/admin/trigger-renewal-reminders")
+                                .with(csrf()))
+                                .andExpect(status().isForbidden());
         }
 }
