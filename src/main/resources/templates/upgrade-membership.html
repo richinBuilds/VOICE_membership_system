@@ -156,13 +156,11 @@
                     </p>
 
                     <ul class="membership-features"
+                        th:if="${membership.features != null}"
                         style="font-size: 0.875rem; margin-bottom: 1rem; list-style-type: disc; padding-left: 1.5rem;">
-                        <li style="padding: 0.375rem 0;">All free membership benefits</li>
-                        <li style="padding: 0.375rem 0;">Priority event registration</li>
-                        <li style="padding: 0.375rem 0;">Exclusive workshops and webinars</li>
-                        <li style="padding: 0.375rem 0;">One-on-one support sessions</li>
-                        <li style="padding: 0.375rem 0;">Advanced resource library</li>
-                        <li style="padding: 0.375rem 0;">Family networking opportunities</li>
+                        <li th:each="feature : ${#strings.arraySplit(membership.features, lineSeparator)}"
+                            th:text="${feature.trim()}"
+                            style="padding: 0.375rem 0;">Feature item</li>
                     </ul>
 
                     <!-- Action Button -->

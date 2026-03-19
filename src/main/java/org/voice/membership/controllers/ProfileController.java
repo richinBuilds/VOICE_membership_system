@@ -323,6 +323,7 @@ public class ProfileController {
             model.addAttribute("user", user);
             model.addAttribute("currentMembership", membership);
             model.addAttribute("paidMemberships", paidMemberships);
+            model.addAttribute("lineSeparator", System.lineSeparator());
             String fullName = user.getFirstName() +
                     (user.getMiddleName() != null && !user.getMiddleName().isEmpty() ? " " + user.getMiddleName() : "")
                     +

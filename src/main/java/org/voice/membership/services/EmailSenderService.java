@@ -9,6 +9,9 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Service
 /**
@@ -22,6 +25,10 @@ public class EmailSenderService {
 
     @Autowired
     private SpringTemplateEngine templateEngine;
+
+    @Autowired
+    @Lazy
+    private LandingPageService landingPageService;
 
     public void sendPasswordResetEmail(String to, String resetLink) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -86,25 +93,51 @@ public class EmailSenderService {
      *
      * @param to              Recipient email address
      * @param userName        Member's first name
-     * @param membershipName  Name of the membership plan (e.g. "Premium Membership")
-     * @param expiryDate      Human-readable expiry date string (e.g. "April 10, 2026")
+     * @param membershipName  Name of the membership plan (e.g. "Premium
+     *                        Membership")
+     * @param expiryDate      Human-readable expiry date string (e.g. "April 10,
+     *                        2026")
      * @param daysUntilExpiry Number of days remaining until expiry
      * @param renewalUrl      URL to the renewal / upgrade page
      */
     public void sendRenewalReminderEmail(String to, String userName, String membershipName,
-                                         String expiryDate, long daysUntilExpiry, String renewalUrl) {
+            String expiryDate, long daysUntilExpiry, String renewalUrl) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setTo(to);
-            helper.setSubject("Membership Renewal Reminder - VOICE");
 
+            // Use admin-editable subject from DB; fall back to default if blank
+            String rawSubject = landingPageService.getRenewalEmailSubject();
+            String subject = (rawSubject != null && !rawSubject.isBlank())
+                    ? rawSubject
+                    : "Membership Renewal Reminder - VOICE";
+            subject = replacePlaceholders(subject, userName, membershipName, expiryDate, daysUntilExpiry, renewalUrl);
+            helper.setSubject(subject);
+
+            // Build template context — always use the styled HTML template
             Context context = new Context();
             context.setVariable("userName", userName);
             context.setVariable("membershipName", membershipName);
             context.setVariable("expiryDate", expiryDate);
             context.setVariable("daysUntilExpiry", daysUntilExpiry);
             context.setVariable("renewalUrl", renewalUrl);
+
+            // If admin has set a custom body, convert it to HTML paragraphs and inject into
+            // template
+            String rawBody = landingPageService.getRenewalEmailBody();
+            if (rawBody != null && !rawBody.isBlank()) {
+                String bodyText = replacePlaceholders(rawBody, userName, membershipName, expiryDate, daysUntilExpiry,
+                        renewalUrl);
+                String customBodyHtml = Arrays.stream(bodyText.split("\n{2,}"))
+                        .map(para -> "<p style='color:#4B5563;font-size:15px;line-height:1.7;margin:0 0 14px 0;'>" +
+                                para.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n",
+                                        "<br>")
+                                +
+                                "</p>")
+                        .collect(Collectors.joining());
+                context.setVariable("customBodyHtml", customBodyHtml);
+            }
 
             String htmlContent = templateEngine.process("membership-renewal-reminder", context);
             helper.setText(htmlContent, true);
@@ -113,5 +146,15 @@ public class EmailSenderService {
         } catch (MessagingException | MailException e) {
             throw new RuntimeException("Failed to send renewal reminder email to " + to, e);
         }
+    }
+
+    private String replacePlaceholders(String template, String memberName, String membershipName,
+            String expiryDate, long daysUntilExpiry, String renewalUrl) {
+        return template
+                .replace("{memberName}", memberName)
+                .replace("{membershipName}", membershipName)
+                .replace("{expiryDate}", expiryDate)
+                .replace("{daysUntilExpiry}", String.valueOf(daysUntilExpiry))
+                .replace("{renewalUrl}", renewalUrl);
     }
 }

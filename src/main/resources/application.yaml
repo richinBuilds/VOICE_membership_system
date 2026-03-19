@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: ${DB_PASSWORD}
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -19,15 +19,14 @@ spring:
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 587
-    username: ${MAILTRAP_USERNAME}
-    password: ${MAILTRAP_PASSWORD}
+    username:
+    password:
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
- 
 
 server:
   port: 8080

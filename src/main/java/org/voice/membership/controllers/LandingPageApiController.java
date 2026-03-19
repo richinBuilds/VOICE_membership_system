@@ -25,7 +25,6 @@ public class LandingPageApiController {
         Map<String, Object> data = new HashMap<>();
         data.put("tagline", landingPageService.getTagline());
         data.put("memberships", landingPageService.getActiveMemberships());
-        data.put("benefits", landingPageService.getActiveBenefits());
 
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication();
@@ -49,7 +48,6 @@ public class LandingPageApiController {
         try {
             landingPageService.initializeDefaultContent();
             landingPageService.initializeDefaultMemberships();
-            landingPageService.initializeDefaultBenefits();
 
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");

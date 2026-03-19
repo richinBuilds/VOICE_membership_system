@@ -37,16 +37,17 @@ public class MembershipRenewalSchedulerService {
     private String baseUrl;
 
     /** Reminder intervals (in days before expiry) at which emails are sent. */
-    private static final int[] REMINDER_DAYS = {30, 14, 7};
+    private static final int[] REMINDER_DAYS = { 30, 14, 7 };
 
     /**
      * Scheduled task that fires every day at 8:00 AM.
      *
      * For each configured reminder interval the method:
      * <ol>
-     *   <li>Calculates a 24-hour window starting at midnight of (today + N days).</li>
-     *   <li>Queries for paid members whose expiry date falls within that window.</li>
-     *   <li>Sends a personalised renewal reminder email to each such member.</li>
+     * <li>Calculates a 24-hour window starting at midnight of (today + N
+     * days).</li>
+     * <li>Queries for paid members whose expiry date falls within that window.</li>
+     * <li>Sends a personalised renewal reminder email to each such member.</li>
      * </ol>
      *
      * Failures for individual members are caught and logged so one bad address
@@ -57,17 +58,17 @@ public class MembershipRenewalSchedulerService {
      * Also called directly by the admin trigger endpoint.
      * Returns a summary map so callers can report results to the UI.
      */
-    @Scheduled(cron = "0 0 8 * * ?") // Every day at 08:00 AM
+    @Scheduled(cron = "0 44 16 * * ?") // Every day at 08:00 AM
     @Transactional(readOnly = true)
     public Map<String, Object> sendRenewalReminders() {
         log.info("Starting membership renewal reminder job");
 
-        SimpleDateFormat dateFormatter  = new SimpleDateFormat("MMMM dd, yyyy");
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("MMMM dd, yyyy");
         SimpleDateFormat windowFormatter = new SimpleDateFormat("yyyy-MM-dd");
         String renewalUrl = baseUrl + "/upgrade-membership";
 
-        int totalFound  = 0;
-        int totalSent   = 0;
+        int totalFound = 0;
+        int totalSent = 0;
         int totalFailed = 0;
         Map<String, Object> windowDetails = new LinkedHashMap<>();
 
@@ -93,9 +94,9 @@ public class MembershipRenewalSchedulerService {
                     windowFormatter.format(windowStart),
                     windowFormatter.format(windowEnd));
 
-            int windowSent   = 0;
+            int windowSent = 0;
             int windowFailed = 0;
-            List<String> sentTo   = new ArrayList<>();
+            List<String> sentTo = new ArrayList<>();
             List<String> failedTo = new ArrayList<>();
 
             for (User user : expiringMembers) {
@@ -110,8 +111,7 @@ public class MembershipRenewalSchedulerService {
                             membershipName,
                             dateFormatter.format(user.getMembershipExpiryDate()),
                             days,
-                            renewalUrl
-                    );
+                            renewalUrl);
 
                     log.info("Sent {}-day renewal reminder to {}", days, user.getEmail());
                     sentTo.add(user.getEmail());
@@ -125,15 +125,15 @@ public class MembershipRenewalSchedulerService {
                 }
             }
 
-            totalFound  += expiringMembers.size();
-            totalSent   += windowSent;
+            totalFound += expiringMembers.size();
+            totalSent += windowSent;
             totalFailed += windowFailed;
 
             Map<String, Object> detail = new LinkedHashMap<>();
             detail.put("membersFound", expiringMembers.size());
-            detail.put("emailsSent",   windowSent);
+            detail.put("emailsSent", windowSent);
             detail.put("emailsFailed", windowFailed);
-            detail.put("sentTo",   sentTo);
+            detail.put("sentTo", sentTo);
             detail.put("failedTo", failedTo);
             windowDetails.put(days + "-day window", detail);
         }
@@ -143,7 +143,7 @@ public class MembershipRenewalSchedulerService {
 
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("totalMembersFound", totalFound);
-        summary.put("totalEmailsSent",   totalSent);
+        summary.put("totalEmailsSent", totalSent);
         summary.put("totalEmailsFailed", totalFailed);
         summary.put("windows", windowDetails);
         return summary;
@@ -181,17 +181,17 @@ public class MembershipRenewalSchedulerService {
         Date now = new Date();
 
         for (User u : members) {
-            long diffMs   = u.getMembershipExpiryDate().getTime() - now.getTime();
+            long diffMs = u.getMembershipExpiryDate().getTime() - now.getTime();
             long daysLeft = diffMs / (1000L * 60 * 60 * 24);
 
             Map<String, Object> entry = new LinkedHashMap<>();
-            entry.put("id",              u.getId());
-            entry.put("name",            u.getFirstName() + " " + u.getLastName());
-            entry.put("email",           u.getEmail());
-            entry.put("membership",      u.getMembership() != null ? u.getMembership().getName() : "N/A");
-            entry.put("expiryDate",      fmt.format(u.getMembershipExpiryDate()));
+            entry.put("id", u.getId());
+            entry.put("name", u.getFirstName() + " " + u.getLastName());
+            entry.put("email", u.getEmail());
+            entry.put("membership", u.getMembership() != null ? u.getMembership().getName() : "N/A");
+            entry.put("expiryDate", fmt.format(u.getMembershipExpiryDate()));
             entry.put("daysUntilExpiry", daysLeft);
-            entry.put("paid",            u.isPaid());
+            entry.put("paid", u.isPaid());
             result.add(entry);
         }
         return result;
