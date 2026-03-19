@@ -30,9 +30,6 @@ public class ApplicationStartup implements CommandLineRunner {
             landingPageService.initializeDefaultContent();
             log.info("Landing page content initialized successfully");
 
-            landingPageService.initializeDefaultBenefits();
-            log.info("Benefits initialized successfully");
-
             log.info("Application startup initialization complete!");
         } catch (Exception e) {
             log.error("Error during application startup initialization: {}", e.getMessage(), e);

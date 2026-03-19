@@ -6,7 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import java.util.Arrays;
+import org.voice.membership.services.LandingPageService;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.security.Principal;
 
 @Controller
@@ -17,11 +18,18 @@ import java.security.Principal;
  */
 public class HomeController {
 
+    @Autowired
+    private LandingPageService landingPageService;
+
     @GetMapping
     public String index(Model model, Principal principal) {
-        model.addAttribute("tagline", "Empowering families of children who are Deaf and Hard of Hearing");
-        model.addAttribute("benefits", Arrays.asList());
-        model.addAttribute("memberships", Arrays.asList());
+        model.addAttribute("heroTitle", landingPageService.getHeroTitle());
+        model.addAttribute("heroTagline", landingPageService.getHeroTagline());
+        model.addAttribute("benefitsTitle", landingPageService.getBenefitsTitle());
+        model.addAttribute("reasonsHeading", landingPageService.getReasonsHeading());
+        model.addAttribute("reasonsContent", landingPageService.getReasonsContent());
+        model.addAttribute("memberships", landingPageService.getActiveMemberships());
+        model.addAttribute("lineSeparator", System.lineSeparator());
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAuthenticated = auth != null && auth.isAuthenticated() &&

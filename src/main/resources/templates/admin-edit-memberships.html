@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VOICE Admin - Edit Membership Plans">
+
+    <title>Edit Membership Plans - VOICE Membership System</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+
+    <style>
+        .plan-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s;
+        }
+        .plan-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+        }
+        .plan-card .card-header {
+            background: var(--teal-primary, #008080);
+            color: #fff;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1rem 1.25rem;
+        }
+        .plan-card .card-header.free-header {
+            background: var(--teal-dark, #006666);
+        }
+        .badge-free {
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .badge-paid {
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .features-hint {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #444;
+        }
+        .price-group .input-group-text {
+            background: #f1f5f5;
+            border-color: #ced4da;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body style="background: var(--bg-bone);">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">
+            <img th:src="@{/images/logo.png}" alt="VOICE Logo" height="50" onerror="this.style.display='none'">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"
+                aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="nav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item me-3">
+                    <span class="admin-badge">
+                        <i class="fas fa-shield-alt me-1"></i> ADMIN
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/dashboard}">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Page header -->
+<div class="admin-header">
+    <div class="container">
+        <h1><i class="fas fa-tags me-2"></i> Edit Membership Plans</h1>
+        <p class="mb-0" style="color: var(--bg-white);">Update plan names, pricing, descriptions, and features.</p>
+    </div>
+</div>
+
+<!-- Main content -->
+<div class="container mb-5">
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show mt-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}">Success message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Membership plan cards -->
+    <div class="row mt-4 g-4">
+
+        <div class="col-12" th:if="${#lists.isEmpty(memberships)}">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No active membership plans found.
+            </div>
+        </div>
+
+        <div class="col-lg-6" th:each="membership : ${memberships}">
+            <div class="card plan-card h-100">
+
+                <!-- Card header -->
+                <div class="card-header d-flex justify-content-between align-items-center"
+                     th:classappend="${membership.isFree} ? 'free-header' : ''">
+                    <div>
+                        <h5 class="mb-0 fw-bold">
+                            <i class="fas fa-id-card me-2"></i>
+                            <span th:text="${membership.name}">Plan Name</span>
+                        </h5>
+                    </div>
+                    <span class="badge-free" th:if="${membership.isFree}">FREE</span>
+                    <span class="badge-paid" th:unless="${membership.isFree}">PAID</span>
+                </div>
+
+                <!-- Card body: edit form -->
+                <div class="card-body p-4">
+                    <form method="post"
+                          th:action="@{/admin/memberships/{id}/save(id=${membership.id})}">
+                        <input type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}"/>
+
+                        <!-- Plan Name -->
+                        <div class="mb-3">
+                            <label class="form-label">Plan Name</label>
+                            <input type="text"
+                                   name="name"
+                                   class="form-control"
+                                   th:value="${membership.name}"
+                                   maxlength="100"
+                                   required/>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description"
+                                      class="form-control"
+                                      rows="3"
+                                      maxlength="500"
+                                      th:text="${membership.description}"></textarea>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Price
+                                <span class="text-muted fw-normal small" th:if="${membership.isFree}">(not applicable for free plans)</span>
+                            </label>
+                            <div class="input-group price-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number"
+                                       name="price"
+                                       class="form-control"
+                                       step="0.01"
+                                       min="0"
+                                       th:value="${membership.price}"
+                                       th:disabled="${membership.isFree}"
+                                       placeholder="0.00"/>
+                                <span class="input-group-text">/year</span>
+                            </div>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="mb-4">
+                            <label class="form-label">Features</label>
+                            <textarea name="features"
+                                      class="form-control font-monospace"
+                                      rows="7"
+                                      th:text="${membership.features}"></textarea>
+                            <div class="features-hint mt-1">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Enter one feature per line. Each line appears as a bullet point on the membership cards.
+                            </div>
+                        </div>
+
+                        <!-- Save button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary-custom">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        <!-- end th:each -->
+
+    </div>
+    <!-- end .row -->
+
+</div>
+<!-- end .container -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

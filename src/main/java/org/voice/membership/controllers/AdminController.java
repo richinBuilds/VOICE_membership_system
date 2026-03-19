@@ -21,8 +21,10 @@ import org.voice.membership.dtos.AdminUpdateUserRequest;
 import org.voice.membership.dtos.AdminAddMemberRequest;
 import org.voice.membership.dtos.AdminAddAdminRequest;
 import org.voice.membership.dtos.BulkEmailRequest;
+import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
+import java.math.BigDecimal;
 import org.voice.membership.repositories.UserRepository;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.services.EmailSenderService;
@@ -31,6 +33,7 @@ import org.voice.membership.services.AdminExportService;
 import org.voice.membership.services.AdminMemberService;
 import org.voice.membership.services.AdminNotificationService;
 import org.voice.membership.entities.AdminNotification;
+import org.voice.membership.services.LandingPageService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,6 +73,9 @@ public class AdminController {
 
     @Autowired
     private AdminNotificationService adminNotificationService;
+
+    @Autowired
+    private LandingPageService landingPageService;
 
     @GetMapping("/dashboard")
     public String adminDashboard(
@@ -723,5 +729,96 @@ public class AdminController {
         model.addAttribute("newUsers", newUsers);
 
         return "admin-notifications";
+    }
+
+    // ===== Landing Page Editor =====
+
+    @GetMapping("/landing-page")
+    public String landingPageEditor(Model model, Principal principal) {
+        String adminEmail = principal.getName();
+        User admin = userRepository.findByEmail(adminEmail);
+        model.addAttribute("adminName", adminMemberService.formatAdminName(admin));
+
+        model.addAttribute("heroTitle",      landingPageService.getHeroTitle());
+        model.addAttribute("heroTagline",    landingPageService.getHeroTagline());
+        model.addAttribute("benefitsTitle",  landingPageService.getBenefitsTitle());
+        model.addAttribute("reasonsHeading", landingPageService.getReasonsHeading());
+        model.addAttribute("reasonsContent", landingPageService.getReasonsContent());
+
+        return "admin-landing-page";
+    }
+
+    @PostMapping("/landing-page/save")
+    public String saveLandingPage(
+            @RequestParam String heroTitle,
+            @RequestParam String heroTagline,
+            @RequestParam String benefitsTitle,
+            @RequestParam String reasonsHeading,
+            @RequestParam String reasonsContent,
+            RedirectAttributes redirectAttributes) {
+
+        landingPageService.updateContent("hero_title",      heroTitle);
+        landingPageService.updateContent("hero_tagline",    heroTagline);
+        landingPageService.updateContent("benefits_title",  benefitsTitle);
+        landingPageService.updateContent("reasons_heading", reasonsHeading);
+        landingPageService.updateContent("reasons_content", reasonsContent);
+
+        redirectAttributes.addFlashAttribute("success", "Landing page content updated successfully.");
+        return "redirect:/admin/landing-page";
+    }
+
+    // -----------------------------------------------------------------------
+    // Membership Plan Editor
+    // -----------------------------------------------------------------------
+
+    @GetMapping("/memberships")
+    public String editMembershipsPage(Model model, Principal principal) {
+        String adminEmail = principal.getName();
+        User admin = userRepository.findByEmail(adminEmail);
+        model.addAttribute("adminName", adminMemberService.formatAdminName(admin));
+
+        List<Membership> memberships = membershipRepository.findByActiveTrueOrderByDisplayOrderAsc();
+        model.addAttribute("memberships", memberships);
+        model.addAttribute("lineSeparator", System.lineSeparator());
+        return "admin-edit-memberships";
+    }
+
+    @PostMapping("/memberships/{id}/save")
+    public String saveMembership(
+            @PathVariable("id") int id,
+            @RequestParam("name") String name,
+            @RequestParam("description") String description,
+            @RequestParam(value = "price", required = false) String price,
+            @RequestParam("features") String features,
+            RedirectAttributes redirectAttributes) {
+
+        Membership membership = membershipRepository.findById(id).orElse(null);
+        if (membership == null) {
+            redirectAttributes.addFlashAttribute("error", "Membership plan not found.");
+            return "redirect:/admin/memberships";
+        }
+
+        membership.setName(name.trim());
+        membership.setDescription(description.trim());
+
+        if (!membership.isFree() && price != null && !price.trim().isEmpty()) {
+            try {
+                membership.setPrice(new BigDecimal(price.trim()));
+            } catch (NumberFormatException e) {
+                redirectAttributes.addFlashAttribute("error", "Invalid price format. Please enter a valid number.");
+                return "redirect:/admin/memberships";
+            }
+        }
+
+        if (features != null) {
+            // Normalise browser line endings to the system separator
+            String normalised = features.replace("\r\n", "\n").replace("\r", "\n");
+            normalised = normalised.replace("\n", System.lineSeparator());
+            membership.setFeatures(normalised);
+        }
+
+        membershipRepository.save(membership);
+        redirectAttributes.addFlashAttribute("success", "'" + membership.getName() + "' plan updated successfully.");
+        return "redirect:/admin/memberships";
     }
 }
