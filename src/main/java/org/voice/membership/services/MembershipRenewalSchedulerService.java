@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Scheduled service that sends membership renewal reminder emails.
@@ -58,13 +59,16 @@ public class MembershipRenewalSchedulerService {
      * Also called directly by the admin trigger endpoint.
      * Returns a summary map so callers can report results to the UI.
      */
-    @Scheduled(cron = "0 44 16 * * ?") // Every day at 08:00 AM
+    @Scheduled(cron = "0 0 8 * * ?") // Every day at 08:00 AM
     @Transactional(readOnly = true)
     public Map<String, Object> sendRenewalReminders() {
         log.info("Starting membership renewal reminder job");
 
+        TimeZone utc = TimeZone.getTimeZone("UTC");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("MMMM dd, yyyy");
+        dateFormatter.setTimeZone(utc);
         SimpleDateFormat windowFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        windowFormatter.setTimeZone(utc);
         String renewalUrl = baseUrl + "/upgrade-membership";
 
         int totalFound = 0;
@@ -73,8 +77,9 @@ public class MembershipRenewalSchedulerService {
         Map<String, Object> windowDetails = new LinkedHashMap<>();
 
         for (int days : REMINDER_DAYS) {
-            // Build the 24-hour window for "today + N days"
-            Calendar cal = Calendar.getInstance();
+            // Build the 24-hour window for "today + N days" — always in UTC
+            // to match the UTC dates stored in the database.
+            Calendar cal = Calendar.getInstance(utc);
             cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
@@ -159,7 +164,8 @@ public class MembershipRenewalSchedulerService {
      */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> previewExpiringMembers(int withinDays) {
-        Calendar cal = Calendar.getInstance();
+        TimeZone utc = TimeZone.getTimeZone("UTC");
+        Calendar cal = Calendar.getInstance(utc);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
@@ -177,6 +183,7 @@ public class MembershipRenewalSchedulerService {
         log.info("Preview: {} paid member(s) expiring within {} day(s)", members.size(), withinDays);
 
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
+        fmt.setTimeZone(utc);
         List<Map<String, Object>> result = new ArrayList<>();
         Date now = new Date();
 

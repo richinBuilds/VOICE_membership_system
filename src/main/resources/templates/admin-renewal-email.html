@@ -14,6 +14,81 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
 
     <style>
+        /* ===== Contenteditable body editor ===== */
+        #bodyEditor {
+            min-height: 320px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            background: #fff;
+            outline: none;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        #bodyEditor:focus {
+            border-color: #008080;
+            box-shadow: 0 0 0 0.2rem rgba(0,128,128,0.15);
+        }
+        /* ===== Subject contenteditable editor ===== */
+        #subjectEditor {
+            min-height: 42px;
+            max-height: 80px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            background: #fff;
+            outline: none;
+            white-space: nowrap;
+            overflow-x: auto;
+            word-break: keep-all;
+        }
+        #subjectEditor:focus {
+            border-color: #008080;
+            box-shadow: 0 0 0 0.2rem rgba(0,128,128,0.15);
+        }
+        /* ===== Placeholder chip ===== */
+        .ph-chip {
+            display: inline-block;
+            background: #e0f2f1;
+            color: #00695c;
+            border: 1px solid #80cbc4;
+            border-radius: 12px;
+            padding: 1px 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: default;
+            user-select: all;
+            white-space: nowrap;
+        }
+        /* ===== Insert-placeholder toolbar ===== */
+        .chip-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 0.5rem;
+        }
+        .chip-toolbar button {
+            background: #e0f2f1;
+            color: #00695c;
+            border: 1px solid #80cbc4;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .chip-toolbar button:hover { background: #b2dfdb; }
+        .toolbar-label {
+            font-size: 0.78rem;
+            color: #6c757d;
+            align-self: center;
+            margin-right: 4px;
+        }
         .editor-card {
             background: #fff;
             border-radius: 12px;
@@ -41,26 +116,10 @@
             margin-left: 0.5rem;
             vertical-align: middle;
         }
-        textarea.form-control {
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            line-height: 1.6;
-        }
         .char-hint {
             font-size: 0.78rem;
             color: #6c757d;
             margin-top: 0.3rem;
-        }
-        .placeholder-table td {
-            font-size: 0.85rem;
-            vertical-align: middle;
-        }
-        .placeholder-table code {
-            background: #e0f2f1;
-            color: #00695c;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.82rem;
         }
         .btn-save {
             background: #008080;
@@ -147,107 +206,75 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <!-- ===== PLACEHOLDER REFERENCE ===== -->
-    <div class="editor-card mb-4">
-        <h5>
-            <i class="fas fa-info-circle me-2"></i>Available Placeholders
-            <span class="section-badge">Use in Subject &amp; Body</span>
-        </h5>
-        <p class="text-muted small mb-3">
-            Insert these tokens anywhere in the subject line or body. They are automatically replaced
-            with each member's data when the email is sent.
-        </p>
-        <table class="table table-sm placeholder-table mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Placeholder</th>
-                    <th>Replaced with</th>
-                    <th>Example</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>{memberName}</code></td>
-                    <td>Member's first name</td>
-                    <td class="text-muted">Jane</td>
-                </tr>
-                <tr>
-                    <td><code>{membershipName}</code></td>
-                    <td>Name of the membership plan</td>
-                    <td class="text-muted">Premium</td>
-                </tr>
-                <tr>
-                    <td><code>{expiryDate}</code></td>
-                    <td>Expiry date (formatted)</td>
-                    <td class="text-muted">April 10, 2026</td>
-                </tr>
-                <tr>
-                    <td><code>{daysUntilExpiry}</code></td>
-                    <td>Days remaining until expiry</td>
-                    <td class="text-muted">7</td>
-                </tr>
-                <tr>
-                    <td><code>{renewalUrl}</code></td>
-                    <td>Link to the renewal page</td>
-                    <td class="text-muted">https://voice.org/upgrade-membership</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Info tip -->
+    <div class="alert alert-info d-flex align-items-start gap-2 mb-4">
+        <i class="fas fa-info-circle mt-1"></i>
+        <div>
+            You can edit <strong>all</strong> the text freely.
+            The <span style="background:#e0f2f1;color:#00695c;border:1px solid #80cbc4;border-radius:12px;padding:1px 8px;font-size:0.85em;font-weight:600;">teal chips</span>
+            like <code>{memberName}</code> are <strong>protected</strong> — they will be replaced with real member data when the email is sent.
+            Click a toolbar button to insert a placeholder at the cursor, or delete a chip by selecting it and pressing <kbd>Delete</kbd>.
+        </div>
     </div>
 
     <form th:action="@{/admin/renewal-email/save}" method="post" data-testid="renewal-email-form">
-        <!-- CSRF -->
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
         <!-- ===== SUBJECT ===== -->
         <div class="editor-card">
-            <h5>
-                <i class="fas fa-tag me-2"></i>Email Subject Line
-            </h5>
-            <div class="mb-2">
-                <label for="renewalSubject" class="form-label fw-semibold">
-                    <i class="fas fa-heading me-1"></i> Subject
-                </label>
-                <input type="text"
-                       id="renewalSubject"
-                       name="renewalSubject"
-                       class="form-control"
-                       th:value="${renewalSubject}"
-                       maxlength="255"
-                       required
-                       data-testid="input-renewal-subject"
-                       placeholder="Your VOICE Membership Expires in {daysUntilExpiry} Day(s) — Action Required">
-                <div class="char-hint">
-                    The subject line of the email. Placeholders (e.g. <code>{daysUntilExpiry}</code>) are supported.
-                </div>
+            <h5><i class="fas fa-tag me-2"></i>Email Subject Line</h5>
+
+            <div class="chip-toolbar mb-2">
+                <span class="toolbar-label">Insert:</span>
+                <button type="button" onclick="insertIntoSubject('{daysUntilExpiry}')">{daysUntilExpiry}</button>
+                <button type="button" onclick="insertIntoSubject('{memberName}')">{memberName}</button>
+                <button type="button" onclick="insertIntoSubject('{membershipName}')">{membershipName}</button>
+                <button type="button" onclick="insertIntoSubject('{expiryDate}')">{expiryDate}</button>
             </div>
+
+            <!-- Hidden field submitted -->
+            <input type="hidden" id="renewalSubject" name="renewalSubject"
+                   th:value="${renewalSubject}" data-testid="input-renewal-subject">
+
+            <!-- Contenteditable subject editor (chips rendered here) -->
+            <div id="subjectEditor"
+                 contenteditable="true"
+                 spellcheck="false"
+                 aria-label="Email subject editor"></div>
+            <div class="char-hint">Type freely. Use the buttons above to insert a placeholder at the cursor.</div>
         </div>
 
         <!-- ===== BODY ===== -->
         <div class="editor-card">
-            <h5>
-                <i class="fas fa-align-left me-2"></i>Email Body
-            </h5>
-            <div class="mb-2">
-                <label for="renewalBody" class="form-label fw-semibold">
-                    <i class="fas fa-envelope-open-text me-1"></i> Message
-                </label>
-                <textarea id="renewalBody"
-                          name="renewalBody"
-                          class="form-control"
-                          rows="16"
-                          required
-                          data-testid="input-renewal-body"
-                          th:text="${renewalBody}"
-                          placeholder="Dear {memberName}, ..."></textarea>
-                <div class="char-hint">
-                    Plain text. Use blank lines to create paragraphs. Placeholders are replaced per member when sent.
-                    Leave this field empty to use the default styled HTML email template instead.
-                </div>
+            <h5><i class="fas fa-align-left me-2"></i>Email Body</h5>
+
+            <!-- Hidden field that gets submitted -->
+            <input type="hidden" id="renewalBody" name="renewalBody"
+                   th:value="${renewalBody}" data-testid="input-renewal-body">
+
+            <!-- Insert-placeholder toolbar -->
+            <div class="chip-toolbar mb-2">
+                <span class="toolbar-label">Insert placeholder:</span>
+                <button type="button" onclick="insertChip('{memberName}')">{memberName}</button>
+                <button type="button" onclick="insertChip('{membershipName}')">{membershipName}</button>
+                <button type="button" onclick="insertChip('{expiryDate}')">{expiryDate}</button>
+                <button type="button" onclick="insertChip('{daysUntilExpiry}')">{daysUntilExpiry}</button>
+                <button type="button" onclick="insertChip('{renewalUrl}')">{renewalUrl}</button>
+            </div>
+
+            <!-- Contenteditable editor -->
+            <div id="bodyEditor"
+                 contenteditable="true"
+                 spellcheck="true"
+                 aria-label="Email body editor"></div>
+
+            <div class="char-hint mt-2">
+                Edit all text freely. Press <kbd>Enter</kbd> for a new line.
+                To remove a placeholder chip, select it and press <kbd>Delete</kbd> or <kbd>Backspace</kbd>.
             </div>
         </div>
 
-        <!-- ===== SAVE BUTTON ===== -->
+        <!-- ===== SAVE ===== -->
         <div class="d-flex gap-3 align-items-center">
             <button type="submit" class="btn btn-save" data-testid="btn-save-renewal-email">
                 <i class="fas fa-save me-2"></i>Save Changes
@@ -256,7 +283,6 @@
                 <i class="fas fa-times me-1"></i>Cancel
             </a>
         </div>
-
     </form>
 </div>
 
@@ -268,5 +294,167 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Subject chip editor ──────────────────────────────────────────────────────
+const subjectEditor = document.getElementById('subjectEditor');
+let savedSubjectRange = null;
+['mouseup', 'keyup', 'focus', 'click'].forEach(ev =>
+    subjectEditor.addEventListener(ev, saveSubjectRange)
+);
+function saveSubjectRange() {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+        const r = sel.getRangeAt(0);
+        if (subjectEditor.contains(r.commonAncestorContainer)) savedSubjectRange = r.cloneRange();
+    }
+}
+function insertIntoSubject(token) {
+    subjectEditor.focus();
+    let range = savedSubjectRange;
+    if (!range) {
+        range = document.createRange();
+        range.selectNodeContents(subjectEditor);
+        range.collapse(false);
+    }
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    range.deleteContents();
+    const chip = makeChip(token);
+    range.insertNode(chip);
+    const after = document.createRange();
+    after.setStartAfter(chip);
+    after.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(after);
+    savedSubjectRange = after.cloneRange();
+}
+function serializeSubject() {
+    let out = '';
+    subjectEditor.childNodes.forEach(n => out += serializeNode(n));
+    return out.replace(/^\n+/, '');
+}
+function deserializeToSubject(text) {
+    subjectEditor.innerHTML = '';
+    if (!text) return;
+    const TOKEN_RE = /(\{[a-zA-Z]+\})/g;
+    text.split(TOKEN_RE).forEach(part => {
+        if (!part) return;
+        TOKEN_RE.lastIndex = 0;
+        if (TOKEN_RE.test(part)) {
+            subjectEditor.appendChild(makeChip(part));
+        } else {
+            subjectEditor.appendChild(document.createTextNode(part));
+        }
+        TOKEN_RE.lastIndex = 0;
+    });
+}
+
+// ── Chip factory ─────────────────────────────────────────────────────────────
+function makeChip(token) {
+    const span = document.createElement('span');
+    span.className = 'ph-chip';
+    span.contentEditable = 'false';
+    span.dataset.token = token;
+    span.textContent = token;
+    return span;
+}
+
+// ── Save caret inside body editor ────────────────────────────────────────────
+let savedRange = null;
+const editor = document.getElementById('bodyEditor');
+['mouseup', 'keyup', 'focus', 'click'].forEach(ev =>
+    editor.addEventListener(ev, saveRange)
+);
+function saveRange() {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+        const r = sel.getRangeAt(0);
+        if (editor.contains(r.commonAncestorContainer)) savedRange = r.cloneRange();
+    }
+}
+
+// ── Insert chip at saved caret ────────────────────────────────────────────────
+function insertChip(token) {
+    editor.focus();
+    let range = savedRange;
+    if (!range) {
+        range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+    }
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    range.deleteContents();
+    const chip = makeChip(token);
+    range.insertNode(chip);
+    // Move caret after chip
+    const after = document.createRange();
+    after.setStartAfter(chip);
+    after.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(after);
+    savedRange = after.cloneRange();
+}
+
+// ── Serialize editor DOM → plain text ────────────────────────────────────────
+function serializeNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+        if (node.classList.contains('ph-chip')) return node.dataset.token || node.textContent;
+        if (tag === 'br') return '\n';
+        if (tag === 'div' || tag === 'p') {
+            let inner = '';
+            node.childNodes.forEach(c => inner += serializeNode(c));
+            return '\n' + inner;
+        }
+        let inner = '';
+        node.childNodes.forEach(c => inner += serializeNode(c));
+        return inner;
+    }
+    return '';
+}
+function serializeEditor() {
+    let out = '';
+    editor.childNodes.forEach(n => out += serializeNode(n));
+    return out.replace(/^\n+/, '');
+}
+
+// ── Deserialize plain text → editor DOM ──────────────────────────────────────
+function deserializeToEditor(text) {
+    editor.innerHTML = '';
+    if (!text) return;
+    const TOKEN_RE = /(\{[a-zA-Z]+\})/g;
+    text.split('\n').forEach((line, li) => {
+        if (li > 0) editor.appendChild(document.createElement('br'));
+        line.split(TOKEN_RE).forEach(part => {
+            if (!part) return;
+            if (TOKEN_RE.test(part)) {
+                editor.appendChild(makeChip(part));
+            } else {
+                editor.appendChild(document.createTextNode(part));
+            }
+            TOKEN_RE.lastIndex = 0;
+        });
+    });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    const hiddenBody    = document.getElementById('renewalBody');
+    const hiddenSubject = document.getElementById('renewalSubject');
+
+    deserializeToEditor(hiddenBody.value || '');
+    deserializeToSubject(hiddenSubject.value || '');
+
+    document.querySelector('form[action*="renewal-email/save"]')
+        .addEventListener('submit', function () {
+            hiddenBody.value    = serializeEditor();
+            hiddenSubject.value = serializeSubject();
+        });
+});
+</script>
 </body>
 </html>

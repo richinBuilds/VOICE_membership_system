@@ -41,10 +41,28 @@
             margin-left: 0.5rem;
             vertical-align: middle;
         }
-        textarea.form-control {
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
+        #heroTagline {
+            font-size: 0.95rem;
             line-height: 1.6;
+        }
+        .reason-row {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .reason-row:hover {
+            border-color: #008080;
+            background: #f0fafa;
+        }
+        .reason-number {
+            background: #008080 !important;
+            border-radius: 50% !important;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
         .char-hint {
             font-size: 0.78rem;
@@ -225,25 +243,25 @@
                 <div class="char-hint">The sub-heading above the numbered list, e.g. "10 Great Reasons to Be a Member".</div>
             </div>
 
-            <!-- Reasons Content (HTML) -->
+            <!-- Reasons Content — structured builder -->
             <div class="mb-2">
-                <label for="reasonsContent" class="form-label fw-semibold">
-                    <i class="fas fa-code me-1"></i> Reasons Content
-                    <span class="section-badge">HTML allowed</span>
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-list-ol me-1"></i> Reasons List
                 </label>
-                <textarea id="reasonsContent"
-                          name="reasonsContent"
-                          class="form-control"
-                          rows="20"
-                          required
-                          data-testid="input-reasons-content"
-                          th:text="${reasonsContent}"></textarea>
-                <div class="char-hint">
-                    Enter each reason as an HTML paragraph, e.g.
-                    <code>&lt;p&gt;&lt;strong&gt;1. Title:&lt;/strong&gt; Description&lt;/p&gt;</code>.
-                    The list is rendered directly on the landing page. You may use basic HTML tags
-                    (<code>&lt;p&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;br&gt;</code>).
+                <div class="char-hint mb-3">
+                    Each reason has a <strong>bold title</strong> and a <strong>description</strong>. Numbers are assigned automatically.
                 </div>
+
+                <!-- Hidden field submitted to server -->
+                <input type="hidden" id="reasonsContent" name="reasonsContent"
+                       th:value="${reasonsContent}" data-testid="input-reasons-content">
+
+                <!-- Dynamic rows -->
+                <div id="reasonsBuilder"></div>
+
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-3" onclick="addReasonRow()">
+                    <i class="fas fa-plus me-1"></i> Add Reason
+                </button>
             </div>
         </div>
 
@@ -267,6 +285,111 @@
 
 <!-- ===== JS ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// ===== Reasons Builder =====
+function parseReasons(html) {
+    const results = [];
+    if (!html || !html.trim()) return results;
+    // Match: <p><strong>N. Title:</strong> Description</p>
+    const regex = /<p[^>]*><strong>\d+\.\s*(.*?):<\/strong>(.*?)<\/p>/gi;
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+        results.push({ title: match[1].trim(), desc: match[2].trim() });
+    }
+    return results;
+}
+
+function buildReasonsHtml() {
+    const rows = document.querySelectorAll('.reason-row');
+    let html = '';
+    rows.forEach((row, i) => {
+        const title = row.querySelector('.reason-title').value.trim();
+        const desc  = row.querySelector('.reason-desc').value.trim();
+        if (title || desc) {
+            html += `<p><strong>${i + 1}. ${escHtml(title)}:</strong> ${escHtml(desc)}</p>\n`;
+        }
+    });
+    return html.trim();
+}
+
+function addReasonRow(title, desc, doFocus) {
+    title   = title   !== undefined ? title   : '';
+    desc    = desc    !== undefined ? desc    : '';
+    doFocus = doFocus !== undefined ? doFocus : true;
+    const builder = document.getElementById('reasonsBuilder');
+    const row = document.createElement('div');
+    row.className = 'reason-row card mb-2 p-3';
+    row.innerHTML = `
+        <div class="d-flex align-items-start gap-2">
+            <span class="reason-number badge mt-2" style="min-width:28px;height:28px;background:#008080;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">0</span>
+            <div class="flex-grow-1">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold mb-1">Bold Title</label>
+                        <input type="text" class="form-control form-control-sm reason-title"
+                               placeholder="e.g. Connection" value="${escAttr(title)}">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label small fw-semibold mb-1">Description</label>
+                        <textarea class="form-control form-control-sm reason-desc" rows="2"
+                                  placeholder="e.g. You are connected to a larger group...">${escHtml(desc)}</textarea>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm mt-1"
+                    onclick="removeReasonRow(this)" title="Remove">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    builder.appendChild(row);
+    renumberRows();
+    if (doFocus) row.querySelector('.reason-title').focus();
+}
+
+function removeReasonRow(btn) {
+    btn.closest('.reason-row').remove();
+    renumberRows();
+}
+
+function renumberRows() {
+    document.querySelectorAll('.reason-row .reason-number').forEach((badge, i) => {
+        badge.textContent = i + 1;
+    });
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escAttr(str) {
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const hidden   = document.getElementById('reasonsContent');
+    const existing = hidden ? hidden.value : '';
+    const reasons  = parseReasons(existing);
+
+    if (reasons.length > 0) {
+        reasons.forEach(r => addReasonRow(r.title, r.desc, false));
+    } else {
+        addReasonRow('', '', false);
+    }
+
+    // Serialize rows → hidden field before submit
+    const form = document.querySelector('form[action*="landing-page/save"]');
+    if (form) {
+        form.addEventListener('submit', function () {
+            document.getElementById('reasonsContent').value = buildReasonsHtml();
+        });
+    }
+});
+</script>
 
 </body>
 </html>
