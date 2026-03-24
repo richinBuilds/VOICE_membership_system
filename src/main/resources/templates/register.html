@@ -49,6 +49,17 @@
             Registration failed. Please try again.
         </div>
 
+        <a th:href="@{/register/google}"
+           class="btn btn-outline-dark w-100 d-flex justify-content-center align-items-center gap-2 mb-3"
+           data-testid="google-signup-btn">
+            <i class="fab fa-google"></i>
+            Sign up with Google
+        </a>
+
+        <div class="text-center my-3 text-muted">
+            <span>or sign up with email</span>
+        </div>
+
         <!-- Form -->
         <form th:action="@{/register/step1}"
               method="post"

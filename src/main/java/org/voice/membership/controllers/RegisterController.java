@@ -21,6 +21,7 @@ import org.voice.membership.services.EmailSenderService;
 import org.voice.membership.services.PayPalService;
 import org.voice.membership.services.MembershipService;
 import org.voice.membership.services.ChildService;
+import org.voice.membership.services.GoogleOAuth2UserService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -95,6 +96,13 @@ public class RegisterController {
         model.addAttribute("step", 1);
         model.addAttribute("totalSteps", 4);
         return "register";
+    }
+
+    @GetMapping("/google")
+    public String startGoogleSignup(HttpSession session) {
+        session.setAttribute(GoogleOAuth2UserService.GOOGLE_AUTH_FLOW_SESSION_KEY,
+                GoogleOAuth2UserService.GOOGLE_AUTH_FLOW_SIGNUP);
+        return "redirect:/oauth2/authorization/google";
     }
 
     @PostMapping("/step1")
@@ -487,20 +495,51 @@ public class RegisterController {
 
             RegisterDto userDetails = registrationData.getUserDetails();
 
-            User user = User.builder()
-                    .firstName(userDetails.getFirstName())
-                    .middleName(userDetails.getMiddleName())
-                    .lastName(userDetails.getLastName())
-                    .email(userDetails.getEmail())
-                    .password(passwordEncoder.encode(userDetails.getPassword()))
-                    .phone(userDetails.getPhone())
-                    .address(userDetails.getAddress())
-                    .city(userDetails.getCity())
-                    .province(userDetails.getProvince())
-                    .postalCode(userDetails.getPostalCode())
-                    .role(Role.USER.name())
-                    .creation(new Date())
-                    .build();
+            Integer googleSignupUserId = (Integer) session
+                    .getAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
+
+            User user;
+            if (googleSignupUserId != null) {
+                Optional<User> existingGoogleUser = userRepository.findById(googleSignupUserId);
+                if (existingGoogleUser.isEmpty()) {
+                    session.removeAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
+                    return "redirect:/register?error=registration_session_invalid";
+                }
+
+                user = existingGoogleUser.get();
+                user.setFirstName(userDetails.getFirstName());
+                user.setMiddleName(userDetails.getMiddleName());
+                user.setLastName(userDetails.getLastName());
+                user.setEmail(userDetails.getEmail());
+                user.setPhone(userDetails.getPhone());
+                user.setAddress(userDetails.getAddress());
+                user.setCity(userDetails.getCity());
+                user.setProvince(userDetails.getProvince());
+                user.setPostalCode(userDetails.getPostalCode());
+                if (user.getRole() == null || user.getRole().isBlank()) {
+                    user.setRole(Role.USER.name());
+                }
+                if (user.getCreation() == null) {
+                    user.setCreation(new Date());
+                }
+                user.setEmailVerified(false);
+            } else {
+                user = User.builder()
+                        .firstName(userDetails.getFirstName())
+                        .middleName(userDetails.getMiddleName())
+                        .lastName(userDetails.getLastName())
+                        .email(userDetails.getEmail())
+                        .password(passwordEncoder.encode(userDetails.getPassword()))
+                        .phone(userDetails.getPhone())
+                        .address(userDetails.getAddress())
+                        .city(userDetails.getCity())
+                        .province(userDetails.getProvince())
+                        .postalCode(userDetails.getPostalCode())
+                        .role(Role.USER.name())
+                        .creation(new Date())
+                        .emailVerified(false)
+                        .build();
+            }
 
             if (registrationData.getSelectedMembershipId() != null) {
                 Optional<Membership> membershipOpt = membershipRepository
@@ -548,7 +587,9 @@ public class RegisterController {
                 paymentTransactionRepository.save(transaction);
             }
 
-            // Create and save verification token
+            // Replace old verification token (if any), then create and save a fresh one
+            verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
+
             String token = UUID.randomUUID().toString();
             VerificationToken verificationToken = new VerificationToken(token, user);
             verificationTokenRepository.save(verificationToken);
@@ -629,6 +670,8 @@ public class RegisterController {
             session.removeAttribute("paypalOrderId");
             session.removeAttribute("paypalCaptureId");
             session.removeAttribute("paymentAmount");
+            session.removeAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
+            session.removeAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_REDIRECT_STEP2_SESSION_KEY);
 
             // Redirect to a page informing user to check email
             if (paymentCompleted) {
