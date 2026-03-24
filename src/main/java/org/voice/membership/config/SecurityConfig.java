@@ -16,9 +16,7 @@ import org.voice.membership.services.GoogleOAuth2UserService;
 @Configuration
 @EnableWebSecurity
 /**
- * Configures Spring Security for the VOICE membership application.
- * Defines public and protected routes, login/logout, remember-me, and
- * redirects.
+ * Configures Spring Security for the VOICE membership application. Defines public and protected routes, login/logout, remember-me, and redirects.
  */
 public class SecurityConfig {
 
