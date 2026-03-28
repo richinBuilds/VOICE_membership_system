@@ -72,7 +72,6 @@ class ProfileWorkflowTest {
                 testUser = userRepository.save(testUser);
         }
 
-        // changes
         @Test
         @WithMockUser(username = "integration@example.com", roles = "USER")
         void testCompleteProfileViewAndEdit() throws Exception {
@@ -153,7 +152,6 @@ class ProfileWorkflowTest {
                                 .andExpect(status().is3xxRedirection());
         }
 
-        // upgrades to paid
         @Test
         @WithMockUser(username = "integration@example.com", roles = "USER")
         void testCompleteUpgradeMembershipWorkflow() throws Exception {
@@ -196,7 +194,6 @@ class ProfileWorkflowTest {
         @Test
         @WithMockUser(username = "integration@example.com", roles = "USER")
         void testProfilePageWithUpgradeSuccessParameter() throws Exception {
-                // Verify that profile page accepts upgrade=success parameter for showing payment success modal
                 mockMvc.perform(get("/profile")
                                 .param("upgrade", "success"))
                                 .andExpect(status().isOk())

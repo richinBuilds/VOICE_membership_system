@@ -728,7 +728,6 @@ public class AdminController {
         model.addAttribute("adminName", adminName);
         model.addAttribute("adminEmail", adminEmail);
 
-        // Get all new users from unread notifications
         List<User> newUsers = adminNotificationService.getAllNewUsersFromNotifications();
         model.addAttribute("newUsers", newUsers);
 
@@ -815,7 +814,6 @@ public class AdminController {
         }
 
         if (features != null) {
-            // Normalise browser line endings to the system separator
             String normalised = features.replace("\r\n", "\n").replace("\r", "\n");
             normalised = normalised.replace("\n", System.lineSeparator());
             membership.setFeatures(normalised);
