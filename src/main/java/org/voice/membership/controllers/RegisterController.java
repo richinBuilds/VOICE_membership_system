@@ -2,92 +2,44 @@ package org.voice.membership.controllers;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.voice.membership.config.PayPalProperties;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.voice.membership.dtos.*;
-import org.voice.membership.entities.*;
-import org.voice.membership.repositories.*;
-import org.voice.membership.services.AdminNotificationService;
-import org.voice.membership.services.EmailSenderService;
-import org.voice.membership.services.PayPalService;
-import org.voice.membership.services.MembershipService;
-import org.voice.membership.services.ChildService;
+import org.voice.membership.entities.Membership;
 import org.voice.membership.services.GoogleOAuth2UserService;
+import org.voice.membership.services.MembershipService;
+import org.voice.membership.services.RegistrationCheckoutService;
+import org.voice.membership.services.RegistrationCompletionService;
+import org.voice.membership.services.RegistrationStep1Service;
+import org.voice.membership.services.RegistrationStep4Service;
+import org.voice.membership.services.RegistrationStep2Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Controller
 @RequestMapping("/register")
-
+@RequiredArgsConstructor
 /**
  * Implements the multi-step user registration, child details, and membership
  * checkout flow.
- * Guides users through all registration steps and persists users, children,
- * carts, and memberships.
+ * Guides users through all registration steps. Delegates all business logic
+ * (user creation, verification, cart, payments) to {@link RegistrationService}.
  */
 public class RegisterController {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private ChildRepository childRepository;
-
-    @Autowired
-    private MembershipRepository membershipRepository;
-
-    @Autowired
-    private CartRepository cartRepository;
-
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-    @Value("${app.base-url:http://localhost:8080}")
-    private String appBaseUrl;
-
-    @Autowired
-    private EmailSenderService emailSenderService;
-
-    @Autowired
-    private VerificationTokenRepository verificationTokenRepository;
-
-    @Autowired
-    private PayPalProperties payPalProperties;
-
-    @Autowired
-    private PayPalService payPalService;
-
-    @Autowired
-    private MembershipPaymentTransactionRepository paymentTransactionRepository;
-
-    @Autowired
-    private MembershipService membershipService;
-
-    @Autowired
-    private ChildService childService;
-
-    @Autowired
-    private AdminNotificationService adminNotificationService;
+    private final MembershipService membershipService;
+    private final PayPalProperties payPalProperties;
+    private final RegistrationCheckoutService registrationCheckoutService;
+    private final RegistrationCompletionService registrationCompletionService;
+    private final RegistrationStep2Service registrationStep2Service;
+    private final RegistrationStep1Service registrationStep1Service;
+    private final RegistrationStep4Service registrationStep4Service;
 
     @GetMapping
     public String showRegister(Model model, HttpSession session) {
@@ -110,17 +62,7 @@ public class RegisterController {
             BindingResult bindingResult,
             Model model,
             HttpSession session) {
-        if (registerDto.getPassword() != null && registerDto.getConfirmPassword() != null
-                && !registerDto.getPassword().equals(registerDto.getConfirmPassword())) {
-            bindingResult.addError(new FieldError("registerDto", "confirmPassword", "Passwords do not match"));
-        }
-
-        if (registerDto.getEmail() != null) {
-            List<User> matches = userRepository.findAllByEmailIgnoreCase(registerDto.getEmail());
-            if (!matches.isEmpty()) {
-                bindingResult.addError(new FieldError("registerDto", "email", "Email already exists"));
-            }
-        }
+        registrationStep1Service.validate(registerDto, bindingResult);
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("registerDto", registerDto);
@@ -129,9 +71,7 @@ public class RegisterController {
             return "register";
         }
 
-        MultiStepRegistrationDto registrationData = new MultiStepRegistrationDto();
-        registrationData.setUserDetails(registerDto);
-        session.setAttribute("registrationData", registrationData);
+        registrationStep1Service.storeRegistration(session, registerDto);
 
         return "redirect:/register/step2";
     }
@@ -143,10 +83,7 @@ public class RegisterController {
             return "redirect:/register";
         }
 
-        if (registrationData.getChildren() == null || registrationData.getChildren().isEmpty()) {
-            registrationData.setChildren(new ArrayList<>());
-            registrationData.getChildren().add(new ChildDto());
-        }
+        registrationStep2Service.initializeChildrenIfNeeded(registrationData);
 
         model.addAttribute("children", registrationData.getChildren());
         model.addAttribute("step", 2);
@@ -155,68 +92,19 @@ public class RegisterController {
     }
 
     @PostMapping("/step2")
-    public String handleStep2(@RequestParam(value = "childName", required = false) List<String> childNames,
-            @RequestParam(value = "childAge", required = false) List<Integer> childAges,
-            @RequestParam(value = "childDob", required = false) List<String> childDobs,
-            @RequestParam(value = "hearingLossType", required = false) List<String> hearingLossTypes,
-            @RequestParam(value = "equipmentType", required = false) List<String> equipmentTypes,
-            @RequestParam(value = "siblingsNames", required = false) List<String> siblingsNames,
-            @RequestParam(value = "chapterLocation", required = false) List<String> chapterLocations,
-            @RequestParam(value = "action", required = false) String action,
-            Model model,
-            HttpSession session) {
+    public String handleStep2(@ModelAttribute RegisterStep2Request request, HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
         if (registrationData == null) {
             return "redirect:/register";
         }
 
-        if ("addChild".equals(action)) {
-            if (registrationData.getChildren() == null) {
-                registrationData.setChildren(new ArrayList<>());
-            }
-            registrationData.getChildren().add(new ChildDto());
+        if (registrationStep2Service.isAddChildAction(request)) {
+            registrationStep2Service.addEmptyChild(registrationData);
             session.setAttribute("registrationData", registrationData);
             return "redirect:/register/step2";
         }
 
-        List<ChildDto> children = new ArrayList<>();
-        if (childNames != null && !childNames.isEmpty()) {
-            for (int i = 0; i < childNames.size(); i++) {
-                String name = childNames.get(i);
-                if (name != null && !name.trim().isEmpty()) {
-                    ChildDto child = new ChildDto();
-                    child.setName(name);
-                    if (childAges != null && i < childAges.size()) {
-                        child.setAge(childAges.get(i));
-                    }
-                    if (childDobs != null && i < childDobs.size() && childDobs.get(i) != null
-                            && !childDobs.get(i).isEmpty()) {
-                        // ChildService will handle date parsing
-                        try {
-                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-                            child.setDateOfBirth(sdf.parse(childDobs.get(i)));
-                        } catch (Exception e) {
-                            // Date parsing handled later
-                        }
-                    }
-                    if (hearingLossTypes != null && i < hearingLossTypes.size()) {
-                        child.setHearingLossType(hearingLossTypes.get(i));
-                    }
-                    if (equipmentTypes != null && i < equipmentTypes.size()) {
-                        child.setEquipmentType(equipmentTypes.get(i));
-                    }
-                    if (siblingsNames != null && i < siblingsNames.size()) {
-                        child.setSiblingsNames(siblingsNames.get(i));
-                    }
-                    if (chapterLocations != null && i < chapterLocations.size()) {
-                        child.setChapterLocation(chapterLocations.get(i));
-                    }
-                    children.add(child);
-                }
-            }
-        }
-
-        registrationData.setChildren(children);
+        registrationData.setChildren(registrationStep2Service.mapChildren(request));
         session.setAttribute("registrationData", registrationData);
 
         return "redirect:/register/step3";
@@ -225,12 +113,11 @@ public class RegisterController {
     @GetMapping("/step3")
     public String showStep3(Model model, HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
-
         if (registrationData == null) {
             return "redirect:/register";
         }
 
-        List<Membership> memberships = membershipRepository.findByActiveTrueOrderByDisplayOrderAsc();
+        List<Membership> memberships = membershipService.getActiveMembershipsOrdered();
         model.addAttribute("memberships", memberships);
         model.addAttribute("selectedMembershipId", registrationData.getSelectedMembershipId());
         model.addAttribute("lineSeparator", System.lineSeparator());
@@ -240,25 +127,20 @@ public class RegisterController {
     }
 
     @PostMapping("/step3")
-    public String handleStep3(@RequestParam("membershipId") Integer membershipId,
+    public String handleStep3(@Valid @ModelAttribute MembershipSelectionRequest request,
+            BindingResult bindingResult,
             HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
         if (registrationData == null) {
             return "redirect:/register";
         }
-
-        if (membershipId == null) {
+        if (bindingResult.hasErrors()) {
             return "redirect:/register/step3";
         }
 
-        if (registrationData.getSelectedMembershipId() != null) {
-            // Replacing previous membership selection
-        }
-
-        registrationData.setSelectedMembershipId(membershipId);
-        registrationData.setCartMembershipId(membershipId);
+        registrationData.setSelectedMembershipId(request.membershipId());
+        registrationData.setCartMembershipId(request.membershipId());
         session.setAttribute("registrationData", registrationData);
-
         return "redirect:/register/step4";
     }
 
@@ -266,7 +148,6 @@ public class RegisterController {
     public String showStep4(@RequestParam(value = "error", required = false) String error,
             Model model, HttpSession session) {
         MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
-
         if (registrationData == null) {
             return "redirect:/register";
         }
@@ -275,13 +156,12 @@ public class RegisterController {
             return "redirect:/register/step3";
         }
 
-        Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
+        Optional<Membership> membershipOpt = registrationStep4Service.resolveMembership(session);
         if (membershipOpt.isEmpty()) {
             return "redirect:/register/step3";
         }
 
-        Membership membership = membershipOpt.get();
-        model.addAttribute("membership", membership);
+        model.addAttribute("membership", membershipOpt.get());
         model.addAttribute("lineSeparator", System.lineSeparator());
         model.addAttribute("step", 4);
         model.addAttribute("totalSteps", 4);
@@ -295,60 +175,22 @@ public class RegisterController {
     public String handleStep4(@RequestParam(value = "action", required = false) String action,
             HttpSession session) {
         try {
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
-                    .getAttribute("registrationData");
-            if (registrationData == null) {
-                return "redirect:/register";
-            }
-
-            if ("remove".equals(action)) {
-                registrationData.setCartMembershipId(null);
-                registrationData.setSelectedMembershipId(null);
-                session.setAttribute("registrationData", registrationData);
-                return "redirect:/register/step3";
-            }
-
-            if (registrationData.getCartMembershipId() == null) {
-                return "redirect:/register/step3";
-            }
-
-            Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
-            if (membershipOpt.isEmpty()) {
-                return "redirect:/register/step3";
-            }
-
-            Membership membership = membershipOpt.get();
-
-            if (membership.isFree()) {
-                return completeRegistration(session);
-            } else {
-                return "redirect:/register/checkout";
-            }
+            return registrationStep4Service.handleStep4Action(action, session, registrationCompletionService);
         } catch (Exception e) {
-            e.printStackTrace();
             return "redirect:/register/step4?error=processing_failed";
         }
     }
 
     @GetMapping("/checkout")
     public String showCheckout(Model model, HttpSession session) {
-        MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session.getAttribute("registrationData");
-        if (registrationData == null) {
-            return "redirect:/register";
-        }
-
-        if (registrationData.getCartMembershipId() == null) {
-            return "redirect:/register/step3";
-        }
-
-        Optional<Membership> membershipOpt = membershipRepository.findById(registrationData.getCartMembershipId());
+        Optional<Membership> membershipOpt = registrationCheckoutService.resolveCheckoutMembership(session);
         if (membershipOpt.isEmpty()) {
             return "redirect:/register/step3";
         }
 
         Membership membership = membershipOpt.get();
         if (membership.isFree()) {
-            return completeRegistration(session);
+            return registrationCompletionService.completeRegistration(session);
         }
 
         model.addAttribute("membership", membership);
@@ -370,390 +212,20 @@ public class RegisterController {
 
     @PostMapping("/paypal/checkout/create-order")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> createCheckoutOrder(@RequestBody CreatePayPalOrderRequest request,
+    public ResponseEntity<ApiResponse<PayPalOrderResponse>> createCheckoutOrder(
+            @Valid @RequestBody CreatePayPalOrderRequest request,
             HttpSession session) {
-        try {
-            if (!payPalProperties.hasCredentials()) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(Map.of("message", "PayPal is not configured"));
-            }
-
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
-                    .getAttribute("registrationData");
-            if (registrationData == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("message", "Registration session expired"));
-            }
-
-            Integer membershipId = registrationData.getCartMembershipId();
-            if (membershipId == null) {
-                return ResponseEntity.badRequest().body(Map.of("message", "No membership selected"));
-            }
-
-            if (request == null || request.membershipId() == null || !request.membershipId().equals(membershipId)) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Membership mismatch"));
-            }
-
-            Optional<Membership> membershipOpt = membershipRepository.findById(membershipId);
-            if (membershipOpt.isEmpty() || membershipOpt.get().isFree()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Invalid paid membership"));
-            }
-
-            if (Boolean.TRUE.equals(session.getAttribute("registrationPaymentCompleted"))) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(Map.of("message", "Payment already completed"));
-            }
-
-            String registrationPaymentRef = (String) session.getAttribute("registrationPaymentRef");
-            if (registrationPaymentRef == null || registrationPaymentRef.isBlank()) {
-                registrationPaymentRef = UUID.randomUUID().toString();
-                session.setAttribute("registrationPaymentRef", registrationPaymentRef);
-            }
-
-            String orderId = payPalService.createOrderForRegistration(membershipOpt.get(), registrationPaymentRef);
-            session.setAttribute("registrationPayPalOrderId", orderId);
-
-            return ResponseEntity.ok(Map.of("orderId", orderId));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Failed to create payment order"));
-        }
+        PayPalOrderResponse response = registrationCheckoutService.createOrder(request.membershipId(), session);
+        return ResponseEntity.ok(ApiResponse.success("Order created", response));
     }
 
     @PostMapping("/paypal/checkout/capture-order")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> captureCheckoutOrder(@RequestBody CapturePayPalOrderRequest request,
+    public ResponseEntity<ApiResponse<RedirectResponse>> captureCheckoutOrder(
+            @Valid @RequestBody CapturePayPalOrderRequest request,
             HttpSession session) {
-        try {
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
-                    .getAttribute("registrationData");
-            if (registrationData == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("message", "Registration session expired"));
-            }
-
-            Integer membershipId = registrationData.getCartMembershipId();
-            if (membershipId == null || request == null || request.orderId() == null || request.orderId().isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Invalid payment request"));
-            }
-
-            if (request.membershipId() == null || !request.membershipId().equals(membershipId)) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Membership mismatch"));
-            }
-
-            String expectedOrderId = (String) session.getAttribute("registrationPayPalOrderId");
-            if (expectedOrderId == null || !expectedOrderId.equals(request.orderId())) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Order mismatch"));
-            }
-
-            Optional<Membership> membershipOpt = membershipRepository.findById(membershipId);
-            if (membershipOpt.isEmpty() || membershipOpt.get().isFree()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Invalid paid membership"));
-            }
-
-            String registrationPaymentRef = (String) session.getAttribute("registrationPaymentRef");
-            if (registrationPaymentRef == null || registrationPaymentRef.isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Payment reference missing"));
-            }
-
-            PayPalService.CaptureValidationResult validation = payPalService.captureAndValidateRegistration(
-                    membershipOpt.get(),
-                    request.orderId(),
-                    registrationPaymentRef);
-
-            if (!validation.completed()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("message", "Payment verification failed"));
-            }
-
-            // Store payment details in session - transaction will be created after user is
-            // created
-            session.setAttribute("registrationPaymentCompleted", true);
-            session.setAttribute("paypalOrderId", request.orderId());
-            session.setAttribute("paypalCaptureId", validation.captureId());
-            session.setAttribute("paymentAmount", membershipOpt.get().getPrice().setScale(2, RoundingMode.HALF_UP));
-
-            String redirect = completeRegistration(session);
-            String redirectUrl = redirect.startsWith("redirect:") ? redirect.substring("redirect:".length()) : redirect;
-
-            return ResponseEntity.ok(Map.of("success", true, "redirectUrl", redirectUrl));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Failed to finalize payment"));
-        }
+        RedirectResponse response = registrationCheckoutService.captureOrder(request, session, registrationCompletionService);
+        return ResponseEntity.ok(ApiResponse.success("Payment finalized", response));
     }
 
-    private String completeRegistration(HttpSession session) {
-        try {
-            MultiStepRegistrationDto registrationData = (MultiStepRegistrationDto) session
-                    .getAttribute("registrationData");
-            if (registrationData == null || registrationData.getUserDetails() == null) {
-                return "redirect:/register";
-            }
-
-            RegisterDto userDetails = registrationData.getUserDetails();
-
-            Integer googleSignupUserId = (Integer) session
-                    .getAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
-
-            User user;
-            if (googleSignupUserId != null) {
-                Optional<User> existingGoogleUser = userRepository.findById(googleSignupUserId);
-                if (existingGoogleUser.isEmpty()) {
-                    session.removeAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
-                    return "redirect:/register?error=registration_session_invalid";
-                }
-
-                user = existingGoogleUser.get();
-                user.setFirstName(userDetails.getFirstName());
-                user.setMiddleName(userDetails.getMiddleName());
-                user.setLastName(userDetails.getLastName());
-                user.setEmail(userDetails.getEmail());
-                user.setPhone(userDetails.getPhone());
-                user.setAddress(userDetails.getAddress());
-                user.setCity(userDetails.getCity());
-                user.setProvince(userDetails.getProvince());
-                user.setPostalCode(userDetails.getPostalCode());
-                if (user.getRole() == null || user.getRole().isBlank()) {
-                    user.setRole(Role.USER.name());
-                }
-                if (user.getCreation() == null) {
-                    user.setCreation(new Date());
-                }
-                user.setEmailVerified(false);
-            } else {
-                user = User.builder()
-                        .firstName(userDetails.getFirstName())
-                        .middleName(userDetails.getMiddleName())
-                        .lastName(userDetails.getLastName())
-                        .email(userDetails.getEmail())
-                        .password(passwordEncoder.encode(userDetails.getPassword()))
-                        .phone(userDetails.getPhone())
-                        .address(userDetails.getAddress())
-                        .city(userDetails.getCity())
-                        .province(userDetails.getProvince())
-                        .postalCode(userDetails.getPostalCode())
-                        .role(Role.USER.name())
-                        .creation(new Date())
-                        .emailVerified(false)
-                        .build();
-            }
-
-            if (registrationData.getSelectedMembershipId() != null) {
-                Optional<Membership> membershipOpt = membershipRepository
-                        .findById(registrationData.getSelectedMembershipId());
-                if (membershipOpt.isPresent()) {
-                    Membership membership = membershipOpt.get();
-                    user.setMembership(membership);
-
-                    if (!membership.isFree()) {
-                        Date now = new Date();
-                        user.setMembershipStartDate(now);
-                        user.setPaid(true);
-                        user.setMembershipExpiryDate(membershipService.calculateMembershipExpiry(now));
-                    } else {
-                        user.setPaid(false);
-                    }
-                }
-            }
-
-            user = userRepository.save(user);
-
-            // Send instant notification to admin for new member registration
-            try {
-                adminNotificationService.createInstantNotification(user);
-            } catch (Exception e) {
-                // Log error but don't fail registration
-                System.err.println("Failed to create instant admin notification: " + e.getMessage());
-            }
-
-            // Create payment transaction if payment was completed during registration
-            String paypalOrderId = (String) session.getAttribute("paypalOrderId");
-            String paypalCaptureId = (String) session.getAttribute("paypalCaptureId");
-            BigDecimal paymentAmount = (BigDecimal) session.getAttribute("paymentAmount");
-
-            if (paypalOrderId != null && paypalCaptureId != null && paymentAmount != null) {
-                MembershipPaymentTransaction transaction = new MembershipPaymentTransaction();
-                transaction.setUser(user);
-                transaction.setMembership(user.getMembership());
-                transaction.setPaypalOrderId(paypalOrderId);
-                transaction.setPaypalCaptureId(paypalCaptureId);
-                transaction.setAmount(paymentAmount);
-                transaction.setCurrency(payPalProperties.getCurrency());
-                transaction.setStatus("COMPLETED");
-                transaction.setFailureReason(null);
-                paymentTransactionRepository.save(transaction);
-            }
-
-            // Replace old verification token (if any), then create and save a fresh one
-            verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
-
-            String token = UUID.randomUUID().toString();
-            VerificationToken verificationToken = new VerificationToken(token, user);
-            verificationTokenRepository.save(verificationToken);
-
-            // Send verification email
-            String verificationLink = appBaseUrl + "/register/verify?token=" + token;
-            String userName = user.getFirstName() + " " + user.getLastName();
-            try {
-                emailSenderService.sendVerificationEmail(user.getEmail(), userName, verificationLink);
-            } catch (Exception e) {
-                e.printStackTrace();
-                // Continue with registration even if email fails
-            }
-
-            if (registrationData.getChildren() != null && !registrationData.getChildren().isEmpty()) {
-                for (ChildDto childDto : registrationData.getChildren()) {
-                    if (childDto.getName() != null && !childDto.getName().trim().isEmpty()) {
-                        String dobStr = null;
-                        if (childDto.getDateOfBirth() != null) {
-                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-                            dobStr = sdf.format(childDto.getDateOfBirth());
-                        }
-
-                        childService.createChild(
-                                user,
-                                childDto.getName(),
-                                childDto.getAge(),
-                                dobStr,
-                                childDto.getHearingLossType(),
-                                childDto.getEquipmentType(),
-                                childDto.getSiblingsNames(),
-                                childDto.getChapterLocation());
-                    }
-                }
-            }
-
-            if (registrationData.getSelectedMembershipId() != null) {
-                Optional<Membership> membershipOpt = membershipRepository
-                        .findById(registrationData.getSelectedMembershipId());
-                if (membershipOpt.isPresent() && !membershipOpt.get().isFree()) {
-                    Optional<Cart> existingCartOpt = cartRepository.findByUserId(user.getId());
-
-                    Cart cart;
-                    if (existingCartOpt.isPresent()) {
-                        Cart existingCart = existingCartOpt.get();
-                        cartItemRepository.deleteByCartId(existingCart.getId());
-                        cart = existingCart;
-                        cart.setUpdatedAt(new Date());
-                        cart = cartRepository.save(cart);
-                    } else {
-                        cart = Cart.builder()
-                                .user(user)
-                                .createdAt(new Date())
-                                .updatedAt(new Date())
-                                .build();
-                        cart = cartRepository.save(cart);
-                    }
-
-                    Membership membership = membershipOpt.get();
-                    CartItem cartItem = CartItem.builder()
-                            .cart(cart)
-                            .membership(membership)
-                            .quantity(1)
-                            .unitPrice(membership.getPrice())
-                            .totalPrice(membership.getPrice())
-                            .build();
-                    cartItemRepository.save(cartItem);
-                }
-            }
-
-            // Do NOT auto-login - user must verify email first
-            boolean paymentCompleted = Boolean.TRUE.equals(session.getAttribute("registrationPaymentCompleted"));
-
-            session.removeAttribute("registrationData");
-            session.removeAttribute("registrationPaymentRef");
-            session.removeAttribute("registrationPayPalOrderId");
-            session.removeAttribute("registrationPaymentCompleted");
-            session.removeAttribute("paypalOrderId");
-            session.removeAttribute("paypalCaptureId");
-            session.removeAttribute("paymentAmount");
-            session.removeAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
-            session.removeAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_REDIRECT_STEP2_SESSION_KEY);
-
-            // Redirect to a page informing user to check email
-            if (paymentCompleted) {
-                return "redirect:/register/verification-sent?payment=success";
-            }
-            return "redirect:/register/verification-sent";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/register?error=registration_failed";
-        }
-    }
-
-    @GetMapping("/verification-sent")
-    public String showVerificationSent(Model model) {
-        model.addAttribute("message", "Registration successful! Please check your email to verify your account.");
-        return "verification-sent";
-    }
-
-    @GetMapping("/verify")
-    public String verifyEmail(@RequestParam("token") String token, Model model) {
-        Optional<VerificationToken> verificationTokenOpt = verificationTokenRepository.findByToken(token);
-
-        if (verificationTokenOpt.isEmpty()) {
-            model.addAttribute("error", "Invalid verification token.");
-            return "verification-result";
-        }
-
-        VerificationToken verificationToken = verificationTokenOpt.get();
-
-        if (verificationToken.isExpired()) {
-            model.addAttribute("error", "Verification token has expired. Please register again.");
-            return "verification-result";
-        }
-
-        User user = verificationToken.getUser();
-        user.setEmailVerified(true);
-        userRepository.save(user);
-
-        verificationTokenRepository.delete(verificationToken);
-
-        model.addAttribute("success", "Email verified successfully! You can now login to your account.");
-        return "verification-result";
-    }
-
-    @GetMapping("/resend-verification")
-    public String showResendVerification() {
-        return "resend-verification";
-    }
-
-    @PostMapping("/resend-verification")
-    public String resendVerification(@RequestParam("email") String email, Model model) {
-        User user = userRepository.findByEmail(email);
-
-        if (user == null) {
-            model.addAttribute("error", "No account found with this email address.");
-            return "resend-verification";
-        }
-
-        if (user.isEmailVerified()) {
-            model.addAttribute("error", "This email is already verified. You can login.");
-            return "resend-verification";
-        }
-
-        // Delete old token if exists
-        verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
-
-        // Create new token
-        String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken(token, user);
-        verificationTokenRepository.save(verificationToken);
-
-        // Send verification email
-        String verificationLink = appBaseUrl + "/register/verify?token=" + token;
-        String userName = user.getFirstName() + " " + user.getLastName();
-        try {
-            emailSenderService.sendVerificationEmail(user.getEmail(), userName, verificationLink);
-            model.addAttribute("success", "Verification email sent! Please check your inbox.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            model.addAttribute("error", "Failed to send verification email. Please try again later.");
-        }
-
-        return "resend-verification";
-    }
 }

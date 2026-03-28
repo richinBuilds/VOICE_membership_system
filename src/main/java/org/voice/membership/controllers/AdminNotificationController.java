@@ -5,15 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.voice.membership.dtos.ApiResponse;
+import org.voice.membership.dtos.NotificationDetailsResponse;
 import org.voice.membership.dtos.NotificationDTO;
-import org.voice.membership.entities.AdminNotification;
-import org.voice.membership.entities.User;
-import org.voice.membership.services.AdminNotificationService;
+import org.voice.membership.dtos.UnreadCountResponse;
+import org.voice.membership.services.AdminNotificationFacadeService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for managing admin notifications.
@@ -26,19 +24,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AdminNotificationController {
 
-    private final AdminNotificationService notificationService;
+    private final AdminNotificationFacadeService notificationFacadeService;
 
     /**
      * Get all unread notifications
      */
     @GetMapping("/unread")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<NotificationDTO>> getUnreadNotifications() {
-        List<AdminNotification> notifications = notificationService.getUnreadNotifications();
-        List<NotificationDTO> dtos = notifications.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<ApiResponse<List<NotificationDTO>>> getUnreadNotifications() {
+        return ResponseEntity.ok(ApiResponse.success("Unread notifications fetched", notificationFacadeService.getUnreadNotifications()));
     }
 
     /**
@@ -46,12 +40,8 @@ public class AdminNotificationController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<NotificationDTO>> getAllNotifications() {
-        List<AdminNotification> notifications = notificationService.getAllNotifications();
-        List<NotificationDTO> dtos = notifications.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<ApiResponse<List<NotificationDTO>>> getAllNotifications() {
+        return ResponseEntity.ok(ApiResponse.success("Notifications fetched", notificationFacadeService.getAllNotifications()));
     }
 
     /**
@@ -59,9 +49,10 @@ public class AdminNotificationController {
      */
     @GetMapping("/count")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Long>> getUnreadCount() {
-        long count = notificationService.getUnreadCount();
-        return ResponseEntity.ok(Map.of("count", count));
+    public ResponseEntity<ApiResponse<UnreadCountResponse>> getUnreadCount() {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Unread count fetched",
+                UnreadCountResponse.builder().count(notificationFacadeService.getUnreadCount()).build()));
     }
 
     /**
@@ -69,9 +60,9 @@ public class AdminNotificationController {
      */
     @PutMapping("/{id}/read")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> markAsRead(@PathVariable Long id) {
-        notificationService.markAsRead(id);
-        return ResponseEntity.ok(Map.of("message", "Notification marked as read"));
+    public ResponseEntity<ApiResponse<Void>> markAsRead(@PathVariable Long id) {
+        notificationFacadeService.markAsRead(id);
+        return ResponseEntity.ok(ApiResponse.success("Notification marked as read", null));
     }
 
     /**
@@ -79,9 +70,9 @@ public class AdminNotificationController {
      */
     @PutMapping("/read-all")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> markAllAsRead() {
-        notificationService.markAllAsRead();
-        return ResponseEntity.ok(Map.of("message", "All notifications marked as read"));
+    public ResponseEntity<ApiResponse<Void>> markAllAsRead() {
+        notificationFacadeService.markAllAsRead();
+        return ResponseEntity.ok(ApiResponse.success("All notifications marked as read", null));
     }
 
     /**
@@ -89,9 +80,9 @@ public class AdminNotificationController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> dismissNotification(@PathVariable Long id) {
-        notificationService.dismissNotification(id);
-        return ResponseEntity.ok(Map.of("message", "Notification dismissed"));
+    public ResponseEntity<ApiResponse<Void>> dismissNotification(@PathVariable Long id) {
+        notificationFacadeService.dismissNotification(id);
+        return ResponseEntity.ok(ApiResponse.success("Notification dismissed", null));
     }
 
     /**
@@ -99,12 +90,9 @@ public class AdminNotificationController {
      */
     @PostMapping("/dismiss-all")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> dismissAllNotifications() {
-        notificationService.dismissAllNotifications();
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "All notifications dismissed");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<Void>> dismissAllNotifications() {
+        notificationFacadeService.dismissAllNotifications();
+        return ResponseEntity.ok(ApiResponse.success("All notifications dismissed", null));
     }
 
     /**
@@ -112,52 +100,7 @@ public class AdminNotificationController {
      */
     @GetMapping("/{id}/details")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> getNotificationDetails(@PathVariable Long id) {
-        AdminNotification notification = notificationService.getNotificationById(id);
-        if (notification == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        List<User> newMembers = notificationService.getNewPaidMembersForNotification(id);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("notification", convertToDTO(notification));
-        response.put("members", newMembers.stream().map(this::convertUserToSimpleDTO).collect(Collectors.toList()));
-
-        // Mark as read when details are viewed
-        notificationService.markAsRead(id);
-
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Convert AdminNotification entity to DTO
-     */
-    private NotificationDTO convertToDTO(AdminNotification notification) {
-        return NotificationDTO.builder()
-                .id(notification.getId())
-                .message(notification.getMessage())
-                .notificationType(notification.getNotificationType())
-                .newMembersCount(notification.getNewMembersCount())
-                .periodStart(notification.getPeriodStart())
-                .periodEnd(notification.getPeriodEnd())
-                .read(notification.isRead())
-                .dismissed(notification.isDismissed())
-                .createdAt(notification.getCreatedAt())
-                .build();
-    }
-
-    /**
-     * Convert User to a simple DTO with essential info
-     */
-    private Map<String, Object> convertUserToSimpleDTO(User user) {
-        Map<String, Object> userDTO = new HashMap<>();
-        userDTO.put("id", user.getId());
-        userDTO.put("firstName", user.getFirstName());
-        userDTO.put("lastName", user.getLastName());
-        userDTO.put("email", user.getEmail());
-        userDTO.put("membershipName", user.getMembership() != null ? user.getMembership().getName() : "N/A");
-        userDTO.put("registrationDate", user.getCreation());
-        return userDTO;
+    public ResponseEntity<ApiResponse<NotificationDetailsResponse>> getNotificationDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Notification details fetched", notificationFacadeService.getNotificationDetails(id)));
     }
 }

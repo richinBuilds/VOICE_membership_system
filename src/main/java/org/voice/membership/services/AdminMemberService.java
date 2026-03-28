@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.voice.membership.dtos.AdminAddMemberRequest;
 import org.voice.membership.dtos.AdminUpdateUserRequest;
+import org.voice.membership.dtos.BulkEmailRequest;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
@@ -34,6 +35,7 @@ public class AdminMemberService {
     private final MembershipPaymentTransactionRepository paymentTransactionRepository;
     private final MembershipService membershipService;
     private final AdminNotificationService adminNotificationService;
+    private final EmailSenderService emailSenderService;
 
     /**
      * Create a new member account.
@@ -295,5 +297,98 @@ public class AdminMemberService {
         name.append(" ").append(admin.getLastName());
 
         return name.toString();
+    }
+
+    // -----------------------------------------------------------------------
+    // Convenience lookups
+    // -----------------------------------------------------------------------
+
+    /**
+     * Return the formatted full name of the admin with the given email.
+     */
+    public String getAdminNameByEmail(String email) {
+        return formatAdminName(userRepository.findByEmail(email));
+    }
+
+    /**
+     * Fetch a user by primary key, or {@code null} if not found.
+     */
+    public User getUserById(Integer id) {
+        if (id == null) {
+            return null;
+        }
+        return userRepository.findById(id).orElse(null);
+    }
+
+    /**
+     * Return all users in the system.
+     */
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    // -----------------------------------------------------------------------
+    // Bulk email
+    // -----------------------------------------------------------------------
+
+    /**
+     * Immutable result of a bulk-email send operation.
+     */
+    public record BulkEmailResult(int successCount, int failureCount, String message) {}
+
+    /**
+     * Send a custom email to every user in {@code request.getRecipientIds()}.
+     *
+     * @param request   the bulk email payload (recipients, subject, body)
+     * @param adminName the sender name shown at the bottom of each email
+     * @return a {@link BulkEmailResult} with per-send counts and a summary message
+     */
+    public BulkEmailResult sendBulkEmails(BulkEmailRequest request, String adminName) {
+        int successCount = 0;
+        int failureCount = 0;
+        StringBuilder failedEmails = new StringBuilder();
+
+        for (Integer userId : request.getRecipientIds()) {
+            try {
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null && user.getEmail() != null) {
+                    emailSenderService.sendCustomEmail(
+                            user.getEmail(),
+                            request.getSubject(),
+                            request.getMessageBody(),
+                            adminName);
+                    successCount++;
+                } else {
+                    failureCount++;
+                    if (user != null) {
+                        failedEmails.append(user.getFirstName()).append(" ")
+                                .append(user.getLastName()).append(", ");
+                    }
+                }
+            } catch (Exception e) {
+                failureCount++;
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    failedEmails.append(user.getEmail()).append(", ");
+                }
+            }
+        }
+
+        String message = buildBulkEmailSummary(successCount, failureCount, failedEmails.toString());
+        return new BulkEmailResult(successCount, failureCount, message);
+    }
+
+    private String buildBulkEmailSummary(int successCount, int failureCount, String failedEmailsStr) {
+        String message = "Emails sent successfully to " + successCount + " recipient(s)";
+        if (failureCount > 0) {
+            message += ". Failed to send to " + failureCount + " recipient(s)";
+            if (!failedEmailsStr.isBlank()) {
+                String failed = failedEmailsStr.endsWith(", ")
+                        ? failedEmailsStr.substring(0, failedEmailsStr.length() - 2)
+                        : failedEmailsStr;
+                message += ": " + failed;
+            }
+        }
+        return message;
     }
 }

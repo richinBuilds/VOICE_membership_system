@@ -1,6 +1,7 @@
 package org.voice.membership.dtos;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -37,4 +38,9 @@ public class AdminAddAdminRequest {
 
     @NotBlank(message = "Password confirmation is required")
     private String confirmPassword;
+
+    @AssertTrue(message = "Passwords do not match")
+    public boolean isPasswordMatching() {
+        return password != null && password.equals(confirmPassword);
+    }
 }

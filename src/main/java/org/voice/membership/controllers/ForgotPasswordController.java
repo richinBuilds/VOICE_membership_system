@@ -1,22 +1,25 @@
 package org.voice.membership.controllers;
 
+import lombok.RequiredArgsConstructor;
+import org.voice.membership.dtos.ForgotPasswordRequest;
 import org.voice.membership.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
+@RequiredArgsConstructor
 /**
  * Manages the "forgot password" flow before a reset token is issued.
  * Shows the request form and triggers sending of password reset emails.
  */
 public class ForgotPasswordController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @GetMapping("/forgot-password")
     public String showForgotPasswordPage() {
@@ -24,8 +27,14 @@ public class ForgotPasswordController {
     }
 
     @PostMapping("/forgot-password")
-    public String processForgotPassword(@RequestParam("email") String email, Model model) {
-        boolean result = userService.sendPasswordResetEmail(email);
+    public String processForgotPassword(@Valid @ModelAttribute ForgotPasswordRequest request,
+            BindingResult bindingResult,
+            Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("message", "Please provide a valid email address.");
+            return "forgot-password";
+        }
+        boolean result = userService.sendPasswordResetEmail(request.email());
         if (result) {
             model.addAttribute("message", "A password reset link has been sent to your email address.");
         } else {

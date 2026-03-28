@@ -1,28 +1,33 @@
 package org.voice.membership.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service for membership-related business logic.
  * Handles membership expiry calculations, date formatting, and membership
  * lifecycle operations.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MembershipService {
 
     private final MembershipRepository membershipRepository;
     private final UserRepository userRepository;
+    private final AdminNotificationService adminNotificationService;
 
     /**
      * Calculate membership expiry date from a start date.
@@ -112,5 +117,108 @@ public class MembershipService {
         }
 
         return false;
+    }
+
+    // -----------------------------------------------------------------------
+    // Membership retrieval helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Find a membership by its primary key.
+     */
+    public Optional<Membership> getMembershipById(Integer id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return membershipRepository.findById(id);
+    }
+
+    /**
+     * Return all active memberships ordered by display order (ascending).
+     */
+    public List<Membership> getActiveMembershipsOrdered() {
+        return membershipRepository.findByActiveTrueOrderByDisplayOrderAsc();
+    }
+
+    /**
+     * Return all active memberships.
+     */
+    public List<Membership> getActiveMemberships() {
+        return membershipRepository.findByActiveTrue();
+    }
+
+    /**
+     * Return every membership regardless of active status.
+     */
+    public List<Membership> getAllMemberships() {
+        return membershipRepository.findAll();
+    }
+
+    /**
+     * Return all paid (non-free) memberships.
+     */
+    public List<Membership> getPaidMemberships() {
+        return membershipRepository.findByIsFree(false);
+    }
+
+    // -----------------------------------------------------------------------
+    // Membership upgrade
+    // -----------------------------------------------------------------------
+
+    /**
+     * Apply a paid membership upgrade to a user: set the membership, update
+     * start/expiry dates, persist the user, and notify the admin.
+     *
+     * @param user           the user being upgraded
+     * @param paidMembership the new paid membership to assign
+     */
+    public void applyMembershipUpgrade(User user, Membership paidMembership) {
+        user.setMembership(paidMembership);
+        user.setPaid(true);
+        Date now = new Date();
+        user.setMembershipStartDate(now);
+        user.setMembershipExpiryDate(calculateMembershipExpiry(now));
+        userRepository.save(user);
+        try {
+            adminNotificationService.createInstantNotification(user);
+        } catch (Exception e) {
+            log.error("Failed to create admin notification for user {}", user.getId(), e);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Admin membership editor
+    // -----------------------------------------------------------------------
+
+    /**
+     * Update a membership plan's name, description, price, and features.
+     *
+     * @param id          primary key of the membership
+     * @param name        new display name
+     * @param description new description
+     * @param price       new price string (ignored for free memberships or when blank)
+     * @param features    newline-separated features text (browser line endings are
+     *                    normalised to the system separator)
+     * @return the saved Membership, or {@code null} if the id was not found
+     * @throws NumberFormatException if {@code price} is non-blank but not a valid
+     *                               decimal number
+     */
+    public Membership updateMembership(int id, String name, String description,
+                                       String price, String features) {
+        Membership membership = membershipRepository.findById(id).orElse(null);
+        if (membership == null) {
+            return null;
+        }
+        membership.setName(name.trim());
+        membership.setDescription(description.trim());
+        if (!membership.isFree() && price != null && !price.trim().isEmpty()) {
+            membership.setPrice(new BigDecimal(price.trim()));
+        }
+        if (features != null) {
+            String normalised = features.replace("\r\n", "\n").replace("\r", "\n");
+            normalised = normalised.replace("\n", System.lineSeparator());
+            membership.setFeatures(normalised);
+        }
+        return membershipRepository.save(membership);
     }
 }
