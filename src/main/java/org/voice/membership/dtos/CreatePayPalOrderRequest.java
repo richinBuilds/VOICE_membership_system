@@ -1,4 +1,8 @@
 package org.voice.membership.dtos;
 
-public record CreatePayPalOrderRequest(Integer membershipId) {
+import jakarta.validation.constraints.NotNull;
+
+public record CreatePayPalOrderRequest(
+	@NotNull(message = "Membership is required")
+	Integer membershipId) {
 }

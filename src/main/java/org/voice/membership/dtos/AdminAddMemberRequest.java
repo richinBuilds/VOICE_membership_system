@@ -1,6 +1,7 @@
 package org.voice.membership.dtos;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -58,4 +59,9 @@ public class AdminAddMemberRequest {
 
     @NotNull(message = "Account lock status is required")
     private Boolean accountLocked;
+
+    @AssertTrue(message = "Passwords do not match")
+    public boolean isPasswordMatching() {
+        return password != null && password.equals(confirmPassword);
+    }
 }

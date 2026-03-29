@@ -1,9 +1,9 @@
 package org.voice.membership.dtos;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.voice.membership.validation.StrongPassword;
 
@@ -29,6 +29,8 @@ public class RegisterDto {
 
     @StrongPassword
     private String password;
+
+    @NotEmpty(message = "Confirm password is required")
     private String confirmPassword;
     @NotEmpty(message = "Phone number is required")
     @Pattern(regexp = "^\\(?([0-9]{3})\\)?[-.\\s]?([0-9]{3})[-.\\s]?([0-9]{4})$", message = "Invalid Canadian phone number format. Use: (XXX) XXX-XXXX or XXX-XXX-XXXX or XXXXXXXXXX (10 digits)")
@@ -38,4 +40,9 @@ public class RegisterDto {
     private String province;
     @Pattern(regexp = "^[A-Za-z][0-9][A-Za-z][ ]?[0-9][A-Za-z][0-9]$", message = "Valid Canadian postal code, e.g., A1A 1A1")
     private String postalCode;
+
+    @AssertTrue(message = "Passwords do not match")
+    public boolean isPasswordMatching() {
+        return password == null || confirmPassword == null || password.equals(confirmPassword);
+    }
 }

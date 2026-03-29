@@ -8,7 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -28,11 +27,14 @@ class MembershipServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private AdminNotificationService adminNotificationService;
+
     private MembershipService membershipService;
 
     @BeforeEach
     void setUp() {
-        membershipService = new MembershipService(membershipRepository, userRepository);
+        membershipService = new MembershipService(membershipRepository, userRepository, adminNotificationService);
     }
 
     // ==================== calculateMembershipExpiry Tests ====================
