@@ -14,8 +14,6 @@ import org.voice.membership.services.AdminNotificationFacadeService;
 import java.util.List;
 
 /**
- * REST Controller for managing admin notifications.
- * Provides endpoints for fetching, marking as read, and dismissing
  * notifications.
  */
 @Slf4j
