@@ -25,12 +25,7 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/register")
 @RequiredArgsConstructor
-/**
- * Implements the multi-step user registration, child details, and membership
- * checkout flow.
- * Guides users through all registration steps. Delegates all business logic
- * (user creation, verification, cart, payments) to {@link RegistrationService}.
- */
+
 public class RegisterController {
 
     private final MembershipService membershipService;
