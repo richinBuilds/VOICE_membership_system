@@ -12,10 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
+import org.voice.membership.repositories.LandingPageContentRepository;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -47,17 +49,49 @@ class AdminControllerTest {
         private UserRepository userRepository;
 
         @Autowired
+        private LandingPageContentRepository landingPageContentRepository;
+
+        @Autowired
         private MembershipRepository membershipRepository;
 
         @Autowired
         private ObjectMapper objectMapper;
 
+        @Autowired
+        private org.voice.membership.services.LandingPageService landingPageService;
+
         private User adminUser;
         private User regularUser;
+        private org.voice.membership.entities.Membership freeMembership;
+        private org.voice.membership.entities.Membership premiumMembership;
 
         @BeforeEach
         void setUp() {
                 userRepository.deleteAll();
+                membershipRepository.deleteAll();
+
+                // Create test memberships
+                freeMembership = org.voice.membership.entities.Membership.builder()
+                                .name("Free")
+                                .description("Free membership")
+                                .price(new java.math.BigDecimal("0.00"))
+                                .features("Basic features")
+                                .isFree(true)
+                                .displayOrder(1)
+                                .active(true)
+                                .build();
+                freeMembership = membershipRepository.save(freeMembership);
+
+                premiumMembership = org.voice.membership.entities.Membership.builder()
+                                .name("Premium")
+                                .description("Premium membership with all features")
+                                .price(new java.math.BigDecimal("20.00"))
+                                .features("- All features\n- Priority support")
+                                .isFree(false)
+                                .displayOrder(2)
+                                .active(true)
+                                .build();
+                premiumMembership = membershipRepository.save(premiumMembership);
 
                 adminUser = User.builder()
                                 .firstName("Admin")
@@ -1067,6 +1101,300 @@ class AdminControllerTest {
                                                 .value(containsString("Failed to send to 2 recipient(s)")));
         }
 
+        // ==================== Edit Membership Renewal Reminder Email Tests
+        // ====================
+        // Scenario: Admin wants to edit the membership renewal reminder email
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void renewalEmailEditor_WithAdminRole_ShouldReturnEditorForm() throws Exception {
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin-renewal-email"))
+                                .andExpect(model().attributeExists("renewalSubject"))
+                                .andExpect(model().attributeExists("renewalBody"))
+                                .andExpect(model().attributeExists("adminName"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void renewalEmailEditor_ShouldLoadCurrentEmailContent() throws Exception {
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attributeExists("renewalSubject"))
+                                .andExpect(model().attributeExists("renewalBody"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithValidSubjectAndBody_ShouldUpdate() throws Exception {
+                String newSubject = "Your VOICE Membership Renews Soon - Action Required";
+                String newBody = "Dear {memberName},\n\nYour VOICE membership expires on {expiryDate}. "
+                                + "Please renew today: {renewalUrl}\n\nThank you!";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", newSubject)
+                                .param("renewalBody", newBody))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/renewal-email"))
+                                .andExpect(flash().attributeExists("success"));
+
+                // Verify the content was updated
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalSubject", newSubject))
+                                .andExpect(model().attribute("renewalBody", newBody));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithUpdatedSubjectOnly_ShouldUpdateSubject() throws Exception {
+                String originalBody = landingPageService.getRenewalEmailBody();
+                String newSubject = "Renew Your VOICE Membership Today";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", newSubject)
+                                .param("renewalBody", originalBody))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/renewal-email"))
+                                .andExpect(flash().attributeExists("success"));
+
+                // Verify subject was updated
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalSubject", newSubject));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithUpdatedBodyOnly_ShouldUpdateBody() throws Exception {
+                String originalSubject = landingPageService.getRenewalEmailSubject();
+                String newBody = "Hello {memberName},\n\nIt's time to renew your membership before {expiryDate}. "
+                                + "Renew now and continue enjoying VOICE benefits!\n\nRenew: {renewalUrl}\n\nBest regards,\nVOICE Team";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", originalSubject)
+                                .param("renewalBody", newBody))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/renewal-email"))
+                                .andExpect(flash().attributeExists("success"));
+
+                // Verify body was updated
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalBody", newBody));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithTemplateVariables_ShouldPreserveVariables() throws Exception {
+                String subjectWithVariables = "Your Membership Expires in {daysUntilExpiry} Day(s) - Renew Now";
+                String bodyWithVariables = "Dear {memberName},\n\n"
+                                + "Your {membershipName} expires on {expiryDate}.\n"
+                                + "Days until expiry: {daysUntilExpiry}\n"
+                                + "Renew here: {renewalUrl}\n\n"
+                                + "Thank you for being a VOICE member!";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", subjectWithVariables)
+                                .param("renewalBody", bodyWithVariables))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(flash().attributeExists("success"));
+
+                // Verify variables were preserved
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalSubject",
+                                                containsString("{daysUntilExpiry}")))
+                                .andExpect(model().attribute("renewalBody",
+                                                allOf(containsString("{memberName}"),
+                                                                containsString("{expiryDate}"),
+                                                                containsString("{renewalUrl}"))));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithWhitespaceContent_ShouldTrimValues() throws Exception {
+                String subjectWithWhitespace = "  \n  Renew Your Membership  \n  ";
+                String bodyWithWhitespace = "  \n  Dear member,\n\n  Please renew.  \n  ";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", subjectWithWhitespace)
+                                .param("renewalBody", bodyWithWhitespace))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(flash().attributeExists("success"));
+
+                // Verify content was trimmed
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalSubject", "Renew Your Membership"))
+                                .andExpect(model().attribute("renewalBody", "Dear member,\n\n  Please renew."));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithMultilineBody_ShouldPreserveFormatting() throws Exception {
+                String multilineBody = "Dear {memberName},\n\n"
+                                + "This is a reminder that your membership expires on {expiryDate}.\n\n"
+                                + "Benefits of renewing:\n"
+                                + "- Access to all features\n"
+                                + "- Priority support\n"
+                                + "- Exclusive webinars\n\n"
+                                + "Renew now: {renewalUrl}\n\n"
+                                + "Best regards,\nThe VOICE Team";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", "Renew Your Membership")
+                                .param("renewalBody", multilineBody))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(flash().attributeExists("success"));
+
+                // Verify multiline formatting was preserved
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalBody", containsString("Benefits of renewing:")));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithHTMLContent_ShouldAcceptHTMLTags() throws Exception {
+                String htmlBody = "<p>Dear {memberName},</p>"
+                                + "<p>Your membership expires on <strong>{expiryDate}</strong>.</p>"
+                                + "<p>Please renew: <a href='{renewalUrl}'>Renew Here</a></p>";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", "Renew Your Membership Now")
+                                .param("renewalBody", htmlBody))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(flash().attributeExists("success"));
+
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalBody", containsString("<p>")));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithSpecialCharacters_ShouldPreserveCharacters() throws Exception {
+                String subjectWithSpecialChars = "Your VOICE® Membership Renewal — {daysUntilExpiry} Day(s) Left!";
+                String bodyWithSpecialChars = "© 2026 VOICE Organization\n\n"
+                                + "Dear {memberName},\n\n"
+                                + "Your membership ends on {expiryDate} — don't miss out!\n\n"
+                                + "Prices: Free / $20/year • Sign-up bonus: 10%";
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", subjectWithSpecialChars)
+                                .param("renewalBody", bodyWithSpecialChars))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(flash().attributeExists("success"));
+
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalSubject",
+                                                containsString("VOICE®")))
+                                .andExpect(model().attribute("renewalBody",
+                                                containsString("© 2026")));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithLongContent_ShouldAcceptLongText() throws Exception {
+                StringBuilder longBody = new StringBuilder();
+                longBody.append("Dear {memberName},\n\n");
+                for (int i = 1; i <= 10; i++) {
+                        longBody.append("Paragraph ").append(i).append(": ")
+                                        .append("Lorem ipsum dolor sit amet, consectetur adipiscing elit. ")
+                                        .append("Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ")
+                                        .append("Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.\n\n");
+                }
+                longBody.append("Renew at: {renewalUrl}");
+
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", "Your Membership Renewal Information")
+                                .param("renewalBody", longBody.toString()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(flash().attributeExists("success"));
+
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalBody",
+                                                containsString("Paragraph 10")));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_MultipleUpdates_ShouldPersistLastUpdate() throws Exception {
+                // First update
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", "First Update Subject")
+                                .param("renewalBody", "First update body"))
+                                .andExpect(status().is3xxRedirection());
+
+                // Second update
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", "Second Update Subject")
+                                .param("renewalBody", "Second update body"))
+                                .andExpect(status().is3xxRedirection());
+
+                // Verify only the second update persists
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("renewalSubject", "Second Update Subject"))
+                                .andExpect(model().attribute("renewalBody", "Second update body"));
+        }
+
+        @Test
+        void renewalEmailEditor_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().is3xxRedirection());
+        }
+
+        @Test
+        void saveRenewalEmail_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", "Subject")
+                                .param("renewalBody", "Body"))
+                                .andExpect(status().is3xxRedirection());
+        }
+
+        @Test
+        @WithMockUser(username = "user@example.com", roles = "USER")
+        void renewalEmailEditor_WithUserRole_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(get("/admin/renewal-email"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(username = "user@example.com", roles = "USER")
+        void saveRenewalEmail_WithUserRole_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .with(csrf())
+                                .param("renewalSubject", "Subject")
+                                .param("renewalBody", "Body"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveRenewalEmail_WithoutCSRF_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(post("/admin/renewal-email/save")
+                                .param("renewalSubject", "Subject")
+                                .param("renewalBody", "Body"))
+                                .andExpect(status().isForbidden());
+        }
+
         // ==================== Renewal Reminder Endpoint Tests ====================
 
         @Test
@@ -1086,7 +1414,8 @@ class AdminControllerTest {
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void previewRenewalReminders_WithExpiringMember_ShouldReturnMemberDetails() throws Exception {
-                // Arrange: find the paid membership plan and create a paid member expiring in 5 days
+                // Arrange: find the paid membership plan and create a paid member expiring in 5
+                // days
                 var paidMembership = membershipRepository.findAll().stream()
                                 .filter(m -> !m.isFree())
                                 .findFirst()
@@ -1138,6 +1467,414 @@ class AdminControllerTest {
         void triggerRenewalReminders_WithNonAdminUser_ShouldBeForbidden() throws Exception {
                 mockMvc.perform(post("/admin/trigger-renewal-reminders")
                                 .with(csrf()))
+                                .andExpect(status().isForbidden());
+        }
+
+        // ========================== Edit Landing Page Tests ==========================
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void landingPageEditor_WithAdminRole_ShouldReturnEditorForm() throws Exception {
+                mockMvc.perform(get("/admin/landing-page"))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin-landing-page"))
+                                .andExpect(model().attributeExists("heroTitle"))
+                                .andExpect(model().attributeExists("heroTagline"))
+                                .andExpect(model().attributeExists("benefitsTitle"))
+                                .andExpect(model().attributeExists("reasonsHeading"))
+                                .andExpect(model().attributeExists("reasonsContent"))
+                                .andExpect(model().attributeExists("adminName"));
+        }
+
+        // ========================== Edit Membership Plan Details Tests
+        // ==========================
+        // Scenario: Admin wants to edit existing membership plan details
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void editMembershipsPage_WithAdminRole_ShouldShowMemberships() throws Exception {
+                mockMvc.perform(get("/admin/memberships"))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin-edit-memberships"))
+                                .andExpect(model().attributeExists("memberships"))
+                                .andExpect(model().attributeExists("adminName"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void editMembershipsPage_ShouldDisplayAllActiveMemberships() throws Exception {
+                mockMvc.perform(get("/admin/memberships"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("memberships", hasSize(2)));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithValidPremiumData_ShouldUpdatePricing() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium Plus")
+                                .param("description", "Enhanced premium membership with priority support")
+                                .param("price", "29.99")
+                                .param("features",
+                                                "- All premium features\n- 24/7 Priority support\n- Monthly webinars"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attributeExists("success"));
+
+                org.voice.membership.entities.Membership updated = membershipRepository
+                                .findById(premiumMembership.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getName()).isEqualTo("Premium Plus");
+                assertThat(updated.getPrice()).isEqualByComparingTo(new BigDecimal("29.99"));
+                assertThat(updated.getDescription())
+                                .isEqualTo("Enhanced premium membership with priority support");
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithUpdatedDescription_ShouldUpdateDescriptionOnly() throws Exception {
+                String oldPrice = premiumMembership.getPrice().toString();
+
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium")
+                                .param("description", "Updated description for premium membership")
+                                .param("price", oldPrice)
+                                .param("features", premiumMembership.getFeatures()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attributeExists("success"));
+
+                org.voice.membership.entities.Membership updated = membershipRepository
+                                .findById(premiumMembership.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getDescription()).isEqualTo("Updated description for premium membership");
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithUpdatedFeatures_ShouldUpdateFeatures() throws Exception {
+                String newFeatures = "- Feature 1\n- Feature 2\n- Feature 3\n- New Feature 4";
+
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium")
+                                .param("description", premiumMembership.getDescription())
+                                .param("price", premiumMembership.getPrice().toString())
+                                .param("features", newFeatures))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attributeExists("success"));
+
+                org.voice.membership.entities.Membership updated = membershipRepository
+                                .findById(premiumMembership.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getFeatures()).contains("Feature 1", "Feature 2", "Feature 3", "New Feature 4");
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_FreeMembership_ShouldNotChangePriceFromZero() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + freeMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Free Basic")
+                                .param("description", "Updated free membership description")
+                                .param("price", "99.99")
+                                .param("features", "- Basic features only"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attributeExists("success"));
+
+                org.voice.membership.entities.Membership updated = membershipRepository
+                                .findById(freeMembership.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.isFree()).isTrue();
+                assertThat(updated.getPrice()).isEqualByComparingTo(new BigDecimal("0.00"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithInvalidPrice_ShouldShowErrorMessage() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium")
+                                .param("description", premiumMembership.getDescription())
+                                .param("price", "invalid-price")
+                                .param("features", premiumMembership.getFeatures()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attribute("error", containsString("Invalid price format")));
+
+                org.voice.membership.entities.Membership unchanged = membershipRepository
+                                .findById(premiumMembership.getId()).orElse(null);
+                assertThat(unchanged).isNotNull();
+                assertThat(unchanged.getPrice()).isEqualByComparingTo(new BigDecimal("20.00"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithNegativePrice_ShouldHandleGracefully() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium")
+                                .param("description", premiumMembership.getDescription())
+                                .param("price", "-50.00")
+                                .param("features", premiumMembership.getFeatures()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithNonexistentId_ShouldShowError() throws Exception {
+                mockMvc.perform(post("/admin/memberships/99999/save")
+                                .with(csrf())
+                                .param("name", "Nonexistent")
+                                .param("description", "This membership does not exist")
+                                .param("price", "50.00")
+                                .param("features", "Some features"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attribute("error", containsString("not found")));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithWhitespaceInName_ShouldTrimAndSave() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "  Premium Updated  ")
+                                .param("description", "  Trimmed description  ")
+                                .param("price", premiumMembership.getPrice().toString())
+                                .param("features", premiumMembership.getFeatures()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"));
+
+                org.voice.membership.entities.Membership updated = membershipRepository
+                                .findById(premiumMembership.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getName()).isEqualTo("Premium Updated");
+                assertThat(updated.getDescription()).isEqualTo("Trimmed description");
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithLargePrice_ShouldAcceptDecimalValues() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium Enterprise")
+                                .param("description", premiumMembership.getDescription())
+                                .param("price", "999.99")
+                                .param("features", premiumMembership.getFeatures()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attributeExists("success"));
+
+                org.voice.membership.entities.Membership updated = membershipRepository
+                                .findById(premiumMembership.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getPrice()).isEqualByComparingTo(new BigDecimal("999.99"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_WithEmptyPrice_FreeMembership_ShouldNotUpdate() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium")
+                                .param("description", premiumMembership.getDescription())
+                                .param("price", "")
+                                .param("features", premiumMembership.getFeatures()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveMembership_CompleteUpdate_ShouldUpdateAllFields() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium Gold")
+                                .param("description", "Our most advanced membership tier")
+                                .param("price", "49.99")
+                                .param("features", "- Unlimited access\n- Premium support\n- Custom features"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/memberships"))
+                                .andExpect(flash().attributeExists("success"));
+
+                org.voice.membership.entities.Membership updated = membershipRepository
+                                .findById(premiumMembership.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getName()).isEqualTo("Premium Gold");
+                assertThat(updated.getDescription()).isEqualTo("Our most advanced membership tier");
+                assertThat(updated.getPrice()).isEqualByComparingTo(new BigDecimal("49.99"));
+                assertThat(updated.getFeatures())
+                                .contains("Unlimited access", "Premium support", "Custom features");
+        }
+
+        @Test
+        void saveMembership_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium")
+                                .param("description", "Test")
+                                .param("price", "20.00")
+                                .param("features", "Test features"))
+                                .andExpect(status().is3xxRedirection());
+        }
+
+        @Test
+        @WithMockUser(username = "user@example.com", roles = "USER")
+        void editMembershipsPage_WithUserRole_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(get("/admin/memberships"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(username = "user@example.com", roles = "USER")
+        void saveMembership_WithUserRole_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(post("/admin/memberships/" + premiumMembership.getId() + "/save")
+                                .with(csrf())
+                                .param("name", "Premium")
+                                .param("description", "Test")
+                                .param("price", "29.99")
+                                .param("features", "Test features"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveLandingPage_WithValidData_ShouldRedirectWithSuccess() throws Exception {
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .with(csrf())
+                                .param("heroTitle", "Welcome to VOICE")
+                                .param("heroTagline", "Empowering families of Deaf and Hard of Hearing children")
+                                .param("benefitsTitle", "Why Join VOICE?")
+                                .param("reasonsHeading", "10 Great Reasons to Join")
+                                .param("reasonsContent", "<ol><li>Community support</li></ol>"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/landing-page"))
+                                .andExpect(flash().attributeExists("success"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveLandingPage_ContentShouldBePersistedInDatabase() throws Exception {
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .with(csrf())
+                                .param("heroTitle", "Persisted Hero Title")
+                                .param("heroTagline", "Persisted tagline text")
+                                .param("benefitsTitle", "Persisted Benefits")
+                                .param("reasonsHeading", "Persisted Reasons Heading")
+                                .param("reasonsContent", "<ol><li>Reason 1</li></ol>"))
+                                .andExpect(status().is3xxRedirection());
+
+                String savedTitle = landingPageContentRepository.findByKey("hero_title")
+                                .map(c -> c.getValue()).orElse(null);
+                assertThat(savedTitle).isEqualTo("Persisted Hero Title");
+
+                String savedTagline = landingPageContentRepository.findByKey("hero_tagline")
+                                .map(c -> c.getValue()).orElse(null);
+                assertThat(savedTagline).isEqualTo("Persisted tagline text");
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void landingPageEditor_AfterSave_ShouldDisplayUpdatedContent() throws Exception {
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .with(csrf())
+                                .param("heroTitle", "Updated Hero Title")
+                                .param("heroTagline", "Updated Tagline")
+                                .param("benefitsTitle", "Updated Benefits Title")
+                                .param("reasonsHeading", "Updated Reasons Heading")
+                                .param("reasonsContent", "<ol><li>Updated Reason</li></ol>"))
+                                .andExpect(status().is3xxRedirection());
+
+                mockMvc.perform(get("/admin/landing-page"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("heroTitle", "Updated Hero Title"))
+                                .andExpect(model().attribute("heroTagline", "Updated Tagline"))
+                                .andExpect(model().attribute("benefitsTitle", "Updated Benefits Title"))
+                                .andExpect(model().attribute("reasonsHeading", "Updated Reasons Heading"));
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveLandingPage_OverwriteExistingContent_ShouldUpdateSuccessfully() throws Exception {
+                // Save initial content
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .with(csrf())
+                                .param("heroTitle", "Initial Title")
+                                .param("heroTagline", "Initial Tagline")
+                                .param("benefitsTitle", "Initial Benefits")
+                                .param("reasonsHeading", "Initial Reasons")
+                                .param("reasonsContent", "<ol><li>Initial</li></ol>"))
+                                .andExpect(status().is3xxRedirection());
+
+                // Overwrite with new content
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .with(csrf())
+                                .param("heroTitle", "Overwritten Title")
+                                .param("heroTagline", "Overwritten Tagline")
+                                .param("benefitsTitle", "Overwritten Benefits")
+                                .param("reasonsHeading", "Overwritten Reasons")
+                                .param("reasonsContent", "<ol><li>Overwritten</li></ol>"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(flash().attributeExists("success"));
+
+                String latestTitle = landingPageContentRepository.findByKey("hero_title")
+                                .map(c -> c.getValue()).orElse(null);
+                assertThat(latestTitle).isEqualTo("Overwritten Title");
+        }
+
+        @Test
+        void landingPageEditor_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+                mockMvc.perform(get("/admin/landing-page"))
+                                .andExpect(status().is3xxRedirection());
+        }
+
+        @Test
+        @WithMockUser(username = "user@example.com", roles = "USER")
+        void landingPageEditor_WithUserRole_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(get("/admin/landing-page"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void saveLandingPage_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .with(csrf())
+                                .param("heroTitle", "Test Title")
+                                .param("heroTagline", "Test Tagline")
+                                .param("benefitsTitle", "Test Benefits")
+                                .param("reasonsHeading", "Test Heading")
+                                .param("reasonsContent", "<ol><li>Test</li></ol>"))
+                                .andExpect(status().is3xxRedirection());
+        }
+
+        @Test
+        @WithMockUser(username = "user@example.com", roles = "USER")
+        void saveLandingPage_WithUserRole_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .with(csrf())
+                                .param("heroTitle", "Test Title")
+                                .param("heroTagline", "Test Tagline")
+                                .param("benefitsTitle", "Test Benefits")
+                                .param("reasonsHeading", "Test Heading")
+                                .param("reasonsContent", "<ol><li>Test</li></ol>"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void saveLandingPage_WithoutCsrf_ShouldBeForbidden() throws Exception {
+                mockMvc.perform(post("/admin/landing-page/save")
+                                .param("heroTitle", "Test Title")
+                                .param("heroTagline", "Test Tagline")
+                                .param("benefitsTitle", "Test Benefits")
+                                .param("reasonsHeading", "Test Heading")
+                                .param("reasonsContent", "<ol><li>Test</li></ol>"))
                                 .andExpect(status().isForbidden());
         }
 }

@@ -17,7 +17,7 @@ spring:
         format_sql: true
 
   mail:
-    host: sandbox.smtp.mailtrap.io
+    host: smtp.mailtrap.io
     port: 587
     username: ${MAILTRAP_USERNAME}
     password: ${MAILTRAP_PASSWORD}
@@ -27,24 +27,26 @@ spring:
           auth: true
           starttls:
             enable: true
-#added google authentication configuration
+
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:}      
+            client-id: ${GOOGLE_CLIENT_ID:}
             client-secret: ${GOOGLE_CLIENT_SECRET:}
             scope:
-              - email
               - profile
+              - email
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://www.googleapis.com/oauth2/v4/token
+            user-info-uri: https://www.googleapis.com/oauth2/v1/userinfo
+            user-name-attribute: sub
 
 server:
   port: 8080
-
-app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}
-
   servlet:
     session:
       timeout: 30m
@@ -52,6 +54,9 @@ app:
         http-only: true
         secure: false
         max-age: 30m
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
 
 logging:
   level:
@@ -71,7 +76,7 @@ account:
 
 paypal:
   mode: sandbox
-  client-id: ${PAYPAL_CLIENT_ID
+  client-id: ${PAYPAL_CLIENT_ID}
   client-secret: ${PAYPAL_CLIENT_SECRET}
   webhook-id:
   currency: CAD
