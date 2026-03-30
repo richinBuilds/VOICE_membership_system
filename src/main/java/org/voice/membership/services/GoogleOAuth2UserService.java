@@ -170,7 +170,6 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
 
         Object flow = session.getAttribute(GOOGLE_AUTH_FLOW_SESSION_KEY);
-        session.removeAttribute(GOOGLE_AUTH_FLOW_SESSION_KEY);
         return GOOGLE_AUTH_FLOW_SIGNUP.equalsIgnoreCase(String.valueOf(flow));
     }
 
@@ -181,6 +180,7 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
 
         HttpSession session = attributes.getRequest().getSession(true);
+        session.removeAttribute(GOOGLE_AUTH_FLOW_SESSION_KEY);
 
         RegisterDto registerDto = new RegisterDto();
         registerDto.setFirstName(user.getFirstName());
