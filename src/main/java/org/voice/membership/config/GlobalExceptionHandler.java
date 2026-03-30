@@ -1,9 +1,12 @@
 package org.voice.membership.config;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+@Order(Ordered.LOWEST_PRECEDENCE)
 @ControllerAdvice
 /**
  * Centralized handler for uncaught exceptions in MVC controllers.

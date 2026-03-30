@@ -7,16 +7,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.voice.membership.services.GoogleOAuth2UserService;
 
 @Configuration
 @EnableWebSecurity
 /**
- * Configures Spring Security for the VOICE membership application.
- * Defines public and protected routes, login/logout, remember-me, and
- * redirects.
+ * Configures Spring Security for the VOICE membership application. Defines public and protected routes, login/logout, remember-me, and redirects.
  */
 public class SecurityConfig {
 
@@ -27,13 +27,15 @@ public class SecurityConfig {
         private CustomAuthenticationSuccessHandler authenticationSuccessHandler;
 
         @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
+                        GoogleOAuth2UserService googleOAuth2UserService) throws Exception {
                 return httpSecurity
                                 .authorizeHttpRequests(auth -> auth
 
                                                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                                                 .requestMatchers("/").permitAll()
                                                 .requestMatchers("/login").permitAll()
+                                                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                                                 .requestMatchers("/register/paypal/checkout/**").permitAll()
                                                 .requestMatchers("/register/paypal/**")
                                                 .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
@@ -56,6 +58,36 @@ public class SecurityConfig {
                                                 .successHandler(authenticationSuccessHandler)
                                                 .failureHandler(authenticationFailureHandler)
                                                 .permitAll())
+                                .oauth2Login(oauth2 -> oauth2
+                                                .loginPage("/login")
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(googleOAuth2UserService))
+                                                .failureHandler((request, response, exception) -> {
+                                                        String redirectUrl = "/login?error=true";
+
+                                                        if (exception instanceof OAuth2AuthenticationException oauth2Exception
+                                                                        && oauth2Exception.getError() != null
+                                                                        && "google_signup_required".equalsIgnoreCase(
+                                                                                        oauth2Exception.getError()
+                                                                                                        .getErrorCode())) {
+                                                                redirectUrl = "/login?googleSignupRequired=true";
+                                                        } else if (exception instanceof OAuth2AuthenticationException oauth2Exception
+                                                                        && oauth2Exception.getError() != null
+                                                                        && "email_unverified".equalsIgnoreCase(
+                                                                                        oauth2Exception.getError()
+                                                                                                        .getErrorCode())) {
+                                                                redirectUrl = "/login?unverified=true";
+                                                        } else if (exception instanceof OAuth2AuthenticationException oauth2Exception
+                                                                        && oauth2Exception.getError() != null
+                                                                        && "account_locked".equalsIgnoreCase(
+                                                                                        oauth2Exception.getError()
+                                                                                                        .getErrorCode())) {
+                                                                redirectUrl = "/login?locked=true";
+                                                        }
+
+                                                        response.sendRedirect(redirectUrl);
+                                                })
+                                                .successHandler(authenticationSuccessHandler))
                                 .logout(config -> config
                                                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                                                 .logoutSuccessUrl("/")

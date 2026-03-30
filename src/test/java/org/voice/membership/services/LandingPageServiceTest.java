@@ -1,205 +1,294 @@
-// package org.voice.membership.services;
+package org.voice.membership.services;
 
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Test;
-// import org.junit.jupiter.api.extension.ExtendWith;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.junit.jupiter.MockitoExtension;
-// import org.voice.membership.entities.LandingPageContent;
-// import org.voice.membership.entities.Membership;
-// import org.voice.membership.entities.MembershipBenefit;
-// import org.voice.membership.repositories.LandingPageContentRepository;
-// import org.voice.membership.repositories.MembershipBenefitRepository;
-// import org.voice.membership.repositories.MembershipRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.voice.membership.entities.LandingPageContent;
+import org.voice.membership.entities.Membership;
+import org.voice.membership.repositories.LandingPageContentRepository;
+import org.voice.membership.repositories.MembershipRepository;
 
-// import java.math.BigDecimal;
-// import java.util.Arrays;
-// import java.util.List;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-// import static org.assertj.core.api.Assertions.assertThat;
-// import static org.mockito.ArgumentMatchers.any;
-// import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
 
-// /**
-// * Unit tests for LandingPageService
-// * Tests membership and landing page content initialization
-// */
-// @ExtendWith(MockitoExtension.class)
-// class LandingPageServiceTest {
+/**
+ * Unit tests for LandingPageService
+ * Tests landing page content retrieval, update, and initialization logic
+ */
+@ExtendWith(MockitoExtension.class)
+class LandingPageServiceTest {
 
-// @Mock
-// private MembershipRepository membershipRepository;
+    @Mock
+    private MembershipRepository membershipRepository;
 
-// @Mock
-// private MembershipBenefitRepository membershipBenefitRepository;
+    @Mock
+    private LandingPageContentRepository landingPageContentRepository;
 
-// @Mock
-// private LandingPageContentRepository landingPageContentRepository;
+    @InjectMocks
+    private LandingPageService landingPageService;
 
-// @InjectMocks
-// private LandingPageService landingPageService;
+    private LandingPageContent taglineContent;
+    private LandingPageContent heroTitleContent;
+    private LandingPageContent heroTaglineContent;
+    private LandingPageContent benefitsTitleContent;
+    private LandingPageContent reasonsHeadingContent;
+    private LandingPageContent renewalEmailSubjectContent;
+    private LandingPageContent renewalEmailBodyContent;
+    private LandingPageContent reasonsContentContent;
+    private Membership freeMembership;
+    private Membership premiumMembership;
 
-// private Membership freeMembership;
-// private Membership premiumMembership;
-// private List<MembershipBenefit> benefits;
-// private LandingPageContent landingPageContent;
+    @BeforeEach
+    void setUp() {
+        taglineContent = LandingPageContent.builder()
+                .id(0).key("tagline")
+                .value("Empowering families of children who are Deaf and Hard of Hearing").active(true).build();
 
-// @BeforeEach
-// void setUp() {
-// freeMembership = Membership.builder()
-// .id(1)
-// .name("Free")
-// .description("Basic membership")
-// .price(BigDecimal.ZERO)
-// .isFree(true)
-// .displayOrder(1)
-// .active(true)
-// .build();
+        heroTitleContent = LandingPageContent.builder()
+                .id(1).key("hero_title")
+                .value("Welcome to VOICE").active(true).build();
 
-// premiumMembership = Membership.builder()
-// .id(2)
-// .name("Premium")
-// .description("Premium membership with full benefits")
-// .price(new BigDecimal("20.00"))
-// .isFree(false)
-// .displayOrder(2)
-// .active(true)
-// .build();
+        heroTaglineContent = LandingPageContent.builder()
+                .id(2).key("hero_tagline")
+                .value("Empowering families of Deaf and Hard of Hearing children").active(true).build();
 
-// MembershipBenefit benefit1 = MembershipBenefit.builder()
-// .id(1)
-// .title("Community Network")
-// .description("Connect with other families")
-// .icon("fa-users")
-// .displayOrder(1)
-// .active(true)
-// .build();
+        benefitsTitleContent = LandingPageContent.builder()
+                .id(3).key("benefits_title")
+                .value("Why Join VOICE?").active(true).build();
 
-// MembershipBenefit benefit2 = MembershipBenefit.builder()
-// .id(2)
-// .title("Resources")
-// .description("Access educational materials")
-// .icon("fa-book")
-// .displayOrder(2)
-// .active(true)
-// .build();
+        reasonsHeadingContent = LandingPageContent.builder()
+                .id(4).key("reasons_heading")
+                .value("10 Great Reasons to Join").active(true).build();
 
-// benefits = Arrays.asList(benefit1, benefit2);
+        renewalEmailSubjectContent = LandingPageContent.builder()
+                .id(6).key("renewal_email_subject")
+                .value("Your VOICE Membership Expires").active(true).build();
 
-// landingPageContent = LandingPageContent.builder()
-// .id(1)
-// .key("tagline")
-// .value("Empowering Families with Deaf Children")
-// .active(true)
-// .build();
-// }
+        renewalEmailBodyContent = LandingPageContent.builder()
+                .id(7).key("renewal_email_body")
+                .value("Renewal email body").active(true).build();
 
-// @Test
-// void getActiveMemberships_ShouldReturnListOfMemberships() {
-// when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc())
-// .thenReturn(Arrays.asList(freeMembership, premiumMembership));
+        reasonsContentContent = LandingPageContent.builder()
+                .id(5).key("reasons_content")
+                .value("<ol><li>Community Support</li></ol>").active(true).build();
 
-// List<Membership> result = landingPageService.getActiveMemberships();
+        freeMembership = Membership.builder()
+                .id(1).name("Free").description("Basic membership")
+                .price(BigDecimal.ZERO).isFree(true).displayOrder(1).active(true).build();
 
-// assertThat(result).isNotNull();
-// assertThat(result).hasSize(2);
-// assertThat(result).contains(freeMembership, premiumMembership);
-// verify(membershipRepository).findByActiveTrueOrderByDisplayOrderAsc();
-// }
+        premiumMembership = Membership.builder()
+                .id(2).name("Premium").description("Full membership")
+                .price(new BigDecimal("20.00")).isFree(false).displayOrder(2).active(true).build();
+    }
 
-// @Test
-// void getActiveBenefits_ShouldReturnListOfBenefits() {
-// when(membershipBenefitRepository.findByActiveTrueOrderByDisplayOrderAsc()).thenReturn(benefits);
+    // ========================== Positive Test Cases ==========================
 
-// List<MembershipBenefit> result = landingPageService.getActiveBenefits();
+    @Test
+    void getHeroTitle_WhenContentExists_ShouldReturnValue() {
+        when(landingPageContentRepository.findByKey("hero_title"))
+                .thenReturn(Optional.of(heroTitleContent));
 
-// assertThat(result).isNotNull();
-// assertThat(result).hasSize(2);
-// assertThat(result.get(0).getTitle()).isEqualTo("Community Network");
-// verify(membershipBenefitRepository).findByActiveTrueOrderByDisplayOrderAsc();
-// }
+        String result = landingPageService.getHeroTitle();
 
-// @Test
-// void getTagline_ShouldReturnTaglineString() {
-// when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.of(landingPageContent));
+        assertThat(result).isEqualTo("Welcome to VOICE");
+        verify(landingPageContentRepository).findByKey("hero_title");
+    }
 
-// String result = landingPageService.getTagline();
+    @Test
+    void getHeroTagline_WhenContentExists_ShouldReturnValue() {
+        when(landingPageContentRepository.findByKey("hero_tagline"))
+                .thenReturn(Optional.of(heroTaglineContent));
 
-// assertThat(result).isNotNull();
-// assertThat(result).isEqualTo("Empowering Families with Deaf Children");
-// verify(landingPageContentRepository).findByKey("tagline");
-// }
+        String result = landingPageService.getHeroTagline();
 
-// @Test
-// void
-// initializeDefaultMemberships_WhenNoMembershipsExist_ShouldCreateMemberships()
-// {
-// when(membershipRepository.findByNameAndIsFreeTrue("Free")).thenReturn(List.of());
-// when(membershipRepository.findByNameAndIsFreeFalse("Premium")).thenReturn(List.of());
-// when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc()).thenReturn(List.of());
-// when(membershipRepository.save(any(Membership.class))).thenAnswer(i ->
-// i.getArguments()[0]);
+        assertThat(result).isEqualTo("Empowering families of Deaf and Hard of Hearing children");
+        verify(landingPageContentRepository).findByKey("hero_tagline");
+    }
 
-// landingPageService.initializeDefaultMemberships();
+    @Test
+    void getBenefitsTitle_WhenContentExists_ShouldReturnValue() {
+        when(landingPageContentRepository.findByKey("benefits_title"))
+                .thenReturn(Optional.of(benefitsTitleContent));
 
-// verify(membershipRepository, times(2)).save(any(Membership.class));
-// }
+        String result = landingPageService.getBenefitsTitle();
 
-// @Test
-// void
-// initializeDefaultMemberships_WhenMembershipsExist_ShouldNotCreateMemberships()
-// {
-// when(membershipRepository.findByNameAndIsFreeTrue("Free")).thenReturn(List.of(freeMembership));
-// when(membershipRepository.findByNameAndIsFreeFalse("Premium")).thenReturn(List.of(premiumMembership));
-// when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc()).thenReturn(Arrays.asList(freeMembership,
-// premiumMembership));
+        assertThat(result).isEqualTo("Why Join VOICE?");
+    }
 
-// landingPageService.initializeDefaultMemberships();
+    @Test
+    void getReasonsHeading_WhenContentExists_ShouldReturnValue() {
+        when(landingPageContentRepository.findByKey("reasons_heading"))
+                .thenReturn(Optional.of(reasonsHeadingContent));
 
-// verify(membershipRepository, never()).save(any(Membership.class));
-// }
+        String result = landingPageService.getReasonsHeading();
 
-// @Test
-// void initializeDefaultBenefits_WhenNoBenefitsExist_ShouldCreateBenefits() {
-// when(membershipBenefitRepository.count()).thenReturn(0L);
-// when(membershipBenefitRepository.save(any(MembershipBenefit.class))).thenAnswer(i
-// -> i.getArguments()[0]);
+        assertThat(result).isEqualTo("10 Great Reasons to Join");
+    }
 
-// landingPageService.initializeDefaultBenefits();
+    @Test
+    void getReasonsContent_WhenContentExists_ShouldReturnValue() {
+        when(landingPageContentRepository.findByKey("reasons_content"))
+                .thenReturn(Optional.of(reasonsContentContent));
 
-// verify(membershipBenefitRepository,
-// times(5)).save(any(MembershipBenefit.class));
-// }
+        String result = landingPageService.getReasonsContent();
 
-// @Test
-// void initializeDefaultBenefits_WhenBenefitsExist_ShouldNotCreateBenefits() {
-// when(membershipBenefitRepository.count()).thenReturn(6L);
+        assertThat(result).isEqualTo("<ol><li>Community Support</li></ol>");
+    }
 
-// landingPageService.initializeDefaultBenefits();
+    @Test
+    void updateContent_WhenKeyExists_ShouldUpdateValue() {
+        when(landingPageContentRepository.findByKey("hero_title"))
+                .thenReturn(Optional.of(heroTitleContent));
+        when(landingPageContentRepository.save(any(LandingPageContent.class)))
+                .thenAnswer(i -> i.getArguments()[0]);
 
-// verify(membershipBenefitRepository,
-// never()).save(any(MembershipBenefit.class));
-// }
+        landingPageService.updateContent("hero_title", "New Hero Title");
 
-// @Test
-// void initializeDefaultContent_WhenNoContentExists_ShouldCreateContent() {
-// when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.empty());
-// when(landingPageContentRepository.save(any(LandingPageContent.class))).thenAnswer(i
-// -> i.getArguments()[0]);
+        verify(landingPageContentRepository)
+                .save(argThat(c -> "hero_title".equals(c.getKey()) && "New Hero Title".equals(c.getValue())));
+    }
 
-// landingPageService.initializeDefaultContent();
+    @Test
+    void updateContent_WhenKeyNotExists_ShouldCreateNewEntry() {
+        when(landingPageContentRepository.findByKey("hero_title"))
+                .thenReturn(Optional.empty());
+        when(landingPageContentRepository.save(any(LandingPageContent.class)))
+                .thenAnswer(i -> i.getArguments()[0]);
 
-// verify(landingPageContentRepository).save(any(LandingPageContent.class));
-// }
+        landingPageService.updateContent("hero_title", "Brand New Title");
 
-// @Test
-// void initializeDefaultContent_WhenContentExists_ShouldNotCreateContent() {
-// when(landingPageContentRepository.findByKey("tagline")).thenReturn(java.util.Optional.of(landingPageContent));
+        verify(landingPageContentRepository)
+                .save(argThat(c -> "hero_title".equals(c.getKey()) && "Brand New Title".equals(c.getValue())));
+    }
 
-// landingPageService.initializeDefaultContent();
+    @Test
+    void getAllContent_ShouldReturnMapWithAllFiveKeys() {
+        when(landingPageContentRepository.findByKey("hero_title")).thenReturn(Optional.of(heroTitleContent));
+        when(landingPageContentRepository.findByKey("hero_tagline")).thenReturn(Optional.of(heroTaglineContent));
+        when(landingPageContentRepository.findByKey("benefits_title")).thenReturn(Optional.of(benefitsTitleContent));
+        when(landingPageContentRepository.findByKey("reasons_heading")).thenReturn(Optional.of(reasonsHeadingContent));
+        when(landingPageContentRepository.findByKey("reasons_content")).thenReturn(Optional.of(reasonsContentContent));
 
-// verify(landingPageContentRepository,
-// never()).save(any(LandingPageContent.class));
-// }
-// }
+        Map<String, String> result = landingPageService.getAllContent();
+
+        assertThat(result).containsKeys("hero_title", "hero_tagline", "benefits_title", "reasons_heading",
+                "reasons_content");
+        assertThat(result.get("hero_title")).isEqualTo("Welcome to VOICE");
+        assertThat(result.get("hero_tagline")).isEqualTo("Empowering families of Deaf and Hard of Hearing children");
+    }
+
+    @Test
+    void getActiveMemberships_ShouldReturnOrderedList() {
+        when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc())
+                .thenReturn(Arrays.asList(freeMembership, premiumMembership));
+
+        List<Membership> result = landingPageService.getActiveMemberships();
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Free");
+        assertThat(result.get(1).getName()).isEqualTo("Premium");
+        verify(membershipRepository).findByActiveTrueOrderByDisplayOrderAsc();
+    }
+
+    // ========================== Negative Test Cases ==========================
+
+    @Test
+    void getHeroTitle_WhenContentNotExists_ShouldReturnEmptyString() {
+        when(landingPageContentRepository.findByKey("hero_title"))
+                .thenReturn(Optional.empty());
+
+        String result = landingPageService.getHeroTitle();
+
+        assertThat(result).isEqualTo("");
+    }
+
+    @Test
+    void getHeroTagline_WhenContentNotExists_ShouldReturnEmptyString() {
+        when(landingPageContentRepository.findByKey("hero_tagline"))
+                .thenReturn(Optional.empty());
+
+        String result = landingPageService.getHeroTagline();
+
+        assertThat(result).isEqualTo("");
+    }
+
+    @Test
+    void getContentByKey_WithNonExistentKey_ShouldReturnEmptyString() {
+        when(landingPageContentRepository.findByKey("nonexistent_key"))
+                .thenReturn(Optional.empty());
+
+        String result = landingPageService.getContentByKey("nonexistent_key");
+
+        assertThat(result).isEqualTo("");
+    }
+
+    @Test
+    void getActiveMemberships_WhenNoneActive_ShouldReturnEmptyList() {
+        when(membershipRepository.findByActiveTrueOrderByDisplayOrderAsc())
+                .thenReturn(List.of());
+
+        List<Membership> result = landingPageService.getActiveMemberships();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void updateContent_WithEmptyValue_ShouldSaveEmptyString() {
+        when(landingPageContentRepository.findByKey("hero_title"))
+                .thenReturn(Optional.of(heroTitleContent));
+        when(landingPageContentRepository.save(any(LandingPageContent.class)))
+                .thenAnswer(i -> i.getArguments()[0]);
+
+        landingPageService.updateContent("hero_title", "");
+
+        verify(landingPageContentRepository)
+                .save(argThat(c -> "hero_title".equals(c.getKey()) && "".equals(c.getValue())));
+    }
+
+    @Test
+    void initializeDefaultContent_WhenContentAlreadyExists_ShouldNotOverwrite() {
+        when(landingPageContentRepository.findByKey("tagline"))
+                .thenReturn(Optional.of(taglineContent));
+        when(landingPageContentRepository.findByKey("hero_title"))
+                .thenReturn(Optional.of(heroTitleContent));
+        when(landingPageContentRepository.findByKey("hero_tagline"))
+                .thenReturn(Optional.of(heroTaglineContent));
+        when(landingPageContentRepository.findByKey("benefits_title"))
+                .thenReturn(Optional.of(benefitsTitleContent));
+        when(landingPageContentRepository.findByKey("reasons_heading"))
+                .thenReturn(Optional.of(reasonsHeadingContent));
+        when(landingPageContentRepository.findByKey("renewal_email_subject"))
+                .thenReturn(Optional.of(renewalEmailSubjectContent));
+        when(landingPageContentRepository.findByKey("renewal_email_body"))
+                .thenReturn(Optional.of(renewalEmailBodyContent));
+        when(landingPageContentRepository.findByKey("reasons_content"))
+                .thenReturn(Optional.of(reasonsContentContent));
+
+        landingPageService.initializeDefaultContent();
+
+        verify(landingPageContentRepository, never()).save(any(LandingPageContent.class));
+    }
+
+    @Test
+    void initializeDefaultContent_WhenContentNotExists_ShouldCreateDefaultContent() {
+        when(landingPageContentRepository.findByKey("tagline"))
+                .thenReturn(Optional.empty());
+        when(landingPageContentRepository.save(any(LandingPageContent.class)))
+                .thenAnswer(i -> i.getArguments()[0]);
+
+        landingPageService.initializeDefaultContent();
+
+        verify(landingPageContentRepository, atLeastOnce()).save(any(LandingPageContent.class));
+    }
+}

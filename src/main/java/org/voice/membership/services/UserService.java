@@ -140,4 +140,11 @@ public class UserService implements UserDetailsService {
 
         return userRepository.save(user);
     }
+
+    /**
+     * Retrieve a user by their email address, or {@code null} if not found.
+     */
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 }
