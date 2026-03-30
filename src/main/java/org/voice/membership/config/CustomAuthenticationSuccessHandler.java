@@ -25,6 +25,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException {
 
+        request.getSession().removeAttribute(GoogleOAuth2UserService.GOOGLE_AUTH_FLOW_SESSION_KEY);
+
         Object googleSignupRedirect = request.getSession().getAttribute(
                 GoogleOAuth2UserService.GOOGLE_SIGNUP_REDIRECT_STEP2_SESSION_KEY);
         if (Boolean.TRUE.equals(googleSignupRedirect)) {

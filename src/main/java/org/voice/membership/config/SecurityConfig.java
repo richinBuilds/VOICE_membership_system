@@ -63,6 +63,9 @@ public class SecurityConfig {
                                                 .userInfoEndpoint(userInfo -> userInfo
                                                                 .userService(googleOAuth2UserService))
                                                 .failureHandler((request, response, exception) -> {
+                                                        request.getSession().removeAttribute(
+                                                                        GoogleOAuth2UserService.GOOGLE_AUTH_FLOW_SESSION_KEY);
+
                                                         String redirectUrl = "/login?error=true";
 
                                                         if (exception instanceof OAuth2AuthenticationException oauth2Exception
