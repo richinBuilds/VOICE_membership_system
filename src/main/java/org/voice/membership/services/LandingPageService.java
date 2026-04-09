@@ -12,15 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 
- * Business logic service for landing page and membership initialization.
- * Retrieves and manages: memberships, benefits, and landing page content.
- * Initializes default data (Free + Premium memberships, benefits, tagline) on
- * app startup.
- * Provides methods to populate database with seed data if not already present
- * (idempotent).
- */
+
 @Slf4j
 @Service
 public class LandingPageService {
@@ -228,7 +220,7 @@ public class LandingPageService {
             }
         }
 
-        // Log all active memberships
+
         List<Membership> activeMemberships = membershipRepository.findByActiveTrueOrderByDisplayOrderAsc();
         log.info("Total active memberships: {}", activeMemberships.size());
         for (Membership m : activeMemberships) {

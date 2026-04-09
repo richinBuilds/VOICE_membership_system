@@ -13,10 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
 @RequiredArgsConstructor
-/**
- * Manages the "forgot password" flow before a reset token is issued.
- * Shows the request form and triggers sending of password reset emails.
- */
+
 public class ForgotPasswordController {
 
     private final UserService userService;

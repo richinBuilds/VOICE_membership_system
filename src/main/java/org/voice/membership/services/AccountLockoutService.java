@@ -9,11 +9,7 @@ import org.voice.membership.repositories.UserRepository;
 
 import java.util.Date;
 
-/**
- * Service responsible for managing account lockout functionality.
- * Handles tracking failed login attempts, locking/unlocking accounts,
- * and checking lockout status.
- */
+
 @Service
 public class AccountLockoutService {
 
