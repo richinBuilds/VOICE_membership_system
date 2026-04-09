@@ -15,28 +15,9 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
-    
-    <style>
-        /* Teal color for tabs */
-        #userTabs .nav-link {
-            color: #008080;
-            font-weight: 500;
-        }
-        
-        #userTabs .nav-link:hover {
-            color: #006666;
-            border-color: #008080;
-        }
-        
-        #userTabs .nav-link.active {
-            color: #008080;
-            border-color: #008080 #008080 #fff;
-            font-weight: 600;
-        }
-    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body class="app-surface">
 
 <!-- CSRF Token for AJAX requests -->
 <input type="hidden" id="csrf-token" name="_csrf" th:value="${_csrf.token}" />
@@ -77,7 +58,7 @@
 <div class="admin-header">
     <div class="container">
         <h1><i class="fas fa-tachometer-alt me-2"></i> Admin Dashboard</h1>
-        <p class="mb-0" style="color: var(--bg-white);">Welcome back, <span th:text="${adminName}">Admin</span>!</p>
+        <p class="mb-0 admin-subtitle">Welcome back, <span th:text="${adminName}">Admin</span>!</p>
     </div>
 </div>
 
@@ -158,7 +139,7 @@
     <!-- Notification Card -->
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card shadow-sm" style="cursor: pointer;" onclick="window.location.href='/admin/notifications'">
+            <div class="card shadow-sm clickable-card" onclick="window.location.href='/admin/notifications'">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -177,7 +158,7 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow-sm" style="cursor: pointer;" onclick="window.location.href='/admin/landing-page'">
+            <div class="card shadow-sm clickable-card" onclick="window.location.href='/admin/landing-page'">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -196,7 +177,7 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow-sm" style="cursor: pointer;" onclick="window.location.href='/admin/memberships'">
+            <div class="card shadow-sm clickable-card" onclick="window.location.href='/admin/memberships'">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -215,7 +196,7 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow-sm" style="cursor: pointer;" onclick="window.location.href='/admin/renewal-email'">
+            <div class="card shadow-sm clickable-card" onclick="window.location.href='/admin/renewal-email'">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -375,7 +356,7 @@
                             <button type="submit" class="btn btn-primary-custom me-2">
                                 <i class="fas fa-search me-1"></i>Apply Filters
                             </button>
-                            <a th:href="@{/admin/dashboard}" class="btn btn-primary-custom">
+                            <a th:href="@{/admin/dashboard}" class="btn btn-secondary-custom">
                                 <i class="fas fa-times me-1"></i>Clear
                             </a>
                         </div>
@@ -392,8 +373,8 @@
             </div>
         </div>
         
-        <div class="table-responsive">
-            <table class="table table-hover">
+        <div class="admin-members-table-wrapper">
+            <table class="table table-hover admin-members-table">
                 <thead class="table-light">
                     <tr>
                         <th style="width: 40px;">
@@ -403,10 +384,7 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>Address</th>
-                        <th>City</th>
-                        <th>Province</th>
-                        <th>Chapter</th>
+                        <th>Location</th>
                         <th>Children</th>
                         <th>Role</th>
                         <th>Payment Status</th>
@@ -425,27 +403,23 @@
                         <td th:text="${user.firstName + (user.middleName != null && !user.middleName.isEmpty() ? ' ' + user.middleName : '') + ' ' + user.lastName}">John Doe</td>
                         <td th:text="${user.email}">user@example.com</td>
                         <td th:text="${user.phone}">123-456-7890</td>
-                        <td>
-                            <small th:if="${user.address != null and !#strings.isEmpty(user.address)}">
-                                <span th:text="${user.address}">123 Main St</span>
-                                <span th:if="${user.postalCode != null and !#strings.isEmpty(user.postalCode)}" 
-                                      th:text="${', ' + user.postalCode}">, 12345</span>
-                            </small>
-                            <small class="text-muted" th:if="${user.address == null or #strings.isEmpty(user.address)}">
-                                N/A
-                            </small>
-                        </td>
-                        <td>
-                            <span th:if="${user.city != null and !#strings.isEmpty(user.city)}" th:text="${user.city}">Toronto</span>
-                            <span class="text-muted" th:if="${user.city == null or #strings.isEmpty(user.city)}">N/A</span>
-                        </td>
-                        <td>
-                            <span th:if="${user.province != null and !#strings.isEmpty(user.province)}" th:text="${user.province}">Ontario</span>
-                            <span class="text-muted" th:if="${user.province == null or #strings.isEmpty(user.province)}">N/A</span>
-                        </td>
-                        <td>
-                            <span th:if="${user.chapter != null and !#strings.isEmpty(user.chapter)}" th:text="${user.chapter}">Greater Vancouver</span>
-                            <span class="text-muted" th:if="${user.chapter == null or #strings.isEmpty(user.chapter)}">N/A</span>
+                        <td class="cell-location">
+                            <div class="member-location">
+                                <strong th:if="${user.address != null and !#strings.isEmpty(user.address)}">
+                                    <span th:text="${user.address}">123 Main St</span>
+                                    <span th:if="${user.postalCode != null and !#strings.isEmpty(user.postalCode)}"
+                                          th:text="${', ' + user.postalCode}">, 12345</span>
+                                </strong>
+                                <strong th:if="${user.address == null or #strings.isEmpty(user.address)}">N/A</strong>
+                                <small>
+                                    <span th:if="${user.city != null and !#strings.isEmpty(user.city)}" th:text="${user.city}">Toronto</span>
+                                    <span th:if="${(user.city == null or #strings.isEmpty(user.city)) and (user.province != null and !#strings.isEmpty(user.province))}">—</span>
+                                    <span th:if="${user.province != null and !#strings.isEmpty(user.province)}" th:text="${(user.city != null and !#strings.isEmpty(user.city) ? ', ' : '') + user.province}">Ontario</span>
+                                    <span th:if="${(user.city == null or #strings.isEmpty(user.city)) and (user.province == null or #strings.isEmpty(user.province))}">City / Province unavailable</span>
+                                </small>
+                                <small th:if="${user.chapter != null and !#strings.isEmpty(user.chapter)}" th:text="${'Chapter: ' + user.chapter}">Chapter: Greater Vancouver</small>
+                                <small th:if="${user.chapter == null or #strings.isEmpty(user.chapter)}">Chapter not set</small>
+                            </div>
                         </td>
                         <td>
                             <div th:if="${user.children != null and !#lists.isEmpty(user.children)}">
@@ -476,16 +450,14 @@
                                   th:text="${user.membership != null and !user.membership.isFree ? 'Paid' : 'Unpaid'}">Unpaid</span>
                         </td>
                         <td th:text="${#dates.format(user.creation, 'yyyy-MM-dd')}">2024-01-01</td>
-                        <td>
+                        <td class="cell-actions">
                             <button class="btn btn-sm btn-outline-primary view-user-btn" 
-                                    style="border-color: var(--primary); color: var(--primary);"
                                     th:attr="data-user-id=${user.id}"
                                     title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <a th:href="@{/admin/edit-member/{id}(id=${user.id})}"
                                class="btn btn-sm btn-outline-primary"
-                               style="border-color: var(--primary); color: var(--primary);"
                                title="Edit Profile">
                                 <i class="fas fa-edit"></i>
                             </a>

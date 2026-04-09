@@ -15,57 +15,9 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
-
-    <style>
-        .plan-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            transition: box-shadow 0.2s;
-        }
-        .plan-card:hover {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.14);
-        }
-        .plan-card .card-header {
-            background: var(--teal-primary, #008080);
-            color: #fff;
-            border-radius: 12px 12px 0 0 !important;
-            padding: 1rem 1.25rem;
-        }
-        .plan-card .card-header.free-header {
-            background: var(--teal-dark, #006666);
-        }
-        .badge-free {
-            background: rgba(255,255,255,0.25);
-            color: #fff;
-            font-size: 0.75rem;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-        .badge-paid {
-            background: rgba(255,255,255,0.25);
-            color: #fff;
-            font-size: 0.75rem;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-        .features-hint {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        .form-label {
-            font-weight: 600;
-            color: #444;
-        }
-        .price-group .input-group-text {
-            background: #f1f5f5;
-            border-color: #ced4da;
-            color: #555;
-        }
-    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body class="app-surface">
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg">
@@ -110,7 +62,7 @@
 <div class="admin-header">
     <div class="container">
         <h1><i class="fas fa-tags me-2"></i> Edit Membership Plans</h1>
-        <p class="mb-0" style="color: var(--bg-white);">Update plan names, pricing, descriptions, and features.</p>
+        <p class="mb-0 admin-subtitle">Update plan names, pricing, descriptions, and features.</p>
     </div>
 </div>
 

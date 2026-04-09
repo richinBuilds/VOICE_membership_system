@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 /**
  * Exposes REST endpoints for landing page data and initialization.
- * Returns memberships, benefits, tagline, and basic health information.
+ * Returns memberships, benefits, tagline, and basic information.
  */
 public class LandingPageApiController {
 
