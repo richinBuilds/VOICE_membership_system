@@ -12,131 +12,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/main.css}">
-
-    <style>
-        /* ===== Contenteditable body editor ===== */
-        #bodyEditor {
-            min-height: 320px;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
-            line-height: 1.8;
-            background: #fff;
-            outline: none;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        #bodyEditor:focus {
-            border-color: #008080;
-            box-shadow: 0 0 0 0.2rem rgba(0,128,128,0.15);
-        }
-        /* ===== Subject contenteditable editor ===== */
-        #subjectEditor {
-            min-height: 42px;
-            max-height: 80px;
-            overflow-y: auto;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 0.45rem 0.75rem;
-            font-size: 0.95rem;
-            line-height: 1.8;
-            background: #fff;
-            outline: none;
-            white-space: nowrap;
-            overflow-x: auto;
-            word-break: keep-all;
-        }
-        #subjectEditor:focus {
-            border-color: #008080;
-            box-shadow: 0 0 0 0.2rem rgba(0,128,128,0.15);
-        }
-        /* ===== Placeholder chip ===== */
-        .ph-chip {
-            display: inline-block;
-            background: #e0f2f1;
-            color: #00695c;
-            border: 1px solid #80cbc4;
-            border-radius: 12px;
-            padding: 1px 8px;
-            font-size: 0.85em;
-            font-weight: 600;
-            cursor: default;
-            user-select: all;
-            white-space: nowrap;
-        }
-        /* ===== Insert-placeholder toolbar ===== */
-        .chip-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 0.5rem;
-        }
-        .chip-toolbar button {
-            background: #e0f2f1;
-            color: #00695c;
-            border: 1px solid #80cbc4;
-            border-radius: 12px;
-            padding: 2px 10px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .chip-toolbar button:hover { background: #b2dfdb; }
-        .toolbar-label {
-            font-size: 0.78rem;
-            color: #6c757d;
-            align-self: center;
-            margin-right: 4px;
-        }
-        .editor-card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        .editor-card h5 {
-            font-weight: 600;
-            color: #2c6e6e;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e9ecef;
-        }
-        .section-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 0.25rem 0.6rem;
-            border-radius: 20px;
-            background: #e0f2f1;
-            color: #00695c;
-            margin-left: 0.5rem;
-            vertical-align: middle;
-        }
-        .char-hint {
-            font-size: 0.78rem;
-            color: #6c757d;
-            margin-top: 0.3rem;
-        }
-        .btn-save {
-            background: #008080;
-            color: #fff;
-            border: none;
-            padding: 0.6rem 2rem;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-        .btn-save:hover {
-            background: #006666;
-            color: #fff;
-        }
-    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body class="app-surface">
 
 <!-- ===== NAVBAR ===== -->
 <nav class="navbar navbar-expand-lg">
@@ -184,7 +62,7 @@
 <div class="admin-header">
     <div class="container">
         <h1><i class="fas fa-envelope me-2"></i> Edit Renewal Reminder Email</h1>
-        <p class="mb-0" style="color: var(--bg-white);">
+        <p class="mb-0 admin-subtitle">
             Welcome back, <span th:text="${adminName}">Admin</span>!
             Customise the email sent to members before their membership expires.
         </p>
@@ -211,7 +89,7 @@
         <i class="fas fa-info-circle mt-1"></i>
         <div>
             You can edit <strong>all</strong> the text freely.
-            The <span style="background:#e0f2f1;color:#00695c;border:1px solid #80cbc4;border-radius:12px;padding:1px 8px;font-size:0.85em;font-weight:600;">teal chips</span>
+            The <span class="ph-chip">teal chips</span>
             like <code>{memberName}</code> are <strong>protected</strong> — they will be replaced with real member data when the email is sent.
             Click a toolbar button to insert a placeholder at the cursor, or delete a chip by selecting it and pressing <kbd>Delete</kbd>.
         </div>
@@ -287,12 +165,8 @@
 </div>
 
 <!-- ===== FOOTER ===== -->
-<footer style="background:#2c6e6e; color:#fff; padding:1.5rem 0; text-align:center; margin-top:auto;">
-    <div class="container">
-        <p class="mb-0 small">&copy; 2025 VOICE Membership System. All rights reserved.</p>
-    </div>
-</footer>
-
+<!-- Footer -->
+<div th:insert="~{fragments/footer}"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script>
 // ── Subject chip editor ──────────────────────────────────────────────────────

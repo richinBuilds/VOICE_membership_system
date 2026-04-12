@@ -8,9 +8,9 @@
 /* ========== CSS Variables ========== */
 :root {
     /* Primary Colors */
-    --primary: #09637E;
-    --primary-light: #0B7A9A;
-    --primary-hover: #074D63;
+    --primary: #222831;
+    --primary-light: #222831;
+    --primary-hover: #222831;
     
     /* Secondary (Accent Yellow) */
     --secondary: #FFD700;
@@ -338,16 +338,17 @@ a:hover {
 }
 
 .cta-buttons .btn-light {
-    background: var(--secondary);
-    color: var(--primary);
-    border: none;
-    box-shadow: 0 4px 14px rgba(255, 215, 0, 0.35);
+    background: #B8860B;
+    color: var(--bg-white);
+    border: 1px solid #9A7209;
+    box-shadow: 0 8px 18px rgba(184, 134, 11, 0.28);
 }
 
 .cta-buttons .btn-light:hover {
-    background: var(--secondary-dark);
+    background: #8B6508;
+    border-color: #7A5907;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.45);
+    box-shadow: 0 10px 24px rgba(184, 134, 11, 0.34);
 }
 
 .cta-buttons .btn-outline-light {
@@ -1944,7 +1945,7 @@ a:hover {
 body.checkout-page,
 body.edit-child-page,
 body.register-page {
-    background: #09637E;
+    background: #222831;
     min-height: 100vh;
 }
 
@@ -2251,4 +2252,768 @@ body.register-page {
     background: linear-gradient(135deg, #DC2626, #B91C1C);
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(220, 38, 38, 0.4);
+}
+
+/* ========== 2026 SaaS UI System Overrides ========== */
+:root {
+    /* Accessible modern palette */
+    --primary: #4F46E5;
+    --primary-light: #6366F1;
+    --primary-hover: #4338CA;
+
+    --secondary: #0F172A;
+    --secondary-dark: #020617;
+
+    --accent: #0F766E;
+    --accent-light: #DCFCE7;
+
+    --success: #15803D;
+    --success-light: #DCFCE7;
+    --warning: #B45309;
+    --warning-light: #FEF3C7;
+    --danger: #B91C1C;
+    --danger-light: #FEE2E2;
+    --info: #1D4ED8;
+    --info-light: #DBEAFE;
+
+    --bg-bone: #F8FAFC;
+    --bg-white: #FFFFFF;
+    --bg-light: #F1F5F9;
+
+    --text-primary: #0F172A;
+    --text-secondary: #334155;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+
+    --border-light: #E2E8F0;
+    --border-default: #CBD5E1;
+
+    --radius-sm: 10px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 999px;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 6px 12px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 12px 24px rgba(15, 23, 42, 0.12);
+    --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --shadow-hover: 0 14px 30px rgba(15, 23, 42, 0.13);
+
+    --transition-fast: 160ms ease;
+    --transition-base: 220ms ease;
+}
+
+body.app-surface {
+    background: var(--bg-bone);
+}
+
+.navbar {
+    background: rgba(255, 255, 255, 0.94) !important;
+    border-bottom: 1px solid rgba(203, 213, 225, 0.9);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(14px);
+}
+
+.navbar-brand img {
+    height: 68px;
+    width: auto;
+}
+
+.navbar .nav-link {
+    color: var(--text-secondary) !important;
+}
+
+.navbar .nav-link:hover {
+    background: rgba(79, 70, 229, 0.08);
+}
+
+.admin-subtitle {
+    color: var(--bg-white) !important;
+    opacity: 0.95;
+}
+
+/* Unified, accessible button system */
+.btn:not(.btn-link):not(.btn-close),
+.btn-primary-custom,
+.btn-secondary-custom,
+.membership-btn,
+.btn-membership-free,
+.btn-membership-paid,
+.filter-btn,
+.btn-add-child,
+.btn-save {
+    border-radius: var(--radius-full);
+    padding: 0.7rem 1.2rem;
+    border-width: 1px;
+    border-style: solid;
+    font-weight: 600;
+    font-size: 0.92rem;
+    letter-spacing: 0.01em;
+    transition: transform var(--transition-fast), box-shadow var(--transition-base), background-color var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+}
+
+.btn:not(.btn-link):not(.btn-close):active,
+.btn-primary-custom:active,
+.btn-secondary-custom:active,
+.membership-btn:active,
+.btn-save:active {
+    transform: translateY(1px);
+}
+
+.btn:focus-visible,
+.btn-primary-custom:focus-visible,
+.btn-secondary-custom:focus-visible,
+.membership-btn:focus-visible,
+.btn-save:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.35);
+    outline-offset: 2px;
+}
+
+.btn-primary,
+.btn-primary-custom,
+.membership-btn,
+.btn-membership-paid,
+.btn-add-child,
+.btn-save {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--bg-white);
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.18);
+}
+
+.btn-primary:hover,
+.btn-primary-custom:hover,
+.membership-btn:hover,
+.btn-membership-paid:hover,
+.btn-add-child:hover,
+.btn-save:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: var(--bg-white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary,
+.btn-secondary-custom,
+.btn-outline-secondary,
+.btn-membership-free,
+.filter-btn {
+    background: var(--bg-white);
+    border-color: #D7DBE7;
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover,
+.btn-secondary-custom:hover,
+.btn-outline-secondary:hover,
+.btn-membership-free:hover,
+.filter-btn:hover {
+    background: #EEF2FF;
+    border-color: #C7D2FE;
+    color: var(--primary);
+}
+
+.btn-danger,
+.btn-danger-custom {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--bg-white);
+}
+
+.btn-danger:hover,
+.btn-danger-custom:hover {
+    background: #991B1B;
+    border-color: #991B1B;
+    color: var(--bg-white);
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: #C7D2FE;
+    background: #EEF2FF;
+}
+
+.btn-outline-primary:hover {
+    color: var(--bg-white);
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-danger {
+    color: var(--danger);
+    border-color: #FECACA;
+    background: #FEF2F2;
+}
+
+.btn-outline-danger:hover {
+    color: var(--bg-white);
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-sm:not(.btn-link):not(.btn-close) {
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+}
+
+/* Surfaces and layout consistency */
+.card,
+.stat-card,
+.table-card,
+.editor-card,
+.plan-card,
+.add-member-card,
+.checkout-card,
+.auth-card {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.card:hover,
+.stat-card:hover,
+.plan-card:hover,
+.clickable-card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.clickable-card {
+    cursor: pointer;
+}
+
+.form-control,
+.form-select,
+.input-group-text,
+#bodyEditor,
+#subjectEditor {
+    border-radius: var(--radius-md);
+}
+
+.form-control:focus,
+.form-select:focus,
+#bodyEditor:focus,
+#subjectEditor:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.16);
+}
+
+/* Shared admin tab styling */
+#userTabs .nav-link {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+#userTabs .nav-link:hover {
+    color: var(--primary-hover);
+    border-color: var(--primary);
+}
+
+#userTabs .nav-link.active {
+    color: var(--primary);
+    border-color: var(--primary) var(--primary) var(--bg-white);
+    font-weight: 700;
+}
+
+/* Admin landing + renewal editor shared styles */
+.editor-card {
+    background: var(--bg-white);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.editor-card h5 {
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.section-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-full);
+    background: var(--accent-light);
+    color: #075985;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+.char-hint,
+.features-hint,
+.toolbar-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.reason-row {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--bg-light);
+}
+
+.reason-row:hover {
+    border-color: var(--primary);
+    background: rgba(20, 184, 166, 0.08);
+}
+
+.reason-number {
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+    background: var(--primary) !important;
+    color: var(--bg-white);
+    border-radius: 50% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+}
+
+.preview-box {
+    background: var(--bg-light);
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+#heroTagline {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.chip-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.chip-toolbar button,
+.ph-chip {
+    background: var(--accent-light);
+    color: #075985;
+    border: 1px solid #7DD3FC;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.chip-toolbar button {
+    padding: 2px 10px;
+}
+
+.chip-toolbar button:hover {
+    background: #BAE6FD;
+}
+
+.ph-chip {
+    display: inline-block;
+    padding: 1px 8px;
+    cursor: default;
+    user-select: all;
+    white-space: nowrap;
+}
+
+#bodyEditor {
+    min-height: 320px;
+    border: 1px solid var(--border-default);
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    background: var(--bg-white);
+    outline: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#subjectEditor {
+    min-height: 42px;
+    max-height: 80px;
+    overflow-y: auto;
+    border: 1px solid var(--border-default);
+    padding: 0.45rem 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    background: var(--bg-white);
+    outline: none;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+.plan-card .card-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--bg-white);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+.plan-card .card-header.free-header {
+    background: linear-gradient(135deg, var(--text-secondary), #475569);
+}
+
+.badge-free,
+.badge-paid {
+    background: rgba(255, 255, 255, 0.22);
+    color: var(--bg-white);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+}
+
+.price-group .input-group-text {
+    background: var(--bg-light);
+    border-color: var(--border-default);
+    color: var(--text-secondary);
+}
+
+.admin-page-footer {
+    background: var(--primary-hover);
+    color: var(--bg-white);
+    padding: 1.5rem 0;
+    text-align: center;
+    margin-top: auto;
+}
+
+.admin-members-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.admin-members-table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    margin: 0 auto;
+}
+
+.admin-members-table th,
+.admin-members-table td {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font-size: 0.85rem;
+    vertical-align: top;
+}
+
+.admin-members-table th:nth-child(1),
+.admin-members-table td:nth-child(1) {
+    width: 4%;
+}
+
+.admin-members-table th:nth-child(2),
+.admin-members-table td:nth-child(2) {
+    width: 5%;
+}
+
+.admin-members-table th:nth-child(3),
+.admin-members-table td:nth-child(3) {
+    width: 12%;
+}
+
+.admin-members-table th:nth-child(4),
+.admin-members-table td:nth-child(4) {
+    width: 16%;
+}
+
+.admin-members-table th:nth-child(5),
+.admin-members-table td:nth-child(5) {
+    width: 10%;
+}
+
+.admin-members-table th:nth-child(6),
+.admin-members-table td:nth-child(6) {
+    width: 18%;
+}
+
+.admin-members-table th:nth-child(7),
+.admin-members-table td:nth-child(7) {
+    width: 12%;
+}
+
+.admin-members-table th:nth-child(8),
+.admin-members-table td:nth-child(8),
+.admin-members-table th:nth-child(9),
+.admin-members-table td:nth-child(9),
+.admin-members-table th:nth-child(10),
+.admin-members-table td:nth-child(10) {
+    width: 7%;
+}
+
+.admin-members-table th:nth-child(11),
+.admin-members-table td:nth-child(11) {
+    width: 9%;
+}
+
+.member-location {
+    display: grid;
+    gap: 0.2rem;
+    line-height: 1.4;
+}
+
+.member-location strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.member-location small {
+    color: var(--text-muted);
+}
+
+.cell-actions {
+    white-space: normal !important;
+    text-align: center;
+}
+
+.cell-actions .btn {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+}
+
+.table-card {
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .admin-members-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .admin-members-table {
+        min-width: 900px;
+    }
+
+    .navbar-brand img {
+        height: 58px;
+    }
+
+    .editor-card {
+        padding: 1.25rem;
+    }
+
+    .btn-group-checkout,
+    .btn-group-custom,
+    .form-actions {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn:not(.btn-link):not(.btn-close),
+    .btn-primary-custom,
+    .btn-secondary-custom,
+    .membership-btn,
+    .btn-membership-free,
+    .btn-membership-paid,
+    .filter-btn,
+    .btn-add-child,
+    .btn-save {
+        width: 100%;
+    }
+}
+
+/* ========== Final Monochrome Palette Overrides ========== */
+:root {
+    --primary: #222831;
+    --primary-light: #393E46;
+    --primary-hover: #1a1f26;
+    --secondary: #393E46;
+    --secondary-dark: #222831;
+    --accent: #948979;
+    --accent-light: #DFD0B8;
+    --bg-bone: #DFD0B8;
+    --bg-white: #FFFFFF;
+    --bg-light: #F7F7F7;
+    --text-primary: #222831;
+    --text-secondary: #393E46;
+    --text-muted: #948979;
+    --text-light: #DFD0B8;
+    --border-light: #948979;
+    --border-default: #948979;
+}
+
+a {
+    color: var(--text-primary);
+}
+
+a:hover {
+    color: var(--primary);
+}
+
+.navbar .nav-link:hover {
+    background: rgba(17, 17, 17, 0.06);
+}
+
+.btn-primary,
+.btn-primary-custom,
+.membership-btn,
+.btn-membership-paid,
+.btn-add-child,
+.btn-save {
+    box-shadow: 0 10px 20px rgba(34, 40, 49, 0.18);
+}
+
+.btn-secondary,
+.btn-secondary-custom,
+.btn-outline-secondary,
+.btn-membership-free,
+.filter-btn {
+    border-color: var(--border-default);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover,
+.btn-secondary-custom:hover,
+.btn-outline-secondary:hover,
+.btn-membership-free:hover,
+.filter-btn:hover {
+    background: #F4F4F5;
+    border-color: #A1A1AA;
+    color: var(--text-primary);
+}
+
+.btn-outline-primary {
+    border-color: #948979;
+    background: #F5F3F0;
+}
+
+#userTabs .nav-link {
+    color: var(--text-secondary);
+}
+
+#userTabs .nav-link:hover {
+    color: var(--text-primary);
+    border-color: var(--border-default);
+}
+
+#userTabs .nav-link.active {
+    color: var(--text-primary);
+    border-color: var(--text-primary) var(--text-primary) var(--bg-white);
+}
+
+.editor-card h5,
+.benefit-icon,
+.child-card h6,
+.child-form-section h3,
+.cart-item-title,
+.form-section-header,
+.form-section-header i,
+.auth-links a,
+.signup-link a,
+.auth-link,
+.text-primary,
+.section-title,
+.navbar-brand span {
+    color: var(--text-primary) !important;
+}
+
+.section-badge,
+.chip-toolbar button,
+.ph-chip,
+.benefit-icon,
+.status-free,
+.status-active,
+.admin-badge {
+    background: #F4F4F5;
+    color: var(--text-primary);
+    border-color: var(--border-default);
+}
+
+.chip-toolbar button:hover {
+    background: #E4E4E7;
+}
+
+.reason-row:hover {
+    border-color: #A1A1AA;
+    background: #FAFAFA;
+}
+
+.plan-card .card-header,
+.plan-card .card-header.free-header,
+.hero-section,
+.auth-bg,
+.admin-header,
+.order-summary,
+.cart-summary,
+.checkout-container .membership-card,
+.site-footer,
+.dashboard-footer,
+.membership-header,
+.success-alert,
+.voice-popup-icon,
+.greeting-avatar,
+.admin-page-footer {
+    background: linear-gradient(135deg, #18181B 0%, #3F3F46 100%);
+    color: var(--bg-white);
+}
+
+.plan-card .card-header h5,
+.plan-card .card-header h5 span,
+.plan-card .card-header h5 i,
+.plan-card .card-header .fw-bold {
+    color: var(--bg-white) !important;
+}
+
+.hero-section::before,
+.auth-bg::before {
+    background: linear-gradient(135deg, #18181B 0%, #3F3F46 100%);
+}
+
+.section-title::after,
+.navbar .nav-link::after {
+    background: var(--text-primary);
+}
+
+.form-floating > .form-control:focus,
+.form-floating > .form-select:focus,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--primary);
+}
+
+.form-check-input:checked,
+.step.active,
+.reason-number,
+.benefit-card::before,
+.table .btn-outline-primary:hover {
+    background: var(--primary);
+}
+
+.membership-card.selected {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18) !important;
+    background: rgba(37, 99, 235, 0.04) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* Strong RED border (invalid) */
+.form-control.is-invalid {
+    border: 2px solid #dc3545 !important;  /* darker red */
+    box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+}
+
+/* Strong GREEN border (valid) */
+.form-control.is-valid {
+    border: 2px solid #198754 !important;  /* darker green */
+    box-shadow: 0 0 5px rgba(25, 135, 84, 0.5);
 }

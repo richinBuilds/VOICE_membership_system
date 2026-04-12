@@ -132,6 +132,31 @@ class ProfileControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
+    void editProfile_WithBlankAddressCityProvincePostalCode_ShouldSaveSuccessfully() throws Exception {
+        mockMvc.perform(post("/profile/edit")
+                .with(csrf())
+                .param("firstName", "Updated")
+                .param("middleName", "")
+                .param("lastName", "Name")
+                .param("email", "test@example.com")
+                .param("phone", "9876543210")
+                .param("address", "")
+                .param("city", "")
+                .param("province", "")
+                .param("postalCode", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"));
+
+        User updated = userRepository.findByEmail("test@example.com");
+        assertThat(updated).isNotNull();
+        assertThat(updated.getAddress()).isEmpty();
+        assertThat(updated.getCity()).isEmpty();
+        assertThat(updated.getProvince()).isEmpty();
+        assertThat(updated.getPostalCode()).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void addChild_GetRequest_ShouldReturnAddChildForm() throws Exception {
         mockMvc.perform(get("/profile/child/add"))
                 .andExpect(status().isOk())

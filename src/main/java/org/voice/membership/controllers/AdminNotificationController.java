@@ -84,6 +84,20 @@ public class AdminNotificationController {
     }
 
     /**
+     * Dismiss notification(s) associated with a specific user.
+     */
+    @DeleteMapping("/dismiss-by-user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> dismissNotificationByUser(@PathVariable Integer userId) {
+        boolean dismissed = notificationFacadeService.dismissNotificationForUser(userId);
+        if (!dismissed) {
+            return ResponseEntity.status(404)
+                    .body(ApiResponse.error("No active notification found for this user", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Notification dismissed", null));
+    }
+
+    /**
      * Dismiss all notifications
      */
     @PostMapping("/dismiss-all")

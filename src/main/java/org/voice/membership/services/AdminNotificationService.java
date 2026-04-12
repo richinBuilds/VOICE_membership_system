@@ -15,6 +15,7 @@ import org.voice.membership.repositories.UserRepository;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Service for managing admin notifications about new paid members.
@@ -240,6 +241,48 @@ public class AdminNotificationService {
             notificationRepository.save(notification);
             log.info("Dismissed notification {}", notificationId);
         });
+    }
+
+    /**
+     * Dismiss notification(s) associated with a specific user.
+     *
+     * @return true if at least one notification was dismissed.
+     */
+    @Transactional
+    public boolean dismissNotificationForUser(Integer userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || user.getCreation() == null) {
+            return false;
+        }
+
+        List<AdminNotification> candidates = notificationRepository
+                .findByNotificationTypeAndDismissedFalseAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualOrderByCreatedAtDesc(
+                        "INSTANT",
+                        user.getCreation(),
+                        user.getCreation());
+
+        if (candidates.isEmpty()) {
+            return false;
+        }
+
+        String fullName = ((user.getFirstName() == null ? "" : user.getFirstName()) + " "
+                + (user.getLastName() == null ? "" : user.getLastName())).trim().toLowerCase(Locale.ROOT);
+
+        List<AdminNotification> matched = candidates.stream()
+                .filter(n -> {
+                    if (fullName.isBlank()) {
+                        return true;
+                    }
+                    String message = n.getMessage() == null ? "" : n.getMessage().toLowerCase(Locale.ROOT);
+                    return message.contains(fullName);
+                })
+                .toList();
+
+        List<AdminNotification> toDismiss = matched.isEmpty() ? List.of(candidates.get(0)) : matched;
+
+        toDismiss.forEach(notification -> notification.setDismissed(true));
+        notificationRepository.saveAll(toDismiss);
+        return true;
     }
 
     /**

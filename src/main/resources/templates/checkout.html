@@ -104,6 +104,45 @@
 
                 <div id="paymentError" class="alert alert-danger d-none" role="alert"></div>
                 <div id="paymentInfo" class="alert alert-info d-none" role="alert"></div>
+                <button type="button"
+                        id="showCardFieldsButton"
+                        class="btn btn-secondary-custom w-100 mb-3 d-none"
+                        th:if="${paypalClientId != null && !#strings.isEmpty(paypalClientId)}">
+                    <i class="fas fa-credit-card me-2"></i>Debit or Credit Card
+                </button>
+                <div id="cardFieldsWrapper"
+                     class="card shadow-sm border-0 mb-3 d-none"
+                     th:if="${paypalClientId != null && !#strings.isEmpty(paypalClientId)}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                            <h5 class="mb-0">
+                                <i class="fas fa-credit-card me-2"></i>Debit or Credit Card
+                            </h5>
+                            <span class="badge text-bg-light">Secure card entry</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold mb-1">Name on card</label>
+                                <div id="card-name-field" class="form-control d-flex align-items-center" style="min-height: 48px;"></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold mb-1">Card number</label>
+                                <div id="card-number-field" class="form-control d-flex align-items-center" style="min-height: 48px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold mb-1">Expiry date</label>
+                                <div id="card-expiry-field" class="form-control d-flex align-items-center" style="min-height: 48px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold mb-1">Security code</label>
+                                <div id="card-cvv-field" class="form-control d-flex align-items-center" style="min-height: 48px;"></div>
+                            </div>
+                        </div>
+                        <button type="button" id="card-field-submit" class="btn btn-primary-custom w-100 mt-3">
+                            <i class="fas fa-lock me-2"></i>Pay securely by card
+                        </button>
+                    </div>
+                </div>
                 <div id="paypal-button-container" th:if="${paypalClientId != null && !#strings.isEmpty(paypalClientId)}"></div>
 
                 <div class="btn-group-checkout mt-3">
@@ -199,7 +238,7 @@
 <!-- Bootstrap JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script th:if="${paypalClientId != null && !#strings.isEmpty(paypalClientId)}"
-        th:src="|https://www.paypal.com/sdk/js?client-id=${paypalClientId}&amp;currency=${paypalCurrency}|"></script>
+        th:src="|https://www.paypal.com/sdk/js?client-id=${paypalClientId}&amp;currency=${paypalCurrency}&amp;components=buttons,card-fields&amp;intent=capture|"></script>
 
 <script>
 const membershipIdElement = document.getElementById('membershipId');
@@ -208,65 +247,101 @@ const csrfHeader = document.getElementById('csrfHeader')?.value;
 const checkoutMode = document.getElementById('checkoutMode')?.value;
 const errorBox = document.getElementById('paymentError');
 const infoBox = document.getElementById('paymentInfo');
+const cardFieldsWrapper = document.getElementById('cardFieldsWrapper');
+const cardSubmitButton = document.getElementById('card-field-submit');
+const showCardFieldsButton = document.getElementById('showCardFieldsButton');
 
 function showPaymentError(message) {
     if (!errorBox) return;
+    if (infoBox) {
+        infoBox.classList.add('d-none');
+        infoBox.textContent = '';
+    }
     errorBox.classList.remove('d-none');
     errorBox.textContent = message || 'Payment failed. Please try again.';
 }
 
 function showPaymentInfo(message) {
     if (!infoBox) return;
+    if (errorBox) {
+        errorBox.classList.add('d-none');
+        errorBox.textContent = '';
+    }
     infoBox.classList.remove('d-none');
     infoBox.textContent = message;
 }
 
+function clearPaymentMessages() {
+    if (errorBox) {
+        errorBox.classList.add('d-none');
+        errorBox.textContent = '';
+    }
+    if (infoBox) {
+        infoBox.classList.add('d-none');
+        infoBox.textContent = '';
+    }
+}
+
 if (window.paypal && membershipIdElement && membershipIdElement.value) {
     const membershipId = Number(membershipIdElement.value);
-    
-    // Determine API endpoints based on mode
     const isUpgradeMode = checkoutMode === 'upgrade';
     const createOrderUrl = isUpgradeMode ? '/register/paypal/create-order' : '/register/paypal/checkout/create-order';
     const captureOrderUrl = isUpgradeMode ? '/register/paypal/capture-order' : '/register/paypal/checkout/capture-order';
     const successUrl = isUpgradeMode ? '/profile?upgrade=success' : '/register/verification-sent';
 
+    const createPayPalOrder = async () => {
+        clearPaymentMessages();
+
+        const response = await fetch(createOrderUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({ membershipId })
+        });
+
+        const data = await response.json();
+        const payload = data?.data || data;
+
+        if (!response.ok || !payload?.orderId) {
+            throw new Error(data?.message || payload?.message || 'Could not create PayPal order');
+        }
+
+        return payload.orderId;
+    };
+
+    const finalizeApprovedOrder = async (orderId) => {
+        clearPaymentMessages();
+
+        const response = await fetch(captureOrderUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({
+                membershipId,
+                orderId
+            })
+        });
+
+        const result = await response.json();
+        const payload = result?.data || result;
+
+        if (!response.ok || !payload?.success) {
+            throw new Error(result?.message || payload?.message || 'Payment verification failed');
+        }
+
+        window.location.href = payload.redirectUrl || successUrl;
+    };
+
     paypal.Buttons({
-        createOrder: async () => {
-            const response = await fetch(createOrderUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
-                },
-                body: JSON.stringify({ membershipId })
-            });
-
-            const data = await response.json();
-            if (!response.ok || !data.orderId) {
-                throw new Error(data.message || 'Could not create PayPal order');
-            }
-
-            return data.orderId;
-        },
-        onApprove: async (data) => {
-            const response = await fetch(captureOrderUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
-                },
-                body: JSON.stringify({
-                    membershipId,
-                    orderId: data.orderID
-                })
-            });
-
-            const result = await response.json();
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Payment verification failed');
-            }
-
-            window.location.href = result.redirectUrl || successUrl;
+        fundingSource: paypal.FUNDING.PAYPAL,
+        createOrder: createPayPalOrder,
+        onApprove: async (data) => finalizeApprovedOrder(data.orderID),
+        onCancel: () => {
+            showPaymentInfo('Payment was cancelled before approval.');
         },
         onError: (err) => {
             showPaymentError(err?.message || 'PayPal checkout failed');
@@ -274,6 +349,56 @@ if (window.paypal && membershipIdElement && membershipIdElement.value) {
     }).render('#paypal-button-container').catch((err) => {
         showPaymentError(err?.message || 'Unable to load PayPal buttons');
     });
+
+    if (paypal.CardFields && cardFieldsWrapper) {
+        const cardFields = paypal.CardFields({
+            createOrder: createPayPalOrder,
+            onApprove: async (data) => finalizeApprovedOrder(data.orderID),
+            onError: (err) => {
+                if (cardSubmitButton) {
+                    cardSubmitButton.disabled = false;
+                    cardSubmitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Pay securely by card';
+                }
+                showPaymentError(err?.message || 'Card payment failed');
+            }
+        });
+
+        if (cardFields.isEligible()) {
+            cardFields.NameField().render('#card-name-field');
+            cardFields.NumberField().render('#card-number-field');
+            cardFields.ExpiryField().render('#card-expiry-field');
+            cardFields.CVVField().render('#card-cvv-field');
+
+            if (showCardFieldsButton) {
+                showCardFieldsButton.classList.remove('d-none');
+                showCardFieldsButton.addEventListener('click', () => {
+                    clearPaymentMessages();
+                    cardFieldsWrapper.classList.remove('d-none');
+                    showCardFieldsButton.classList.add('d-none');
+                });
+            }
+
+            if (cardSubmitButton) {
+                cardSubmitButton.addEventListener('click', async () => {
+                    try {
+                        clearPaymentMessages();
+                        cardSubmitButton.disabled = true;
+                        cardSubmitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing card...';
+                        await cardFields.submit();
+                    } catch (err) {
+                        cardSubmitButton.disabled = false;
+                        cardSubmitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Pay securely by card';
+                        showPaymentError(err?.message || 'Unable to submit card details');
+                    }
+                });
+            }
+        } else {
+            if (showCardFieldsButton) {
+                showCardFieldsButton.classList.add('d-none');
+            }
+            showPaymentInfo('Inline card entry is not eligible for this PayPal sandbox setup, but PayPal checkout is still available below.');
+        }
+    }
 } else if (membershipIdElement && membershipIdElement.value) {
     showPaymentError('PayPal SDK did not load. Disable ad blocker/tracking protection, then refresh (Ctrl+F5).');
     showPaymentInfo('If this persists, open Browser DevTools Console and check for blocked paypal.com scripts.');

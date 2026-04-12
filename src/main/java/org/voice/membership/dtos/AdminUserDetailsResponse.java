@@ -16,6 +16,8 @@ public record AdminUserDetailsResponse(
         String email,
         String phone,
         String address,
+        String city,
+        String province,
         String postalCode,
         String role,
         Date creation,

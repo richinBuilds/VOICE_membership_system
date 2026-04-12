@@ -17,4 +17,3 @@ public final class PasswordPolicy {
         return password != null && STRONG_PASSWORD.matcher(password).matches();
     }
 }
-

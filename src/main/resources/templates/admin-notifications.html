@@ -15,28 +15,9 @@
 
     <!-- Global CSS -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
-    
-    <style>
-        /* Teal color for tabs */
-        #userTabs .nav-link {
-            color: #008080;
-            font-weight: 500;
-        }
-        
-        #userTabs .nav-link:hover {
-            color: #006666;
-            border-color: #008080;
-        }
-        
-        #userTabs .nav-link.active {
-            color: #008080;
-            border-color: #008080 #008080 #fff;
-            font-weight: 600;
-        }
-    </style>
 </head>
 
-<body style="background: var(--bg-bone);">
+<body class="app-surface">
 
 <nav class="navbar navbar-expand-lg">
     <div class="container">
@@ -79,7 +60,7 @@
 <div class="admin-header">
     <div class="container">
         <h1><i class="fas fa-user-plus me-2"></i> New User Notifications</h1>
-        <p class="mb-0" style="color: var(--bg-white);">Recently registered members</p>
+        <p class="mb-0 admin-subtitle">Recently registered members</p>
     </div>
 </div>
 
@@ -105,9 +86,9 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h4>
                     <i class="fas fa-users me-2"></i>
-                    New Users <span class="badge bg-primary" th:text="${#lists.size(newUsers)}">0</span>
+                    New Users <span class="badge bg-primary" id="newUsersBadge" th:text="${#lists.size(newUsers)}">0</span>
                 </h4>
-                <button class="btn btn-danger" onclick="dismissAllNotifications()">
+                <button class="btn btn-danger" onclick="dismissAllNotifications(this)">
                     <i class="fas fa-times me-1"></i> Dismiss All Notifications
                 </button>
             </div>
@@ -143,7 +124,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="user : ${newUsers}">
+                    <tr th:each="user : ${newUsers}" th:attr="data-user-id=${user.id}">
                         <td th:text="${user.id}">1</td>
                         <td>
                             <strong th:text="${user.firstName + ' ' + user.lastName}">Name</strong>
@@ -175,6 +156,11 @@
                                     title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            <button class="btn btn-sm btn-outline-danger ms-1"
+                                    th:onclick="'dismissUserNotification(' + ${user.id} + ', this)'"
+                                    title="Dismiss Notification">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -187,7 +173,7 @@
 <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: var(--primary); color: white;">
+            <div class="modal-header text-white" style="background-color: var(--primary);">
                 <h5 class="modal-title" id="userDetailsModalLabel">
                     <i class="fas fa-user me-2"></i>User Details
                 </h5>
@@ -207,21 +193,17 @@
     </div>
 </div>
 
-<footer class="footer mt-auto py-3">
-    <div class="container">
-        <p class="text-center text-muted mb-0">© 2025 VOICE All Children are Equal and Deaf or Hearing Impaired. All Rights Reserved.</p>
-    </div>
-</footer>
+<div th:insert="~{fragments/footer}"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    function dismissAllNotifications() {
+    function dismissAllNotifications(buttonEl) {
         if (!confirm('This will dismiss all new user notifications and redirect you back to the dashboard. Continue?')) {
             return;
         }
 
-        const btn = event.target.closest('button');
+        const btn = buttonEl;
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Dismissing...';
@@ -256,6 +238,48 @@
         });
     }
 
+    function dismissUserNotification(userId, buttonEl) {
+        if (!confirm('Dismiss notification for this user?')) {
+            return;
+        }
+
+        const originalHtml = buttonEl.innerHTML;
+        buttonEl.disabled = true;
+        buttonEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        fetch(`/api/admin/notifications/dismiss-by-user/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+
+                    const remainingRows = document.querySelectorAll('tbody tr').length;
+                    const badge = document.getElementById('newUsersBadge');
+                    if (badge) {
+                        badge.textContent = remainingRows;
+                    }
+                } else {
+                    alert(data.message || 'Failed to dismiss notification');
+                    buttonEl.disabled = false;
+                    buttonEl.innerHTML = originalHtml;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to dismiss notification. Please try again.');
+                buttonEl.disabled = false;
+                buttonEl.innerHTML = originalHtml;
+            });
+    }
+
     function viewUser(userId) {
         const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
         const modalBody = document.getElementById('userDetailsBody');
@@ -273,7 +297,8 @@
 
         fetch(`/admin/user/${userId}`)
             .then(response => response.json())
-            .then(user => {
+            .then(data => {
+                const user = (data && data.data) ? data.data : data;
                 modalBody.innerHTML = `
                     <div class="row">
                         <div class="col-md-6">

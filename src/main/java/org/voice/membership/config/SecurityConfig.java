@@ -11,12 +11,20 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.voice.membership.services.GoogleOAuth2UserService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
 /**
- * Configures Spring Security for the VOICE membership application. Defines public and protected routes, login/logout, remember-me, and redirects.
+ * Configures Spring Security for the VOICE membership application. Defines
+ * public and protected routes, login/logout, remember-me, and redirects.
  */
 public class SecurityConfig {
 
@@ -26,10 +34,35 @@ public class SecurityConfig {
         @Autowired
         private CustomAuthenticationSuccessHandler authenticationSuccessHandler;
 
+        /**
+         * Filter to cache request content so it can be read multiple times.
+         * This allows the failure handler to extract the username from the request
+         * body.
+         */
+        @Bean
+        public OncePerRequestFilter contentCachingFilter() {
+                return new OncePerRequestFilter() {
+                        @Override
+                        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                        FilterChain filterChain) throws ServletException, IOException {
+                                // Only wrap POST requests to /login to cache their content
+                                if ("POST".equals(request.getMethod()) && request.getRequestURI().equals("/login")) {
+                                        ContentCachingRequestWrapper cachingRequest = new ContentCachingRequestWrapper(
+                                                        request);
+                                        filterChain.doFilter(cachingRequest, response);
+                                } else {
+                                        filterChain.doFilter(request, response);
+                                }
+                        }
+                };
+        }
+
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
                         GoogleOAuth2UserService googleOAuth2UserService) throws Exception {
                 return httpSecurity
+                                .addFilterBefore(contentCachingFilter(),
+                                                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                                 .authorizeHttpRequests(auth -> auth
 
                                                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
@@ -65,6 +98,10 @@ public class SecurityConfig {
                                                 .failureHandler((request, response, exception) -> {
                                                         request.getSession().removeAttribute(
                                                                         GoogleOAuth2UserService.GOOGLE_AUTH_FLOW_SESSION_KEY);
+                                                        request.getSession().removeAttribute(
+                                                                        GoogleOAuth2UserService.GOOGLE_SIGNUP_REDIRECT_STEP2_SESSION_KEY);
+                                                        request.getSession().removeAttribute(
+                                                                        GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
 
                                                         String redirectUrl = "/login?error=true";
 
@@ -86,6 +123,12 @@ public class SecurityConfig {
                                                                                         oauth2Exception.getError()
                                                                                                         .getErrorCode())) {
                                                                 redirectUrl = "/login?locked=true";
+                                                        } else if (exception instanceof OAuth2AuthenticationException oauth2Exception
+                                                                        && oauth2Exception.getError() != null
+                                                                        && "invalid_google_account".equalsIgnoreCase(
+                                                                                        oauth2Exception.getError()
+                                                                                                        .getErrorCode())) {
+                                                                redirectUrl = "/login?invalidGoogleAccount=true";
                                                         }
 
                                                         response.sendRedirect(redirectUrl);

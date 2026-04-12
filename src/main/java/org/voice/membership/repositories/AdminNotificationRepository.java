@@ -47,4 +47,12 @@ public interface AdminNotificationRepository extends JpaRepository<AdminNotifica
      * Find notifications created after a specific date
      */
     List<AdminNotification> findByCreatedAtAfterOrderByCreatedAtDesc(Date date);
+
+    /**
+     * Find active instant notifications whose period window contains a timestamp.
+     */
+    List<AdminNotification> findByNotificationTypeAndDismissedFalseAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualOrderByCreatedAtDesc(
+            String notificationType,
+            Date periodStart,
+            Date periodEnd);
 }

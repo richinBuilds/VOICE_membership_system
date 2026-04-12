@@ -17,7 +17,7 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
 
-<body style="background: var(--bg-bone);">
+<body class="app-surface">
 
 <nav class="navbar navbar-expand-lg">
     <div class="container">
@@ -390,13 +390,7 @@
     
 </div>
 
-<div class="dashboard-footer">
-    <div class="container">
-        <p class="mb-0">
-            © 2026 VOICE for Children who are Deaf and Hard of Hearing. All Rights Reserved.
-        </p>
-    </div>
-</div>
+<div th:insert="~{fragments/footer}"></div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
