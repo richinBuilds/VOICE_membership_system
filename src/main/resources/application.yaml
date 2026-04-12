@@ -3,9 +3,9 @@ spring:
     name: MembershipManagementSystem
 
   datasource:
-    url: jdbc:mysql://localhost:3306/membership_management?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: 
+    url: ${DB_URL:jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -19,8 +19,8 @@ spring:
   mail:
     host: smtp.mailtrap.io
     port: 587
-    username: 
-    password: 
+    username: ${MAILTRAP_USERNAME}
+    password: ${MAILTRAP_PASSWORD}
     properties:
       mail:
         smtp:
@@ -33,9 +33,9 @@ spring:
       client:
         registration:
           google:
-            client-id: 
-            client-secret: 
-            redirect-uri: http://127.0.0.1:8080/login/oauth2/code/google #${GOOGLE_REDIRECT_URI:{baseUrl}/login/oauth2/code/{registrationId}}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI:{baseUrl}/login/oauth2/code/{registrationId}}
             scope:
               - profile
               - email
@@ -57,11 +57,11 @@ app:
       timeout: 30m
       cookie:
         http-only: true
-        secure: false
+        secure: ${SESSION_COOKIE_SECURE:false}
         max-age: 30m
   admin:
-    email: admin@gmail.com
-    password: Voice36!
+    email: ${ADMIN_EMAIL:admin@gmail.com}
+    password: ${ADMIN_PASSWORD:Voice36!}
 
 logging:
   level:
@@ -81,7 +81,7 @@ account:
 
 paypal:
   mode: sandbox
-  client-id:
-  client-secret:
+  client-id: ${PAYPAL_CLIENT_ID}
+  client-secret: ${PAYPAL_CLIENT_SECRET}
   webhook-id:
   currency: CAD

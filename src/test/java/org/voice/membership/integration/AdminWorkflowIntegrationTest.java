@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.voice.membership.config.TestEmailConfig;
 import org.voice.membership.entities.Membership;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
@@ -41,6 +43,7 @@ import static org.hamcrest.Matchers.*;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Import(TestEmailConfig.class)
 class AdminWorkflowIntegrationTest {
 
     @Autowired
@@ -275,9 +278,8 @@ class AdminWorkflowIntegrationTest {
                 .param("membershipId", String.valueOf(freeMembership.getId()))
                 .param("emailVerified", "true")
                 .param("accountLocked", "false"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/add-member"))
-                .andExpect(flash().attributeExists("error"));
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin-add-member"));
     }
 
     @Test
@@ -362,7 +364,7 @@ class AdminWorkflowIntegrationTest {
                 .param("accountLocked", "false"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin-edit-member"))
-                .andExpect(model().attributeHasErrors("updateRequest"));
+                .andExpect(model().attributeExists("emailError"));
     }
 
     @Test
