@@ -75,8 +75,8 @@ logging:
 # Account lockout configuration
 account:
   lockout:
-    max-attempts: 5 # Maximum failed login attempts before lockout
-    duration-minutes: 30 # Lockout duration in minutes
+    max-attempts: 5 
+    duration-minutes: 30 
 
 paypal:
   mode: sandbox
