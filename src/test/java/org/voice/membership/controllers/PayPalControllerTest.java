@@ -128,7 +128,8 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.orderId").value("PAYPAL-ORDER-123"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.orderId").value("PAYPAL-ORDER-123"));
 
                 // Verify transaction was saved
                 Optional<MembershipPaymentTransaction> transaction = paymentTransactionRepository
@@ -153,7 +154,7 @@ class PayPalControllerTest {
                                 .with(user(user.getEmail()).roles("USER"))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
-                                .andExpect(status().isForbidden())
+                                .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.message").value("Not eligible for membership upgrade"));
         }
 
@@ -197,7 +198,7 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.message").value("Membership is required"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"));
         }
 
         // ========== CAPTURE ORDER TESTS ==========
@@ -232,8 +233,9 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.success").value(true))
-                                .andExpect(jsonPath("$.redirectUrl").value("/profile?upgrade=success"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.success").value(true))
+                                .andExpect(jsonPath("$.data.redirectUrl").value("/profile?upgrade=success"));
 
                 // Verify user was upgraded
                 User updatedUser = userRepository.findById(user.getId()).orElseThrow();
@@ -273,8 +275,9 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.success").value(true))
-                                .andExpect(jsonPath("$.redirectUrl").value("/profile?upgrade=success"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.success").value(true))
+                                .andExpect(jsonPath("$.data.redirectUrl").value("/profile?upgrade=success"));
         }
 
         @Test
@@ -301,7 +304,7 @@ class PayPalControllerTest {
                                 .with(user(user2.getEmail()).roles("USER"))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
-                                .andExpect(status().isForbidden())
+                                .andExpect(status().isUnauthorized())
                                 .andExpect(jsonPath("$.message").value("Order does not belong to user"));
         }
 
@@ -319,7 +322,7 @@ class PayPalControllerTest {
                                 .with(user(user.getEmail()).roles("USER"))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
-                                .andExpect(status().isForbidden())
+                                .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.message").value("Not eligible for membership upgrade"));
         }
 
@@ -364,7 +367,7 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.message").value("Membership and order are required"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"));
         }
 
         // ========== WEBHOOK TESTS ==========
@@ -418,7 +421,8 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(webhookPayload.toString()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.status").value("processed"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.status").value("processed"));
 
                 // Verify user was upgraded
                 User updatedUser = userRepository.findById(user.getId()).orElseThrow();
@@ -446,7 +450,8 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(webhookPayload.toString()))
                                 .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status").value("invalid_signature"));
+                                .andExpect(jsonPath("$.status").value("error"))
+                                .andExpect(jsonPath("$.message").value("invalid_signature"));
         }
 
         @Test
@@ -474,7 +479,8 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(webhookPayload.toString()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.status").value("ignored_unknown_order"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.status").value("ignored_unknown_order"));
         }
 
         @Test
@@ -515,7 +521,8 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(webhookPayload.toString()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.status").value("already_completed"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.status").value("already_completed"));
         }
 
         @Test
@@ -532,7 +539,8 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(webhookPayload.toString()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.status").value("ignored"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.status").value("ignored"));
         }
 
         @Test
@@ -580,7 +588,8 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(webhookPayload.toString()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.status").value("validation_failed"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.status").value("validation_failed"));
 
                 // Verify transaction status
                 MembershipPaymentTransaction updatedTransaction = paymentTransactionRepository
@@ -620,7 +629,7 @@ class PayPalControllerTest {
                                 .content("{\"orderId\": \"ORDER-IDEM-123\", \"membershipId\": " + paidMembership.getId()
                                                 + "}"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.success").value(true));
+                                .andExpect(jsonPath("$.data.success").value(true));
 
                 // Second capture same order - user is now paid, so returns forbidden
                 // (This proves idempotency - user was only upgraded once, can't be charged
@@ -631,7 +640,7 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"orderId\": \"ORDER-IDEM-123\", \"membershipId\": " + paidMembership.getId()
                                                 + "}"))
-                                .andExpect(status().isForbidden())
+                                .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.message").value("Not eligible for membership upgrade"));
 
                 // Verify only ONE transaction exists (no double-charging)
@@ -683,7 +692,7 @@ class PayPalControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"orderId\": \"ORDER-SEC-123\", \"membershipId\": " + paidMembership.getId()
                                                 + "}"))
-                                .andExpect(status().isForbidden());
+                                .andExpect(status().isUnauthorized());
 
                 // Verify only user1 was upgraded
                 User updatedUser1 = userRepository.findByEmail("user1.security@test.com");
@@ -754,7 +763,8 @@ class PayPalControllerTest {
                                 .header("paypal-cert-url", "https://api.paypal.com/cert")
                                 .header("paypal-auth-algo", "SHA256withRSA"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.status").value("already_completed"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.status").value("already_completed"));
 
                 Optional<MembershipPaymentTransaction> txn = paymentTransactionRepository
                                 .findByPaypalOrderId("ORDER-WEBHOOK-IDEM");

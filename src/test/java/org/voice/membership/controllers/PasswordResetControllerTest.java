@@ -107,7 +107,7 @@ class PasswordResetControllerTest {
                 .param("confirmPassword", "DifferentPass123!"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("reset-password"))
-                .andExpect(model().attribute("message", "Passwords do not match."));
+                .andExpect(model().attribute("message", "Please fix the password validation errors."));
     }
 
     @Test

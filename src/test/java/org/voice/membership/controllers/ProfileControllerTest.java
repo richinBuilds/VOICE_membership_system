@@ -631,7 +631,7 @@ class ProfileControllerTest {
                 .with(csrf())
                 .param("membershipId", "99999"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/profile/upgrade-membership?error=invalid_membership"));
+            .andExpect(redirectedUrl("/profile?error=not_eligible_for_upgrade"));
     }
 
     // View upgrade membership page with free membership
@@ -663,7 +663,7 @@ class ProfileControllerTest {
                 .with(csrf())
                 .param("membershipId", String.valueOf(anotherFreeMembership.getId())))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/profile/upgrade-membership?error=invalid_membership"));
+            .andExpect(redirectedUrl("/profile?error=not_eligible_for_upgrade"));
     }
 
 }
