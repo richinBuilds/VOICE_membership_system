@@ -99,12 +99,18 @@ public class RegistrationService {
      */
     @Transactional
     public User registerUser(RegisterDto userDetails,
-                             Integer googleSignupUserId,
-                             Integer selectedMembershipId,
-                             List<ChildDto> children,
-                             String paypalOrderId,
-                             String paypalCaptureId,
-                             BigDecimal paymentAmount) {
+            Integer googleSignupUserId,
+            Integer selectedMembershipId,
+            List<ChildDto> children,
+            String paypalOrderId,
+            String paypalCaptureId,
+            BigDecimal paymentAmount) {
+
+        if (googleSignupUserId != null) {
+            log.info("Google signup flow detected for userId: {}", googleSignupUserId);
+        } else {
+            log.info("Normal registration flow (new user)");
+        }
 
         User user = buildOrUpdateUser(userDetails, googleSignupUserId);
 
@@ -163,7 +169,11 @@ public class RegistrationService {
         if (user.isEmailVerified()) {
             return ResendOutcome.ALREADY_VERIFIED;
         }
-        verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
+        verificationTokenRepository.findByUser(user).ifPresent(existingToken -> {
+            log.info("Deleting existing token for user ID: {}", user.getId());
+            verificationTokenRepository.delete(existingToken);
+            verificationTokenRepository.flush();
+        });
         String token = UUID.randomUUID().toString();
         verificationTokenRepository.save(new VerificationToken(token, user));
         String verificationLink = appBaseUrl + "/register/verify?token=" + token;
@@ -250,7 +260,7 @@ public class RegistrationService {
     }
 
     private void recordPaymentTransaction(User user, String paypalOrderId,
-                                          String paypalCaptureId, BigDecimal paymentAmount) {
+            String paypalCaptureId, BigDecimal paymentAmount) {
         if (paypalOrderId == null || paypalCaptureId == null || paymentAmount == null) {
             return;
         }
@@ -267,6 +277,8 @@ public class RegistrationService {
     }
 
     private void issueAndSendVerificationToken(User user) {
+        log.info("Generating token for user ID: {}", user.getId());
+
         verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
         String token = UUID.randomUUID().toString();
         verificationTokenRepository.save(new VerificationToken(token, user));

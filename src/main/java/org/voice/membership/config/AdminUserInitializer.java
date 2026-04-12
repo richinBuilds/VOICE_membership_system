@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.UserRepository;
-
 import java.util.Date;
 
 @Slf4j
@@ -25,9 +24,14 @@ public class AdminUserInitializer implements CommandLineRunner {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AdminProperties adminProperties;
+
     @Override
     public void run(String... args) throws Exception {
-        String adminEmail = "tarparakrimy@gmail.com";
+        String adminEmail = adminProperties.getEmail();
+        String adminPassword = adminProperties.getPassword();
+
         User existingAdmin = userRepository.findByEmail(adminEmail);
 
         if (existingAdmin == null) {
@@ -36,7 +40,7 @@ public class AdminUserInitializer implements CommandLineRunner {
                     .middleName(null)
                     .lastName("User")
                     .email(adminEmail)
-                    .password(passwordEncoder.encode("Capstone36!"))
+                    .password(passwordEncoder.encode(adminPassword))
                     .phone("N/A")
                     .address("N/A")
                     .postalCode("N/A")
@@ -51,7 +55,7 @@ public class AdminUserInitializer implements CommandLineRunner {
         } else {
             log.info("Admin user already exists");
 
-            existingAdmin.setPassword(passwordEncoder.encode("Caspstone36!"));
+            existingAdmin.setPassword(passwordEncoder.encode(adminPassword));
             existingAdmin.setRole(Role.ADMIN.name());
             existingAdmin.setFirstName("Admin");
             existingAdmin.setMiddleName(null);

@@ -349,33 +349,59 @@ document.getElementById('phone').addEventListener('blur', function() {
 });
 
 // Phone number auto-formatting
-document.getElementById('phone').addEventListener('input', function() {
+let isDeleting = false;
+
+const phoneInput = document.getElementById('phone');
+
+phoneInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+        isDeleting = true;
+    } else {
+        isDeleting = false;
+    }
+});
+
+phoneInput.addEventListener('input', function() {
+    if (isDeleting) return; // ✅ allows proper deletion
+
     let value = this.value.replace(/\D/g, '');
-    
+
     if (value.length > 10) {
         value = value.slice(0, 10);
     }
-    
+
     if (value.length >= 6) {
         this.value = '(' + value.slice(0, 3) + ') ' + value.slice(3, 6) + '-' + value.slice(6);
     } else if (value.length >= 3) {
         this.value = '(' + value.slice(0, 3) + ') ' + value.slice(3);
-    } else if (value.length > 0) {
+    } else {
         this.value = value;
     }
 });
 
-// Real-time password match check
-document.getElementById('confirmPassword').addEventListener('input', function() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
-    
-    if (confirmPassword && password !== confirmPassword) {
-        this.classList.add('is-invalid');
+const passwordInput = document.getElementById('password');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+
+function checkPasswordMatch() {
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    // Reset classes first
+    confirmPasswordInput.classList.remove('is-invalid');
+    confirmPasswordInput.classList.remove('is-valid');
+
+    if (!confirmPassword) return; // do nothing if empty
+
+    if (password === confirmPassword) {
+        confirmPasswordInput.classList.add('is-valid');   // ✅ GREEN
     } else {
-        this.classList.remove('is-invalid');
+        confirmPasswordInput.classList.add('is-invalid'); // ❌ RED
     }
-});
+}
+
+// Check on typing in both fields
+passwordInput.addEventListener('input', checkPasswordMatch);
+confirmPasswordInput.addEventListener('input', checkPasswordMatch);
 
 // Postal Code auto-formatting (Canadian format: A1A 1A1)
 document.getElementById('postalCode').addEventListener('input', function() {

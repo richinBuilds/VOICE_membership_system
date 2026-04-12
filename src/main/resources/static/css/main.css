@@ -8,9 +8,9 @@
 /* ========== CSS Variables ========== */
 :root {
     /* Primary Colors */
-    --primary: #09637E;
-    --primary-light: #0B7A9A;
-    --primary-hover: #074D63;
+    --primary: #222831;
+    --primary-light: #222831;
+    --primary-hover: #222831;
     
     /* Secondary (Accent Yellow) */
     --secondary: #FFD700;
@@ -1945,7 +1945,7 @@ a:hover {
 body.checkout-page,
 body.edit-child-page,
 body.register-page {
-    background: #09637E;
+    background: #222831;
     min-height: 100vh;
 }
 
@@ -3003,4 +3003,17 @@ a:hover {
         transition: none !important;
         scroll-behavior: auto !important;
     }
+}
+
+
+/* Strong RED border (invalid) */
+.form-control.is-invalid {
+    border: 2px solid #dc3545 !important;  /* darker red */
+    box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+}
+
+/* Strong GREEN border (valid) */
+.form-control.is-valid {
+    border: 2px solid #198754 !important;  /* darker green */
+    box-shadow: 0 0 5px rgba(25, 135, 84, 0.5);
 }
