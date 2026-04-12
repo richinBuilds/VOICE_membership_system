@@ -20,6 +20,20 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Spring context smoke test
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          DB_URL: jdbc:h2:mem:testdb
+          DB_USERNAME: sa
+          DB_PASSWORD: ""
+          MAILTRAP_USERNAME: test
+          MAILTRAP_PASSWORD: test
+          GOOGLE_CLIENT_ID: test-google-client-id
+          GOOGLE_CLIENT_SECRET: test-google-client-secret
+          PAYPAL_CLIENT_ID: test-client-id
+          PAYPAL_CLIENT_SECRET: test-client-secret
+        run: ./mvnw -Dtest=org.voice.membership.WebRegistrationApplicationTests test -Dspring.profiles.active=test -e
+
       - name: Build with Maven
         env:
           SPRING_PROFILES_ACTIVE: test
@@ -38,10 +52,18 @@ jobs:
         if: failure()
         run: |
           echo "=== Surefire reports (first 400 lines each) ==="
-          find target/surefire-reports -type f -name "*.txt" -o -name "*.xml" | while read f; do
+          find target/surefire-reports -type f \( -name "*.txt" -o -name "*.xml" \) | while IFS= read -r f; do
             echo "--- $f ---"
             sed -n '1,400p' "$f"
           done
+
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+          if-no-files-found: ignore
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3

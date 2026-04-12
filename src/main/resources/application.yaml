@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/web_registration?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -48,10 +48,6 @@ spring:
 
 server:
   port: 8080
-
-app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}
-
   servlet:
     session:
       timeout: 30m
@@ -59,6 +55,9 @@ app:
         http-only: true
         secure: ${SESSION_COOKIE_SECURE:false}
         max-age: 30m
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
   admin:
     email: ${ADMIN_EMAIL:admin@gmail.com}
     password: ${ADMIN_PASSWORD:Voice36!}
