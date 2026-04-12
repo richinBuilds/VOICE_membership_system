@@ -7,6 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -63,14 +66,20 @@ jobs:
           if-no-files-found: ignore
 
       - name: Login to Docker Hub
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/voice-membership:v5
+          tags: ${{ env.DOCKERHUB_USERNAME }}/voice-membership:v5
+
+      - name: Docker publish skipped notice
+        if: env.DOCKERHUB_USERNAME == '' || env.DOCKERHUB_TOKEN == ''
+        run: echo "Skipping Docker publish because DOCKERHUB_USERNAME or DOCKERHUB_TOKEN is not configured in repository secrets."
