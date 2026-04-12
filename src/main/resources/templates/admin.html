@@ -811,7 +811,8 @@ function loadUserDetails(userId) {
             return response.json();
         })
         .then(data => {
-            content.innerHTML = generateUserDetailsHTML(data);
+            const user = (data && data.data) ? data.data : data;
+            content.innerHTML = generateUserDetailsHTML(user);
         })
         .catch(error => {
             content.innerHTML = `
@@ -1091,7 +1092,7 @@ function loadNotifications() {
     })
     .then(response => response.json())
     .then(data => {
-        const count = data.count || 0;
+        const count = data && data.status === 'success' && data.data ? (data.data.count || 0) : 0;
         document.getElementById('newUserCount').textContent = count;
         const dismissBtn = document.getElementById('dismissAllBtn');
         if (count > 0) {

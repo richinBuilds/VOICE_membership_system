@@ -24,12 +24,6 @@ public class RegistrationCompletionService {
 
             Integer googleSignupUserId = (Integer) session
                     .getAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
-            if (registrationData.getUserDetails() != null) {
-                // optional condition: detect manual flow
-                // safest: ALWAYS clear before using again
-                session.removeAttribute(GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
-                googleSignupUserId = null;
-            }
             String paypalOrderId = (String) session.getAttribute("paypalOrderId");
             String paypalCaptureId = (String) session.getAttribute("paypalCaptureId");
             BigDecimal paymentAmount = (BigDecimal) session.getAttribute("paymentAmount");

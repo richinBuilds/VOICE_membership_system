@@ -320,6 +320,30 @@ class AdminWorkflowIntegrationTest {
         assertThat(updated.getEmail()).isEqualTo("john.updated@example.com");
     }
 
+        @Test
+        @WithMockUser(username = "admin@example.com", roles = "ADMIN")
+        void testEditMember_WithBlankPostalCode_ShouldSaveSuccessfully() throws Exception {
+                mockMvc.perform(post("/admin/edit-member/" + testMember1.getId())
+                                .with(csrf())
+                                .param("userId", String.valueOf(testMember1.getId()))
+                                .param("firstName", "John Updated")
+                                .param("lastName", "Doe Updated")
+                                .param("email", "john.updated@example.com")
+                                .param("phone", "4161111111")
+                                .param("address", "")
+                                .param("city", "")
+                                .param("province", "")
+                                .param("postalCode", "")
+                                .param("emailVerified", "true")
+                                .param("accountLocked", "false"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/dashboard"));
+
+                User updated = userRepository.findById(testMember1.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getPostalCode()).isEmpty();
+        }
+
     @Test
     @WithMockUser(username = "admin@example.com", roles = "ADMIN")
     void testEditMemberWithDuplicateEmail() throws Exception {
@@ -381,10 +405,13 @@ class AdminWorkflowIntegrationTest {
     void testGetUserDetailsViaRestEndpoint() throws Exception {
         mockMvc.perform(get("/admin/user/" + testMember1.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(testMember1.getId()))
-                .andExpect(jsonPath("$.firstName").value("John"))
-                .andExpect(jsonPath("$.lastName").value("Doe"))
-                .andExpect(jsonPath("$.email").value("john.doe@example.com"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.id").value(testMember1.getId()))
+                                .andExpect(jsonPath("$.data.firstName").value("John"))
+                                .andExpect(jsonPath("$.data.lastName").value("Doe"))
+                                .andExpect(jsonPath("$.data.email").value("john.doe@example.com"))
+                                .andExpect(jsonPath("$.data.city").value("Toronto"))
+                                .andExpect(jsonPath("$.data.province").value("ON"));
     }
 
     @Test

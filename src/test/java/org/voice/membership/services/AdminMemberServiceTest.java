@@ -518,6 +518,31 @@ class AdminMemberServiceTest {
     }
 
     @Test
+    void updateMember_WithBlankPostalCode_ShouldSaveSuccessfully() {
+        // Arrange
+        AdminUpdateUserRequest request = new AdminUpdateUserRequest();
+        request.setFirstName("Updated");
+        request.setLastName("User");
+        request.setEmail("user@example.com");
+        request.setPhone("555-7777");
+        request.setAddress("123 Test St");
+        request.setCity("Toronto");
+        request.setProvince("ON");
+        request.setPostalCode("");
+
+        when(userRepository.findById(10)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User updated = adminMemberService.updateMember(10, request);
+
+        // Assert
+        assertThat(updated).isNotNull();
+        assertThat(updated.getPostalCode()).isEmpty();
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
     void updateMember_UnlockingAccount_ShouldResetFailedAttempts() {
         // Arrange
         testUser.setAccountLocked(true);

@@ -19,6 +19,8 @@ public class AdminMemberViewService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
+                .city(user.getCity())
+                .province(user.getProvince())
                 .postalCode(user.getPostalCode())
                 .role(user.getRole() != null ? user.getRole() : "USER")
                 .creation(user.getCreation())

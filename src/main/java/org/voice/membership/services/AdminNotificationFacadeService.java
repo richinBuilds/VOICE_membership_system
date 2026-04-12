@@ -45,6 +45,10 @@ public class AdminNotificationFacadeService {
         notificationService.dismissAllNotifications();
     }
 
+    public boolean dismissNotificationForUser(Integer userId) {
+        return notificationService.dismissNotificationForUser(userId);
+    }
+
     public NotificationDetailsResponse getNotificationDetails(Long id) {
         AdminNotification notification = notificationService.getNotificationById(id);
         if (notification == null) {

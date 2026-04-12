@@ -386,4 +386,47 @@ class AdminNotificationServiceTest {
         assertThat(notification2.isDismissed()).isTrue();
         verify(notificationRepository).saveAll(unreadNotifications);
     }
+
+        @Test
+        void dismissNotificationForUser_WithMatchingInstantNotification_ShouldDismiss() {
+                // Arrange
+                Date now = new Date();
+                paidUser.setCreation(now);
+
+                AdminNotification instant = new AdminNotification();
+                instant.setId(11L);
+                instant.setNotificationType("INSTANT");
+                instant.setDismissed(false);
+                instant.setMessage("New paid member: John Doe joined with Premium membership");
+
+                when(userRepository.findById(1)).thenReturn(Optional.of(paidUser));
+                when(notificationRepository
+                                .findByNotificationTypeAndDismissedFalseAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualOrderByCreatedAtDesc(
+                                                eq("INSTANT"), eq(now), eq(now)))
+                                .thenReturn(List.of(instant));
+
+                // Act
+                boolean dismissed = adminNotificationService.dismissNotificationForUser(1);
+
+                // Assert
+                assertThat(dismissed).isTrue();
+                assertThat(instant.isDismissed()).isTrue();
+                verify(notificationRepository).saveAll(anyList());
+        }
+
+        @Test
+        void dismissNotificationForUser_WithMissingUser_ShouldReturnFalse() {
+                // Arrange
+                when(userRepository.findById(999)).thenReturn(Optional.empty());
+
+                // Act
+                boolean dismissed = adminNotificationService.dismissNotificationForUser(999);
+
+                // Assert
+                assertThat(dismissed).isFalse();
+                verify(notificationRepository, never())
+                                .findByNotificationTypeAndDismissedFalseAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualOrderByCreatedAtDesc(
+                                                anyString(), any(Date.class), any(Date.class));
+                verify(notificationRepository, never()).saveAll(anyList());
+        }
 }

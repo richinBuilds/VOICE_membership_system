@@ -112,6 +112,8 @@ class AdminControllerTest {
                                 .password("Capstone36!")
                                 .phone("1234567890")
                                 .address("123 Test St")
+                                .city("Toronto")
+                                .province("ON")
                                 .postalCode("12345")
                                 .role(Role.USER.name())
                                 .creation(new Date())
@@ -135,10 +137,13 @@ class AdminControllerTest {
         void getUserDetails_WithValidId_ShouldReturnUserDetails() throws Exception {
                 mockMvc.perform(get("/admin/user/" + regularUser.getId()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.id").value(regularUser.getId()))
-                                .andExpect(jsonPath("$.firstName").value("Regular"))
-                                .andExpect(jsonPath("$.lastName").value("User"))
-                                .andExpect(jsonPath("$.email").value("user@example.com"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.id").value(regularUser.getId()))
+                                .andExpect(jsonPath("$.data.firstName").value("Regular"))
+                                .andExpect(jsonPath("$.data.lastName").value("User"))
+                                .andExpect(jsonPath("$.data.email").value("user@example.com"))
+                                .andExpect(jsonPath("$.data.city").value("Toronto"))
+                                .andExpect(jsonPath("$.data.province").value("ON"));
         }
 
         @Test
@@ -227,6 +232,30 @@ class AdminControllerTest {
                 assertThat(updated.getFirstName()).isEqualTo("UpdatedFirst");
                 assertThat(updated.getLastName()).isEqualTo("UpdatedLast");
                 assertThat(updated.getEmail()).isEqualTo("updated@example.com");
+        }
+
+        @Test
+        @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
+        void updateMember_WithBlankPostalCode_ShouldUpdateAndRedirect() throws Exception {
+                mockMvc.perform(post("/admin/edit-member/" + regularUser.getId())
+                                .with(csrf())
+                                .param("userId", String.valueOf(regularUser.getId()))
+                                .param("firstName", "UpdatedFirst")
+                                .param("lastName", "UpdatedLast")
+                                .param("email", "user@example.com")
+                                .param("phone", "9876543210")
+                                .param("address", "")
+                                .param("city", "")
+                                .param("province", "")
+                                .param("postalCode", "")
+                                .param("emailVerified", "true")
+                                .param("accountLocked", "false"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/admin/dashboard"));
+
+                User updated = userRepository.findById(regularUser.getId()).orElse(null);
+                assertThat(updated).isNotNull();
+                assertThat(updated.getPostalCode()).isEmpty();
         }
 
         @Test

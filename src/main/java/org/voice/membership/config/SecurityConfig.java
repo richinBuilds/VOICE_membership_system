@@ -100,7 +100,8 @@ public class SecurityConfig {
                                                                         GoogleOAuth2UserService.GOOGLE_AUTH_FLOW_SESSION_KEY);
                                                         request.getSession().removeAttribute(
                                                                         GoogleOAuth2UserService.GOOGLE_SIGNUP_REDIRECT_STEP2_SESSION_KEY);
-                                                        request.getSession().removeAttribute("googleSignupUserId");
+                                                        request.getSession().removeAttribute(
+                                                                        GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
 
                                                         String redirectUrl = "/login?error=true";
 
@@ -122,6 +123,12 @@ public class SecurityConfig {
                                                                                         oauth2Exception.getError()
                                                                                                         .getErrorCode())) {
                                                                 redirectUrl = "/login?locked=true";
+                                                        } else if (exception instanceof OAuth2AuthenticationException oauth2Exception
+                                                                        && oauth2Exception.getError() != null
+                                                                        && "invalid_google_account".equalsIgnoreCase(
+                                                                                        oauth2Exception.getError()
+                                                                                                        .getErrorCode())) {
+                                                                redirectUrl = "/login?invalidGoogleAccount=true";
                                                         }
 
                                                         response.sendRedirect(redirectUrl);
