@@ -62,9 +62,6 @@ app:
     email: ${ADMIN_EMAIL:admin@gmail.com}
     password: ${ADMIN_PASSWORD:Voice36!}
 
-app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}
-
 logging:
   level:
     org:
