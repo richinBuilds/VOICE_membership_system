@@ -34,19 +34,18 @@ public class AdminAddMemberRequest {
     @Pattern(regexp = "^[0-9\\-\\+\\(\\)\\s]+$", message = "Please provide a valid phone number")
     private String phone;
 
-    @NotBlank(message = "Address is required")
     private String address;
 
-    @NotBlank(message = "Postal code is required")
+    private String city;
+
+    private String province;
+
     private String postalCode;
-    
+
     private String chapter;
 
     @NotBlank(message = "Password is required")
-    @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$",
-        message = "Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-    )
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$", message = "Password must be at least 8 characters with uppercase, lowercase, number, and special character")
     private String password;
 
     @NotBlank(message = "Password confirmation is required")

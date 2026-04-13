@@ -152,7 +152,7 @@ public class AdminMemberService {
                 user.setMembershipStartDate(null);
                 user.setMembershipExpiryDate(null);
             }
-            
+
             // Check if membership actually changed
             if (!updateRequest.getMembershipId().equals(previousMembershipId)) {
                 membershipChanged = true;
@@ -162,7 +162,7 @@ public class AdminMemberService {
             user.setPaid(false);
             user.setMembershipStartDate(null);
             user.setMembershipExpiryDate(null);
-            
+
             // Membership was removed
             if (previousMembershipId != null) {
                 membershipChanged = true;
@@ -334,7 +334,8 @@ public class AdminMemberService {
     /**
      * Immutable result of a bulk-email send operation.
      */
-    public record BulkEmailResult(int successCount, int failureCount, String message) {}
+    public record BulkEmailResult(int successCount, int failureCount, String message) {
+    }
 
     /**
      * Send a custom email to every user in {@code request.getRecipientIds()}.
