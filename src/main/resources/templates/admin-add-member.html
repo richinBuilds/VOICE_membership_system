@@ -214,10 +214,13 @@
                                 
                                 <div class="col-md-4">
                                     <label for="postalCode" class="form-label">Postal Code</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="postalCode" 
-                                           th:field="*{postalCode}">
+                                    <input type="text"
+                                            class="form-control"
+                                            id="postalCode"
+                                            th:field="*{postalCode}"
+                                            maxlength="7"
+                                            pattern="^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$"
+                                            title="Format: A1A 1A1 (Canadian postal code)">
                                 </div>
                                 
                                 <div class="col-md-4">
@@ -567,4 +570,14 @@ function validatePasswordMatch() {
         }
     }
 }
+
+document.getElementById("postalCode").addEventListener("input", function () {
+    let value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+    if (value.length > 3) {
+        value = value.slice(0,3) + " " + value.slice(3,6);
+    }
+
+    this.value = value.slice(0,7);
+});
 </script>

@@ -59,6 +59,8 @@ public class AdminMemberService {
                 .password(passwordEncoder.encode(memberRequest.getPassword()))
                 .phone(memberRequest.getPhone())
                 .address(memberRequest.getAddress())
+                .city(memberRequest.getCity())
+                .province(memberRequest.getProvince())
                 .postalCode(memberRequest.getPostalCode())
                 .chapter(memberRequest.getChapter())
                 .role(Role.USER.name())
