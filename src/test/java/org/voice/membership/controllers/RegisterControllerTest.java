@@ -863,7 +863,7 @@ class RegisterControllerTest {
         void showCheckout_WithoutSessionData_ShouldRedirectToRegister() throws Exception {
                 mockMvc.perform(get("/register/checkout"))
                                 .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/register"));
+                                .andExpect(redirectedUrl("/register/step3"));
         }
 
         // Show Checkout - With Free Membership (Auto-Complete)
@@ -1195,7 +1195,9 @@ class RegisterControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.orderId").value("PAYPAL-ORDER-123"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.message").value("Order created"))
+                                .andExpect(jsonPath("$.data.orderId").value("PAYPAL-ORDER-123"));
         }
 
         // Create PayPal Order - Without Session
@@ -1394,8 +1396,10 @@ class RegisterControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(captureRequestBody))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.success").value(true))
-                                .andExpect(jsonPath("$.redirectUrl").value("/register/verification-sent?payment=success"));
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.message").value("Payment finalized"))
+                                .andExpect(jsonPath("$.data.success").value(true))
+                                .andExpect(jsonPath("$.data.redirectUrl").value("/register/verification-sent?payment=success"));
         }
 
         // Capture PayPal Order - Without Session

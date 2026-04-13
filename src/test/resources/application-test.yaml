@@ -21,8 +21,8 @@ spring:
       client:
         registration:
           google:
-            client-id:
-            client-secret:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
             scope:
               - openid
               - email
@@ -47,23 +47,6 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.voice.membership: DEBUG
-
-# Mock OAuth2 configuration for tests (not real credentials)
-
-security:
-  oauth2:
-    client:
-      registration:
-        google:
-          client-id: test-google-client-id
-          client-secret: test-google-client-secret
-          scope:
-            - openid
-            - email
-            - profile
-      provider:
-        google:
-          issuer-uri: https://accounts.google.com
 
 # Mock PayPal configuration for tests (not real credentials)
 paypal:

@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
+import org.voice.membership.config.TestEmailConfig;
 import org.voice.membership.entities.Role;
 import org.voice.membership.entities.User;
 import org.voice.membership.repositories.LandingPageContentRepository;
@@ -40,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Import(TestEmailConfig.class)
 class AdminControllerTest {
 
         @Autowired
@@ -372,9 +375,8 @@ class AdminControllerTest {
                                 .param("phone", "123") // Invalid length
                                 .param("password", "weak")
                                 .param("confirmPassword", "weak"))
-                                .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/admin/add-member"))
-                                .andExpect(flash().attributeExists("error"));
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin-add-member"));
         }
 
         @Test
@@ -394,9 +396,8 @@ class AdminControllerTest {
                                 .param("confirmPassword", "DifferentPassword123!") // Mismatch
                                 .param("emailVerified", "true")
                                 .param("accountLocked", "false"))
-                                .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/admin/add-member"))
-                                .andExpect(flash().attributeExists("error"));
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin-add-member"));
         }
 
         // ========================== Delete Member Tests ==========================
@@ -509,9 +510,8 @@ class AdminControllerTest {
                                 .param("email", "testadmin@example.com")
                                 .param("password", "Password123!")
                                 .param("confirmPassword", "DifferentPassword123!")) // Mismatch
-                                .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/admin/add-admin"))
-                                .andExpect(flash().attributeExists("error"));
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("admin-add-admin"));
         }
 
         @Test
@@ -658,37 +658,40 @@ class AdminControllerTest {
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void getUnreadNotifications_ShouldReturnNotifications() throws Exception {
-                mockMvc.perform(get("/admin/api/admin/notifications/unread"))
+                mockMvc.perform(get("/api/admin/notifications/unread"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$").isArray());
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data").isArray());
         }
 
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void getUnreadNotificationsCount_ShouldReturnCount() throws Exception {
-                mockMvc.perform(get("/admin/api/admin/notifications/count"))
+                mockMvc.perform(get("/api/admin/notifications/count"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.count").isNumber());
+                                .andExpect(jsonPath("$.status").value("success"))
+                                .andExpect(jsonPath("$.data.count").isNumber());
         }
 
         @Test
         @WithMockUser(username = "tarparakrimy1@gmail.com", roles = "ADMIN")
         void dismissAllNotifications_ShouldSucceed() throws Exception {
-                mockMvc.perform(post("/admin/api/admin/notifications/dismiss-all")
+                mockMvc.perform(post("/api/admin/notifications/dismiss-all")
                                 .with(csrf()))
-                                .andExpect(status().isOk());
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value("success"));
         }
 
         @Test
         @WithMockUser(username = "user@example.com", roles = "USER")
         void getUnreadNotifications_WithUserRole_ShouldBeForbidden() throws Exception {
-                mockMvc.perform(get("/admin/api/admin/notifications/unread"))
+                mockMvc.perform(get("/api/admin/notifications/unread"))
                                 .andExpect(status().isForbidden());
         }
 
         @Test
         void getUnreadNotifications_WithoutAuth_ShouldRedirectToLogin() throws Exception {
-                mockMvc.perform(get("/admin/api/admin/notifications/unread"))
+                mockMvc.perform(get("/api/admin/notifications/unread"))
                                 .andExpect(status().is3xxRedirection());
         }
 
@@ -748,8 +751,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.successCount").value("3"))
-                                .andExpect(jsonPath("$.failureCount").value("0"))
+                                .andExpect(jsonPath("$.data.successCount").value(3))
+                                .andExpect(jsonPath("$.data.failureCount").value(0))
                                 .andExpect(jsonPath("$.message")
                                                 .value(containsString("Emails sent successfully to 3 recipient(s)")));
         }
@@ -771,7 +774,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.status").value("error"))
-                                .andExpect(jsonPath("$.message").value("No recipients selected"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"))
+                                .andExpect(jsonPath("$.data.fieldErrors.recipientIds").exists());
         }
 
         @Test
@@ -791,7 +795,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.status").value("error"))
-                                .andExpect(jsonPath("$.message").value("Subject cannot be empty"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"))
+                                .andExpect(jsonPath("$.data.fieldErrors.subject").exists());
         }
 
         @Test
@@ -811,7 +816,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.status").value("error"))
-                                .andExpect(jsonPath("$.message").value("Message body cannot be empty"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"))
+                                .andExpect(jsonPath("$.data.fieldErrors.messageBody").exists());
         }
 
         @Test
@@ -831,7 +837,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.status").value("error"))
-                                .andExpect(jsonPath("$.message").value("Subject cannot be empty"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"))
+                                .andExpect(jsonPath("$.data.fieldErrors.subject").exists());
         }
 
         @Test
@@ -851,8 +858,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.successCount").value("1"))
-                                .andExpect(jsonPath("$.failureCount").value("0"))
+                                .andExpect(jsonPath("$.data.successCount").value(1))
+                                .andExpect(jsonPath("$.data.failureCount").value(0))
                                 .andExpect(jsonPath("$.message")
                                                 .value(containsString("Emails sent successfully to 1 recipient(s)")));
         }
@@ -875,8 +882,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.successCount").value("1"))
-                                .andExpect(jsonPath("$.failureCount").value("1"))
+                                .andExpect(jsonPath("$.data.successCount").value(1))
+                                .andExpect(jsonPath("$.data.failureCount").value(1))
                                 .andExpect(jsonPath("$.message")
                                                 .value(containsString("Failed to send to 1 recipient(s)")));
         }
@@ -971,7 +978,7 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.successCount").value("4"))
+                                .andExpect(jsonPath("$.data.successCount").value(4))
                                 .andExpect(jsonPath("$.message")
                                                 .value(containsString("Emails sent successfully to 4 recipient(s)")));
         }
@@ -1015,8 +1022,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.successCount").value("2"))
-                                .andExpect(jsonPath("$.failureCount").value("0"));
+                                .andExpect(jsonPath("$.data.successCount").value(2))
+                                .andExpect(jsonPath("$.data.failureCount").value(0));
         }
 
         @Test
@@ -1037,7 +1044,8 @@ class AdminControllerTest {
                                 .content(requestJson))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.status").value("error"))
-                                .andExpect(jsonPath("$.message").value("No recipients selected"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"))
+                                .andExpect(jsonPath("$.data.fieldErrors.recipientIds").exists());
         }
 
         @Test
@@ -1077,7 +1085,7 @@ class AdminControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestJson1))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.successCount").value("3"));
+                                .andExpect(jsonPath("$.data.successCount").value(3));
 
                 // Second: Deselect all (toggle off) - should fail
                 String requestJson2 = objectMapper.writeValueAsString(new java.util.HashMap<String, Object>() {
@@ -1093,7 +1101,8 @@ class AdminControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestJson2))
                                 .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.message").value("No recipients selected"));
+                                .andExpect(jsonPath("$.message").value("Validation failed"))
+                                .andExpect(jsonPath("$.data.fieldErrors.recipientIds").exists());
         }
 
         @Test
@@ -1124,8 +1133,8 @@ class AdminControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestJson))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.successCount").value("1"))
-                                .andExpect(jsonPath("$.failureCount").value("2"))
+                                .andExpect(jsonPath("$.data.successCount").value(1))
+                                .andExpect(jsonPath("$.data.failureCount").value(2))
                                 .andExpect(jsonPath("$.message")
                                                 .value(containsString("Failed to send to 2 recipient(s)")));
         }
@@ -1434,10 +1443,10 @@ class AdminControllerTest {
                                 .with(csrf()))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.totalMembersFound").value(0))
-                                .andExpect(jsonPath("$.totalEmailsSent").value(0))
-                                .andExpect(jsonPath("$.totalEmailsFailed").value(0))
-                                .andExpect(jsonPath("$.windows").exists());
+                                .andExpect(jsonPath("$.data.totalMembersFound").value(0))
+                                .andExpect(jsonPath("$.data.totalEmailsSent").value(0))
+                                .andExpect(jsonPath("$.data.totalEmailsFailed").value(0))
+                                .andExpect(jsonPath("$.data.windows").exists());
         }
 
         @Test
@@ -1472,11 +1481,11 @@ class AdminControllerTest {
                                         .param("withinDays", "10"))
                                         .andExpect(status().isOk())
                                         .andExpect(jsonPath("$.status").value("success"))
-                                        .andExpect(jsonPath("$.withinDays").value(10))
-                                        .andExpect(jsonPath("$.membersFound").value(greaterThanOrEqualTo(1)))
-                                        .andExpect(jsonPath("$.members[0].email").value("expiring@example.com"))
-                                        .andExpect(jsonPath("$.members[0].paid").value(true))
-                                        .andExpect(jsonPath("$.note").exists());
+                                        .andExpect(jsonPath("$.data.withinDays").value(10))
+                                        .andExpect(jsonPath("$.data.membersFound").value(greaterThanOrEqualTo(1)))
+                                        .andExpect(jsonPath("$.data.members[0].email").value("expiring@example.com"))
+                                        .andExpect(jsonPath("$.data.members[0].paid").value(true))
+                                        .andExpect(jsonPath("$.data.note").exists());
                 }
         }
 
@@ -1487,8 +1496,8 @@ class AdminControllerTest {
                                 .param("withinDays", "5"))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.status").value("success"))
-                                .andExpect(jsonPath("$.membersFound").value(0))
-                                .andExpect(jsonPath("$.members").isArray());
+                                .andExpect(jsonPath("$.data.membersFound").value(0))
+                                .andExpect(jsonPath("$.data.members").isArray());
         }
 
         @Test
