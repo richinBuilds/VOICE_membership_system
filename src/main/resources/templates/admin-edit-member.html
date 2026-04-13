@@ -88,7 +88,9 @@
                 
                 <form th:action="@{/admin/edit-member/{id}(id=${user.id})}" 
                       th:object="${updateRequest}"
-                      method="post">
+                      id="editMemberForm"
+                      method="post"
+                      novalidate>
                     
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <input type="hidden" th:field="*{userId}"/>
@@ -115,6 +117,8 @@
                                      th:errors="*{firstName}">
                                     First name error
                                 </div>
+                                <div id="firstNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name is required</div>
+                                <div id="firstNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name cannot contain only numbers</div>
                             </div>
                             
                             <!-- Middle Name -->
@@ -141,6 +145,8 @@
                                      th:errors="*{lastName}">
                                     Last name error
                                 </div>
+                                <div id="lastNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name is required</div>
+                                <div id="lastNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name cannot contain only numbers</div>
                             </div>
                         </div>
                     </div>
@@ -396,6 +402,80 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// Real-time validation for required text fields on blur
+const firstNameInput = document.getElementById('firstName');
+const lastNameInput = document.getElementById('lastName');
+
+if (firstNameInput) {
+    firstNameInput.addEventListener('blur', function() {
+        validateNameField(this, 'firstNameError', 'firstNameNumberError');
+    });
+}
+
+if (lastNameInput) {
+    lastNameInput.addEventListener('blur', function() {
+        validateNameField(this, 'lastNameError', 'lastNameNumberError');
+    });
+}
+
+// Form submission validation
+const editMemberForm = document.getElementById('editMemberForm');
+if (editMemberForm) {
+    editMemberForm.addEventListener('submit', function(e) {
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        
+        // Clear error messages first
+        document.getElementById('firstNameError').style.display = 'none';
+        document.getElementById('firstNameNumberError').style.display = 'none';
+        document.getElementById('lastNameError').style.display = 'none';
+        document.getElementById('lastNameNumberError').style.display = 'none';
+        
+        let hasErrors = false;
+        
+        // Validate first name
+        if (!firstName) {
+            document.getElementById('firstNameError').style.display = 'block';
+            hasErrors = true;
+        } else if (/^\d+$/.test(firstName)) {
+            document.getElementById('firstNameNumberError').style.display = 'block';
+            hasErrors = true;
+        }
+        
+        // Validate last name
+        if (!lastName) {
+            document.getElementById('lastNameError').style.display = 'block';
+            hasErrors = true;
+        } else if (/^\d+$/.test(lastName)) {
+            document.getElementById('lastNameNumberError').style.display = 'block';
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            return false;
+        }
+    });
+}
+
+// Validate name field - check for empty and numeric-only values
+function validateNameField(field, emptyErrorId, numberErrorId) {
+    const value = field.value.trim();
+    const emptyErrorDiv = document.getElementById(emptyErrorId);
+    const numberErrorDiv = document.getElementById(numberErrorId);
+    
+    if (value === '') {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'block';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'none';
+    } else if (/^\d+$/.test(value)) {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'none';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'block';
+    } else {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'none';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'none';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.getElementById('phone');
     const postalCodeInput = document.getElementById('postalCode');

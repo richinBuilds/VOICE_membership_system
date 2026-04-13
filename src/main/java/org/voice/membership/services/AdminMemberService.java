@@ -351,18 +351,23 @@ public class AdminMemberService {
         int failureCount = 0;
         StringBuilder failedEmails = new StringBuilder();
 
+        log.info("Starting bulk email send to {} recipients", request.getRecipientIds().size());
+
         for (Integer userId : request.getRecipientIds()) {
             try {
                 User user = userRepository.findById(userId).orElse(null);
                 if (user != null && user.getEmail() != null) {
+                    log.debug("Sending email to user {} ({})", user.getId(), user.getEmail());
                     emailSenderService.sendCustomEmail(
                             user.getEmail(),
                             request.getSubject(),
                             request.getMessageBody(),
                             adminName);
                     successCount++;
+                    log.debug("Email sent successfully to user {} ({})", user.getId(), user.getEmail());
                 } else {
                     failureCount++;
+                    log.warn("User not found or email missing for userId {}", userId);
                     if (user != null) {
                         failedEmails.append(user.getFirstName()).append(" ")
                                 .append(user.getLastName()).append(", ");
@@ -370,13 +375,15 @@ public class AdminMemberService {
                 }
             } catch (Exception e) {
                 failureCount++;
+                log.error("Error sending email to userId {}: {}", userId, e.getMessage(), e);
                 User user = userRepository.findById(userId).orElse(null);
                 if (user != null) {
-                    failedEmails.append(user.getEmail()).append(", ");
+                    failedEmails.append(user.getEmail()).append(" (").append(e.getMessage()).append("), ");
                 }
             }
         }
 
+        log.info("Bulk email send completed: {} successful, {} failed", successCount, failureCount);
         String message = buildBulkEmailSummary(successCount, failureCount, failedEmails.toString());
         return new BulkEmailResult(successCount, failureCount, message);
     }

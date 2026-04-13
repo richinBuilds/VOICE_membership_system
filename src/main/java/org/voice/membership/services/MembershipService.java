@@ -196,7 +196,8 @@ public class MembershipService {
      * @param id          primary key of the membership
      * @param name        new display name
      * @param description new description
-     * @param price       new price string (ignored for free memberships or when blank)
+     * @param price       new price string (ignored for free memberships or when
+     *                    blank)
      * @param features    newline-separated features text (browser line endings are
      *                    normalised to the system separator)
      * @return the saved Membership, or {@code null} if the id was not found
@@ -204,14 +205,14 @@ public class MembershipService {
      *                               decimal number
      */
     public Membership updateMembership(int id, String name, String description,
-                                       String price, String features) {
+            String price, String features) {
         Membership membership = membershipRepository.findById(id).orElse(null);
         if (membership == null) {
             return null;
         }
         membership.setName(name.trim());
         membership.setDescription(description.trim());
-        if (!membership.isFree() && price != null && !price.trim().isEmpty()) {
+        if (price != null && !price.trim().isEmpty()) {
             membership.setPrice(new BigDecimal(price.trim()));
         }
         if (features != null) {

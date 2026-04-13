@@ -82,6 +82,8 @@
         <span th:text="${error}">Error message</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+
+
     
     <!-- Add Member Form -->
     <div class="row justify-content-center">
@@ -94,7 +96,14 @@
                     <form th:action="@{/admin/add-member}" 
                           th:object="${memberRequest}" 
                           method="post"
-                          id="addMemberForm">
+                          id="addMemberForm"
+                          novalidate>
+
+                        <div th:if="${#fields.hasGlobalErrors()}">
+                            <p th:each="err : ${#fields.globalErrors()}"
+                            th:text="${err}">
+                            </p>
+                        </div>
                         
                         <!-- Personal Information Section -->
                         <div class="form-section">
@@ -111,7 +120,14 @@
                                            class="form-control" 
                                            id="firstName" 
                                            th:field="*{firstName}"
+                                           th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
                                            required>
+                                    <div class="invalid-feedback"
+                                        th:if="${#fields.hasErrors('firstName')}"
+                                        th:errors="*{firstName}">
+                                    </div>
+                                    <div id="firstNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name is required</div>
+                                    <div id="firstNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name cannot contain only numbers</div>                                
                                 </div>
                                 
                                 <div class="col-md-4">
@@ -128,11 +144,21 @@
                                     <label for="lastName" class="form-label">
                                         Last Name <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="lastName" 
-                                           th:field="*{lastName}"
-                                           required>
+
+                                    <input type="text"
+                                        class="form-control"
+                                        id="lastName"
+                                        th:field="*{lastName}"
+                                        th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
+                                        required>
+
+                                    <!-- FIXED ERROR DISPLAY -->
+                                    <div class="invalid-feedback d-block"
+                                        th:if="${#fields.hasErrors('lastName')}">
+                                        <span th:errors="*{lastName}"></span>
+                                    </div>
+                                    <div id="lastNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name is required</div>
+                                    <div id="lastNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name cannot contain only numbers</div>
                                 </div>
                             </div>
                         </div>
@@ -152,8 +178,14 @@
                                            class="form-control" 
                                            id="email" 
                                            th:field="*{email}"
+                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
                                            required>
                                     <small class="text-muted">This will be the member's login email</small>
+                                    <div class="invalid-feedback" 
+                                        th:if="${#fields.hasErrors('email')}" 
+                                        th:errors="*{email}">
+                                    </div>
+                                    <div id="emailError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Email is required</div>
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -168,10 +200,16 @@
                                            pattern="[0-9]{10}"
                                            maxlength="10"
                                            inputmode="numeric"
+                                           th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
                                            required>
                                     <small class="text-muted d-block mt-1">
                                         <i class="fas fa-info-circle me-1"></i>Enter exactly 10 digits (no dashes or spaces)
                                     </small>
+                                    <div class="invalid-feedback" 
+                                        th:if="${#fields.hasErrors('phone')}" 
+                                        th:errors="*{phone}">
+                                    </div>
+                                    <div id="phoneError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Phone number must be exactly 10 digits</div>
                                 </div>
                                 
                                 <div class="col-md-8">
@@ -392,12 +430,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 value = value.substring(0, 10);
             }
             this.value = value;
+            
+            // Clear error on input if valid
+            if (value.length === 10) {
+                document.getElementById('phoneError').style.display = 'none';
+            }
         });
         
         phoneInput.addEventListener('keypress', function(e) {
             // Only allow numeric keys
             if (!/[0-9]/.test(e.key)) {
                 e.preventDefault();
+            }
+        });
+        
+        phoneInput.addEventListener('blur', function() {
+            const errorDiv = document.getElementById('phoneError');
+            if (this.value.trim() === '' || this.value.length !== 10) {
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+    }
+    
+    // Real-time validation for required text fields on blur
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    const emailInput = document.getElementById('email');
+    
+    if (firstNameInput) {
+        firstNameInput.addEventListener('blur', function() {
+            validateNameField(this, 'firstNameError', 'firstNameNumberError');
+        });
+    }
+    
+    if (lastNameInput) {
+        lastNameInput.addEventListener('blur', function() {
+            validateNameField(this, 'lastNameError', 'lastNameNumberError');
+        });
+    }
+    
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const errorDiv = document.getElementById('emailError');
+            if (this.value.trim() === '') {
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
             }
         });
     }
@@ -420,32 +500,71 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission validation
     if (addMemberForm) {
         addMemberForm.addEventListener('submit', function(e) {
-            // Validate phone length
-            if (phoneInput.value.length !== 10) {
-                e.preventDefault();
-                phoneInput.classList.add('is-invalid');
-                alert('Phone number must be exactly 10 digits');
+            // Prevent default submission immediately
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = phoneInput.value.trim();
+            
+            // Clear all error messages first
+            document.getElementById('firstNameError').style.display = 'none';
+            document.getElementById('firstNameNumberError').style.display = 'none';
+            document.getElementById('lastNameError').style.display = 'none';
+            document.getElementById('lastNameNumberError').style.display = 'none';
+            document.getElementById('emailError').style.display = 'none';
+            document.getElementById('phoneError').style.display = 'none';
+            
+            let hasErrors = false;
+            
+            // Validate first name
+            if (!firstName) {
+                document.getElementById('firstNameError').style.display = 'block';
+                hasErrors = true;
+            } else if (/^\d+$/.test(firstName)) {
+                document.getElementById('firstNameNumberError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            // Validate last name
+            if (!lastName) {
+                document.getElementById('lastNameError').style.display = 'block';
+                hasErrors = true;
+            } else if (/^\d+$/.test(lastName)) {
+                document.getElementById('lastNameNumberError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (!email) {
+                document.getElementById('emailError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (!phone || phone.length !== 10) {
+                document.getElementById('phoneError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            // If there are validation errors, don't proceed
+            if (hasErrors) {
                 return false;
-            } else {
-                phoneInput.classList.remove('is-invalid');
             }
             
             // Validate password strength
             if (!isPasswordStrong(passwordInput.value)) {
-                e.preventDefault();
                 showPasswordError('Password does not meet the requirements');
                 return false;
             }
             
             // Validate passwords match
             if (confirmPasswordInput && passwordInput.value !== confirmPasswordInput.value) {
-                e.preventDefault();
                 showConfirmPasswordError('Passwords do not match');
                 return false;
             }
             
-            // Form is valid
-            return true;
+            // All validations passed, submit the form
+            this.submit();
         });
     }
 });
@@ -580,4 +699,22 @@ document.getElementById("postalCode").addEventListener("input", function () {
 
     this.value = value.slice(0,7);
 });
+
+// Validate name field - check for empty and numeric-only values
+function validateNameField(field, emptyErrorId, numberErrorId) {
+    const value = field.value.trim();
+    const emptyErrorDiv = document.getElementById(emptyErrorId);
+    const numberErrorDiv = document.getElementById(numberErrorId);
+    
+    if (value === '') {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'block';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'none';
+    } else if (/^\d+$/.test(value)) {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'none';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'block';
+    } else {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'none';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'none';
+    }
+}
 </script>

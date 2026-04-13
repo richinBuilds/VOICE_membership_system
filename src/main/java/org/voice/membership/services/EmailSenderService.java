@@ -10,9 +10,11 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Lazy;
+import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 /**
  * Sends application emails such as password reset and verification notices.

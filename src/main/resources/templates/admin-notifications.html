@@ -136,7 +136,7 @@
                         <td th:text="${user.city}">City</td>
                         <td th:text="${user.province}">Province</td>
                         <td>
-                            <span class="badge bg-info" th:if="${user.children != null and #lists.size(user.children) > 0}" 
+                            <span class="badge bg-secondary" th:if="${user.children != null and #lists.size(user.children) > 0}" 
                                   th:text="${#lists.size(user.children)}">0</span>
                             <span class="text-muted" th:if="${user.children == null or #lists.size(user.children) == 0}">None</span>
                         </td>
@@ -325,8 +325,8 @@
                         <div class="col-md-6">
                             <h6 class="text-primary border-bottom pb-2">Membership Details</h6>
                             <table class="table table-sm">
-                                <tr><th>Status:</th><td><span class="badge ${user.paid ? 'bg-success' : 'bg-secondary'}">${user.paid ? 'PAID' : 'FREE'}</span></td></tr>
-                                <tr><th>Membership:</th><td>${user.membershipName || 'N/A'}</td></tr>
+                                <tr><th>Status:</th><td><span class="badge ${user.paid ? 'bg-secondary' : 'bg-secondary'}">${user.paid ? 'PAID' : 'FREE'}</span></td></tr>
+                                <tr><th>Membership:</th><td>${user.membership && user.membership.name ? user.membership.name : 'N/A'}</td></tr>
                                 <tr><th>Start Date:</th><td>${user.membershipStartDate ? new Date(user.membershipStartDate).toLocaleDateString() : 'N/A'}</td></tr>
                                 <tr><th>Expiry Date:</th><td>${user.membershipExpiryDate ? new Date(user.membershipExpiryDate).toLocaleDateString() : 'N/A'}</td></tr>
                             </table>
@@ -336,8 +336,8 @@
                             <table class="table table-sm">
                                 <tr><th>Role:</th><td><span class="badge ${user.role === 'ADMIN' ? 'bg-secondary' : 'bg-secondary'}">${user.role || 'USER'}</span></td></tr>
                                 <tr><th>Registration:</th><td>${user.creation ? new Date(user.creation).toLocaleDateString() : 'N/A'}</td></tr>
-                                <tr><th>Email Verified:</th><td>${user.emailVerified ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td></tr>
-                                <tr><th>Account Locked:</th><td>${user.accountLocked ? '<span class="badge bg-danger">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td></tr>
+                                <tr><th>Email Verified:</th><td>${user.emailVerified ? '<span class="badge bg-secondary">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td></tr>
+                                <tr><th>Account Locked:</th><td>${user.accountLocked ? '<span class="badge bg-secondary">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td></tr>
                             </table>
                         </div>
                     </div>
@@ -358,7 +358,7 @@
                                 <tbody>
                                     ${user.children.map(child => `
                                         <tr>
-                                            <td>${child.firstName} ${child.lastName}</td>
+                                            <td>${child.name || 'N/A'}</td>
                                             <td>${child.dateOfBirth ? new Date(child.dateOfBirth).toLocaleDateString() : 'N/A'}</td>
                                             <td>${child.age || 'N/A'}</td>
                                             <td>${child.hearingLossType || 'N/A'}</td>

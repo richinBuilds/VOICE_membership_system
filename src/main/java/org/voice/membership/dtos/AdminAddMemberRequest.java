@@ -40,7 +40,6 @@ public class AdminAddMemberRequest {
 
     private String province;
 
-    @Pattern(regexp = "^[A-Za-z]\\d[A-Za-z][ -]?\\d[A-Za-z]\\d$", message = "Postal code must be in format A1A 1A1")
     private String postalCode;
 
     private String chapter;
