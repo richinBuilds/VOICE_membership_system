@@ -67,10 +67,15 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             if (!isSignupFlow) {
                 throw new OAuth2AuthenticationException(
                         new OAuth2Error("google_signup_required"),
-                        "No account found for this Google email. Please sign up first.");
+                        "No account found. Please sign up first.");
             }
             user = createGoogleUser(oauth2User, email);
         } else {
+            if (isSignupFlow) {
+                throw new OAuth2AuthenticationException(
+                        new OAuth2Error("email_exists"),
+                        "An account with this email already exists. Please log in.");
+            }
             user = updateExistingGoogleUser(user, oauth2User);
         }
 
@@ -116,7 +121,7 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .role(Role.USER.name())
                 .creation(new Date())
-            .emailVerified(false)
+                .emailVerified(false)
                 .accountLocked(false)
                 .failedLoginAttempts(0)
                 .paid(false)
@@ -129,11 +134,13 @@ public class GoogleOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String givenName = oauth2User.getAttribute("given_name");
         String familyName = oauth2User.getAttribute("family_name");
 
-        if ((user.getFirstName() == null || user.getFirstName().isBlank()) && givenName != null && !givenName.isBlank()) {
+        if ((user.getFirstName() == null || user.getFirstName().isBlank()) && givenName != null
+                && !givenName.isBlank()) {
             user.setFirstName(givenName);
         }
 
-        if ((user.getLastName() == null || user.getLastName().isBlank()) && familyName != null && !familyName.isBlank()) {
+        if ((user.getLastName() == null || user.getLastName().isBlank()) && familyName != null
+                && !familyName.isBlank()) {
             user.setLastName(familyName);
         }
 
