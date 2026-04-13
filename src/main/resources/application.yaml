@@ -60,8 +60,8 @@ app:
         secure: false
         max-age: 30m
   admin:
-    email: admin@gmail.com
-    password: Voice36!
+    email: ${ADMIN_EMAIL:admin@gmail.com}
+    password: ${ADMIN_PASSWORD:Voice36!}
 
 logging:
   level:
@@ -76,8 +76,8 @@ logging:
 # Account lockout configuration
 account:
   lockout:
-    max-attempts: 5 # Maximum failed login attempts before lockout
-    duration-minutes: 30 # Lockout duration in minutes
+    max-attempts: 5
+    duration-minutes: 30
 
 paypal:
   mode: sandbox
@@ -85,3 +85,4 @@ paypal:
   client-secret:
   webhook-id:
   currency: CAD
+#Docker files testing
