@@ -22,6 +22,7 @@ Thumbs.db
 # Local env files (do not commit secrets)
 .env
 .env.*
+!.env.example
 
 # Node/bundler (if added later)
 /node_modules/
