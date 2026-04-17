@@ -55,11 +55,11 @@ public class MembershipRenewalSchedulerService {
      * cannot block reminders to the rest of the list.
      */
     /**
-     * Scheduled task — fires every day at 8:00 AM.
+     * Scheduled task — fires every day at 3:13 PM.
      * Also called directly by the admin trigger endpoint.
      * Returns a summary map so callers can report results to the UI.
      */
-    @Scheduled(cron = "0 0 8 * * ?") // Every day at 08:00 AM
+    @Scheduled(cron = "0 00 8 * * ?") // Every day at 08:00 AM
     @Transactional(readOnly = true)
     public Map<String, Object> sendRenewalReminders() {
         log.info("Starting membership renewal reminder job");

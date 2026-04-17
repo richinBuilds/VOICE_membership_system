@@ -1,6 +1,7 @@
 package org.voice.membership.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -10,15 +11,19 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Lazy;
+import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 /**
  * Sends application emails such as password reset and verification notices.
  * Uses Thymeleaf templates and JavaMail to build and deliver messages.
  */
 public class EmailSenderService {
+
+    private static final int CUSTOM_EMAIL_MAX_ATTEMPTS = 3;
 
     @Autowired
     private JavaMailSender mailSender;
@@ -29,6 +34,15 @@ public class EmailSenderService {
     @Autowired
     @Lazy
     private LandingPageService landingPageService;
+
+    @Value("${spring.mail.username:}")
+    private String mailFromAddress;
+
+    @Value("${app.email.custom.min-interval-ms:1200}")
+    private long customEmailMinIntervalMs;
+
+    private final Object customEmailRateLock = new Object();
+    private long lastCustomEmailSentAtMs = 0L;
 
     public void sendPasswordResetEmail(String to, String resetLink) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -68,24 +82,85 @@ public class EmailSenderService {
     }
 
     public void sendCustomEmail(String to, String subject, String messageBody, String fromName) {
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setTo(to);
-            helper.setSubject(subject);
+        String recipient = to == null ? "" : to.trim();
+        String senderName = fromName == null ? "Admin" : fromName.trim();
 
-            String htmlContent = "<html><body>" +
-                    "<p>" + messageBody.replaceAll("\n", "<br>") + "</p>" +
-                    "<br>" +
-                    "<p>Sent from: " + fromName + "</p>" +
-                    "<p>---<br>VOICE Membership System</p>" +
-                    "</body></html>";
+        for (int attempt = 1; attempt <= CUSTOM_EMAIL_MAX_ATTEMPTS; attempt++) {
+            throttleCustomEmailSends();
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            try {
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+                helper.setTo(recipient);
+                helper.setSubject(subject);
 
-            helper.setText(htmlContent, true);
-            mailSender.send(mimeMessage);
-        } catch (MessagingException | MailException e) {
-            throw new RuntimeException("Failed to send custom email to " + to, e);
+                if (mailFromAddress != null && !mailFromAddress.isBlank()) {
+                    helper.setFrom(mailFromAddress.trim());
+                }
+
+                String htmlContent = "<html><body>" +
+                        "<p>" + messageBody.replaceAll("\n", "<br>") + "</p>" +
+                        "<br>" +
+                        "<p>Sent from: " + senderName + "</p>" +
+                        "<p>---<br>VOICE Membership System</p>" +
+                        "</body></html>";
+
+                helper.setText(htmlContent, true);
+                mailSender.send(mimeMessage);
+                return;
+            } catch (MessagingException | MailException e) {
+                if (attempt < CUSTOM_EMAIL_MAX_ATTEMPTS) {
+                    long backoffMillis = 500L * attempt;
+                    if (isRateLimitError(e)) {
+                        backoffMillis = Math.max(customEmailMinIntervalMs * (attempt + 1), 1500L);
+                    }
+                    log.warn("Custom email send attempt {}/{} failed for {}. Retrying in {} ms. Cause: {}",
+                            attempt, CUSTOM_EMAIL_MAX_ATTEMPTS, recipient, backoffMillis, e.getMessage());
+                    try {
+                        Thread.sleep(backoffMillis);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Failed to send custom email to " + recipient, e);
+                    }
+                    continue;
+                }
+                throw new RuntimeException("Failed to send custom email to " + recipient, e);
+            }
         }
+    }
+
+    private void throttleCustomEmailSends() {
+        long interval = Math.max(customEmailMinIntervalMs, 250L);
+        synchronized (customEmailRateLock) {
+            long now = System.currentTimeMillis();
+            long elapsed = now - lastCustomEmailSentAtMs;
+            long waitMillis = interval - elapsed;
+            if (waitMillis > 0) {
+                try {
+                    Thread.sleep(waitMillis);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Custom email send interrupted while waiting for rate limit", e);
+                }
+            }
+            lastCustomEmailSentAtMs = System.currentTimeMillis();
+        }
+    }
+
+    private boolean isRateLimitError(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String msg = current.getMessage();
+            if (msg != null) {
+                String lower = msg.toLowerCase();
+                if (lower.contains("too many emails per second")
+                        || lower.contains("mailtrap.io/billing/plans/testing")
+                        || lower.contains("550 5.7.0")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     /**

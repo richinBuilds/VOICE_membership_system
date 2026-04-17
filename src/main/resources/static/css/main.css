@@ -13,12 +13,12 @@
     --primary-hover: #222831;
     
     /* Secondary (Accent Yellow) */
-    --secondary: #FFD700;
-    --secondary-dark: #E5C100;
+    --secondary: #8195b5;
+    --secondary-dark: #8195b5;
     
     /* Accent Teal */
-    --accent: #4FD1C5;
-    --accent-light: #81E6D9;
+    --accent: #8195b5;
+    --accent-light: #8195b5;
     
     /* Backgrounds */
     --bg-bone: #F9F9F5;
@@ -42,7 +42,7 @@
     --warning-light: #FEF3C7;
     --danger: #EF4444;
     --danger-light: #FEE2E2;
-    --info: #3B82F6;
+    --info: #8195b5;
     --info-light: #DBEAFE;
     
     /* Spacing - Compact */
@@ -133,13 +133,13 @@ a:hover {
 
 /* ========== Navbar ========== */
 .navbar {
-    background: linear-gradient(135deg, #FFFFFF 0%, #b0e0ea 100%) !important;
+    background: linear-gradient(135deg, #FFFFFF 0%, #839194 100%) !important;
     padding: 0.75rem 0;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 12px rgba(9, 99, 126, 0.3);
-    border-bottom: 3px solid rgba(9, 99, 126, 0.25);
+    box-shadow: 0 2px 12px rgba(52, 60, 62, 0.3);
+    border-bottom: 3px solid rgba(52, 60, 62, 0.3);
 }
 
 .navbar .container {
@@ -954,7 +954,7 @@ a:hover {
 
 .alert-info {
     background: var(--info-light);
-    color: #1E40AF;
+    color: #6a7085;
 }
 
 .success-alert {

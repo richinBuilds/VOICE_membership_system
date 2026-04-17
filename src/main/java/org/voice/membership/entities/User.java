@@ -37,17 +37,18 @@ public class User {
     private String email;
     private String password;
     private String phone;
+    @Column(name = "address", nullable = true)
     private String address;
-    @Column(name = "city")
+    @Column(name = "city", nullable = true)
     private String city;
-    @Column(name = "province")
+    @Column(name = "province", nullable = true)
     private String province;
-    @Column(name = "postal_code")
+    @Column(name = "postal_code", nullable = true)
     private String postalCode;
-    
+
     @Column(name = "chapter")
     private String chapter;
-    
+
     private String role;
     private Date creation;
 

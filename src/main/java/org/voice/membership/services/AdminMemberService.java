@@ -59,6 +59,8 @@ public class AdminMemberService {
                 .password(passwordEncoder.encode(memberRequest.getPassword()))
                 .phone(memberRequest.getPhone())
                 .address(memberRequest.getAddress())
+                .city(memberRequest.getCity())
+                .province(memberRequest.getProvince())
                 .postalCode(memberRequest.getPostalCode())
                 .chapter(memberRequest.getChapter())
                 .role(Role.USER.name())
@@ -152,7 +154,7 @@ public class AdminMemberService {
                 user.setMembershipStartDate(null);
                 user.setMembershipExpiryDate(null);
             }
-            
+
             // Check if membership actually changed
             if (!updateRequest.getMembershipId().equals(previousMembershipId)) {
                 membershipChanged = true;
@@ -162,7 +164,7 @@ public class AdminMemberService {
             user.setPaid(false);
             user.setMembershipStartDate(null);
             user.setMembershipExpiryDate(null);
-            
+
             // Membership was removed
             if (previousMembershipId != null) {
                 membershipChanged = true;
@@ -334,7 +336,8 @@ public class AdminMemberService {
     /**
      * Immutable result of a bulk-email send operation.
      */
-    public record BulkEmailResult(int successCount, int failureCount, String message) {}
+    public record BulkEmailResult(int successCount, int failureCount, String message) {
+    }
 
     /**
      * Send a custom email to every user in {@code request.getRecipientIds()}.
@@ -348,18 +351,24 @@ public class AdminMemberService {
         int failureCount = 0;
         StringBuilder failedEmails = new StringBuilder();
 
+        log.info("Starting bulk email send to {} recipients", request.getRecipientIds().size());
+
         for (Integer userId : request.getRecipientIds()) {
             try {
                 User user = userRepository.findById(userId).orElse(null);
                 if (user != null && user.getEmail() != null) {
+                    String recipientEmail = user.getEmail().trim();
+                    log.debug("Sending email to user {} ({})", user.getId(), recipientEmail);
                     emailSenderService.sendCustomEmail(
-                            user.getEmail(),
+                            recipientEmail,
                             request.getSubject(),
                             request.getMessageBody(),
                             adminName);
                     successCount++;
+                    log.debug("Email sent successfully to user {} ({})", user.getId(), recipientEmail);
                 } else {
                     failureCount++;
+                    log.warn("User not found or email missing for userId {}", userId);
                     if (user != null) {
                         failedEmails.append(user.getFirstName()).append(" ")
                                 .append(user.getLastName()).append(", ");
@@ -367,13 +376,15 @@ public class AdminMemberService {
                 }
             } catch (Exception e) {
                 failureCount++;
+                log.error("Error sending email to userId {}: {}", userId, e.getMessage(), e);
                 User user = userRepository.findById(userId).orElse(null);
                 if (user != null) {
-                    failedEmails.append(user.getEmail()).append(", ");
+                    failedEmails.append(user.getEmail()).append(" (").append(e.getMessage()).append("), ");
                 }
             }
         }
 
+        log.info("Bulk email send completed: {} successful, {} failed", successCount, failureCount);
         String message = buildBulkEmailSummary(successCount, failureCount, failedEmails.toString());
         return new BulkEmailResult(successCount, failureCount, message);
     }

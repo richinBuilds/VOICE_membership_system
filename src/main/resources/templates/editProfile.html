@@ -59,6 +59,8 @@
         <!-- Form -->
         <form method="post"
               th:object="${updateUserRequest}"
+              id="editProfileForm"
+              novalidate
               data-testid="edit-profile-form">
 
             <input type="hidden"
@@ -87,6 +89,8 @@
                 <label for="firstName">
                     <i class="fas fa-user me-1"></i> First Name *
                 </label>
+                <div id="firstNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name is required</div>
+                <div id="firstNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name cannot contain only numbers</div>
             </div>
 
             <!-- Middle Name -->
@@ -116,6 +120,8 @@
                 <label for="lastName">
                     <i class="fas fa-user me-1"></i> Last Name *
                 </label>
+                <div id="lastNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name is required</div>
+                <div id="lastNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name cannot contain only numbers</div>
             </div>
 
             <!-- Email -->
@@ -243,6 +249,80 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// Real-time validation for required text fields on blur
+const firstNameInput = document.getElementById('firstName');
+const lastNameInput = document.getElementById('lastName');
+
+if (firstNameInput) {
+    firstNameInput.addEventListener('blur', function() {
+        validateNameField(this, 'firstNameError', 'firstNameNumberError');
+    });
+}
+
+if (lastNameInput) {
+    lastNameInput.addEventListener('blur', function() {
+        validateNameField(this, 'lastNameError', 'lastNameNumberError');
+    });
+}
+
+// Form submission validation
+const editProfileForm = document.getElementById('editProfileForm');
+if (editProfileForm) {
+    editProfileForm.addEventListener('submit', function(e) {
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        
+        // Clear error messages first
+        document.getElementById('firstNameError').style.display = 'none';
+        document.getElementById('firstNameNumberError').style.display = 'none';
+        document.getElementById('lastNameError').style.display = 'none';
+        document.getElementById('lastNameNumberError').style.display = 'none';
+        
+        let hasErrors = false;
+        
+        // Validate first name
+        if (!firstName) {
+            document.getElementById('firstNameError').style.display = 'block';
+            hasErrors = true;
+        } else if (/^\d+$/.test(firstName)) {
+            document.getElementById('firstNameNumberError').style.display = 'block';
+            hasErrors = true;
+        }
+        
+        // Validate last name
+        if (!lastName) {
+            document.getElementById('lastNameError').style.display = 'block';
+            hasErrors = true;
+        } else if (/^\d+$/.test(lastName)) {
+            document.getElementById('lastNameNumberError').style.display = 'block';
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            return false;
+        }
+    });
+}
+
+// Validate name field - check for empty and numeric-only values
+function validateNameField(field, emptyErrorId, numberErrorId) {
+    const value = field.value.trim();
+    const emptyErrorDiv = document.getElementById(emptyErrorId);
+    const numberErrorDiv = document.getElementById(numberErrorId);
+    
+    if (value === '') {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'block';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'none';
+    } else if (/^\d+$/.test(value)) {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'none';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'block';
+    } else {
+        if (emptyErrorDiv) emptyErrorDiv.style.display = 'none';
+        if (numberErrorDiv) numberErrorDiv.style.display = 'none';
+    }
+}
+
 // Phone number auto-formatting
 document.getElementById('phone').addEventListener('input', function() {
     let value = this.value.replace(/\D/g, '');

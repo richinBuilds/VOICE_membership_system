@@ -46,7 +46,8 @@ public class AdminMemberManagementController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(ApiResponse.success("User details fetched", adminMemberViewService.buildUserDetails(user)));
+        return ResponseEntity
+                .ok(ApiResponse.success("User details fetched", adminMemberViewService.buildUserDetails(user)));
     }
 
     @GetMapping("/export-users")
@@ -140,12 +141,13 @@ public class AdminMemberManagementController {
     public String addMember(
             @Valid @ModelAttribute("memberRequest") AdminAddMemberRequest memberRequest,
             BindingResult bindingResult,
-            RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         try {
             if (bindingResult.hasErrors()) {
                 model.addAttribute("memberships", membershipService.getAllMemberships());
+                model.addAttribute("memberRequest", memberRequest);
                 return "admin-add-member";
             }
 
@@ -180,7 +182,8 @@ public class AdminMemberManagementController {
 
             if (deletedUser == null) {
                 User existingUser = adminMemberService.getUserById(id);
-                if (existingUser != null && existingUser.getRole() != null && existingUser.getRole().equals(Role.ADMIN.name())) {
+                if (existingUser != null && existingUser.getRole() != null
+                        && existingUser.getRole().equals(Role.ADMIN.name())) {
                     redirectAttributes.addFlashAttribute("error",
                             "Cannot delete admin accounts. Please contact system administrator.");
                 } else {

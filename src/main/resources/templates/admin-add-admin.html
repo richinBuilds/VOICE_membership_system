@@ -94,7 +94,8 @@
                     <form th:action="@{/admin/add-admin}" 
                           th:object="${adminRequest}" 
                           method="post"
-                          id="addAdminForm">
+                          id="addAdminForm"
+                          novalidate>
                         
                         <!-- Personal Information Section -->
                         <div class="form-section">
@@ -112,6 +113,9 @@
                                            id="firstName" 
                                            th:field="*{firstName}"
                                            required>
+                                    <div class="text-danger" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+                                    <div id="firstNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name is required</div>
+                                    <div id="firstNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">First Name cannot contain only numbers</div>    
                                 </div>
                                 
                                 <div class="col-md-4">
@@ -133,6 +137,9 @@
                                            id="lastName" 
                                            th:field="*{lastName}"
                                            required>
+                                    <div class="text-danger" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+                                    <div id="lastNameError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name is required</div>
+                                    <div id="lastNameNumberError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Last Name cannot contain only numbers</div>
                                 </div>
                             </div>
                         </div>
@@ -153,7 +160,10 @@
                                            id="email" 
                                            th:field="*{email}"
                                            required>
+                            
                                     <small class="text-muted">This will be the admin's login email</small>
+                                    <div class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                                    <div id="emailError" class="text-danger" style="display: none; font-size: 0.875rem; margin-top: 0.25rem;">Email is required</div>
                                 </div>
                             </div>
                         </div>
@@ -256,11 +266,81 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Real-time validation for required text fields on blur
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    const emailInput = document.getElementById('email');
+    
+    if (firstNameInput) {
+        firstNameInput.addEventListener('blur', function() {
+            validateNameField(this, 'firstNameError', 'firstNameNumberError');
+        });
+    }
+    
+    if (lastNameInput) {
+        lastNameInput.addEventListener('blur', function() {
+            validateNameField(this, 'lastNameError', 'lastNameNumberError');
+        });
+    }
+    
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const errorDiv = document.getElementById('emailError');
+            if (this.value.trim() === '') {
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+    }
+    
     // Form submission validation
     if (addAdminForm) {
         addAdminForm.addEventListener('submit', function(e) {
+            // Prevent default submission immediately
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = passwordInput.value;
             const confirmPassword = confirmPasswordInput.value;
+            
+            // Clear all error messages first
+            document.getElementById('firstNameError').style.display = 'none';
+            document.getElementById('firstNameNumberError').style.display = 'none';
+            document.getElementById('lastNameError').style.display = 'none';
+            document.getElementById('lastNameNumberError').style.display = 'none';
+            document.getElementById('emailError').style.display = 'none';
+            
+            let hasErrors = false;
+            
+            // Validate required fields
+            if (!firstName) {
+                document.getElementById('firstNameError').style.display = 'block';
+                hasErrors = true;
+            } else if (/^\d+$/.test(firstName)) {
+                document.getElementById('firstNameNumberError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (!lastName) {
+                document.getElementById('lastNameError').style.display = 'block';
+                hasErrors = true;
+            } else if (/^\d+$/.test(lastName)) {
+                document.getElementById('lastNameNumberError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (!email) {
+                document.getElementById('emailError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            // If there are validation errors, don't proceed
+            if (hasErrors) {
+                return false;
+            }
             
             // Check if password meets all requirements
             const hasMinLength = password.length >= 8;
@@ -270,20 +350,39 @@ document.addEventListener('DOMContentLoaded', function() {
             const hasSpecial = /[@$!%*?&#]/.test(password);
             
             if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
-                e.preventDefault();
                 alert('Password does not meet all requirements. Please check the password requirements.');
                 return false;
             }
             
             // Check if passwords match
             if (password !== confirmPassword) {
-                e.preventDefault();
                 alert('Passwords do not match. Please ensure both password fields are identical.');
                 return false;
             }
             
-            return true;
+            // All validations passed, submit the form
+            this.submit();
         });
+    }
+    
+    /**
+     * Validate name field - ensure it's not empty and not only numbers
+     */
+    function validateNameField(field, emptyErrorId, numberErrorId) {
+        const value = field.value.trim();
+        const emptyErrorDiv = document.getElementById(emptyErrorId);
+        const numberErrorDiv = document.getElementById(numberErrorId);
+        
+        if (value === '') {
+            emptyErrorDiv.style.display = 'block';
+            numberErrorDiv.style.display = 'none';
+        } else if (/^\d+$/.test(value)) {
+            emptyErrorDiv.style.display = 'none';
+            numberErrorDiv.style.display = 'block';
+        } else {
+            emptyErrorDiv.style.display = 'none';
+            numberErrorDiv.style.display = 'none';
+        }
     }
     
     /**

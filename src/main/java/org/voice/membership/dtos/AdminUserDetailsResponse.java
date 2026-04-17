@@ -9,18 +9,24 @@ import java.util.List;
 
 @Builder
 public record AdminUserDetailsResponse(
-        Integer id,
-        String firstName,
-        String middleName,
-        String lastName,
-        String email,
-        String phone,
-        String address,
-        String city,
-        String province,
-        String postalCode,
-        String role,
-        Date creation,
-        List<Child> children,
-        Membership membership) {
+                Integer id,
+                String firstName,
+                String middleName,
+                String lastName,
+                String email,
+                String phone,
+                String address,
+                String city,
+                String province,
+                String postalCode,
+                String chapter,
+                String role,
+                Date creation,
+                boolean paid,
+                boolean emailVerified,
+                boolean accountLocked,
+                Date membershipStartDate,
+                Date membershipExpiryDate,
+                List<Child> children,
+                Membership membership) {
 }

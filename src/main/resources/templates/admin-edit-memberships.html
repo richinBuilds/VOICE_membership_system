@@ -140,7 +140,6 @@
                         <div class="mb-3">
                             <label class="form-label">
                                 Price
-                                <span class="text-muted fw-normal small" th:if="${membership.isFree}">(not applicable for free plans)</span>
                             </label>
                             <div class="input-group price-group">
                                 <span class="input-group-text">$</span>
@@ -150,7 +149,6 @@
                                        step="0.01"
                                        min="0"
                                        th:value="${membership.price}"
-                                       th:disabled="${membership.isFree}"
                                        placeholder="0.00"/>
                                 <span class="input-group-text">/year</span>
                             </div>

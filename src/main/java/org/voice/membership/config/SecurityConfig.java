@@ -104,8 +104,14 @@ public class SecurityConfig {
                                                                         GoogleOAuth2UserService.GOOGLE_SIGNUP_USER_ID_SESSION_KEY);
 
                                                         String redirectUrl = "/login?error=true";
-
                                                         if (exception instanceof OAuth2AuthenticationException oauth2Exception
+                                                                        && oauth2Exception.getError() != null
+                                                                        && "email_exists".equalsIgnoreCase(
+                                                                                        oauth2Exception.getError()
+                                                                                                        .getErrorCode())) {
+
+                                                                redirectUrl = "/register?error=email_exists";
+                                                        } else if (exception instanceof OAuth2AuthenticationException oauth2Exception
                                                                         && oauth2Exception.getError() != null
                                                                         && "google_signup_required".equalsIgnoreCase(
                                                                                         oauth2Exception.getError()

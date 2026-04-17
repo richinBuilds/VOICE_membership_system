@@ -75,11 +75,11 @@
                             Membership Name
                         </h3>
 
-                        <div class="membership-price" th:if="${membership.isFree}">
+                        <div class="membership-price" th:if="${membership.price == null || membership.price.signum() == 0}">
                             Free
                         </div>
 
-                        <div class="membership-price" th:unless="${membership.isFree}">
+                        <div class="membership-price" th:unless="${membership.price == null || membership.price.signum() == 0}">
                             $<span th:text="${membership.price}">0</span>
                         </div>
                     </div>
