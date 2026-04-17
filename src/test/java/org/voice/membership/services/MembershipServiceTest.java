@@ -5,13 +5,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.voice.membership.entities.Membership;
 import org.voice.membership.repositories.MembershipRepository;
 import org.voice.membership.repositories.UserRepository;
 
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for MembershipService
@@ -251,5 +256,71 @@ class MembershipServiceTest {
 
         // Assert
         assertThat(expired).isFalse(); // One year from now should not be expired
+    }
+
+    // ==================== updateMembership Tests ====================
+
+    @Test
+    void updateMembership_WithFreePlan_ShouldKeepPriceAtZero() {
+        // Arrange
+        Membership freePlan = Membership.builder()
+                .id(1)
+                .name("Free")
+                .description("Free plan")
+                .price(new BigDecimal("0.00"))
+                .features("- Basic")
+                .isFree(true)
+                .active(true)
+                .displayOrder(1)
+                .build();
+
+        when(membershipRepository.findById(1)).thenReturn(Optional.of(freePlan));
+        when(membershipRepository.save(any(Membership.class))).thenReturn(freePlan);
+
+        // Act
+        Membership updated = membershipService.updateMembership(
+                1,
+                "Free Updated",
+                "Updated free description",
+                "99.99",
+                "- Basic access");
+
+        // Assert
+        assertThat(updated).isNotNull();
+        assertThat(updated.isFree()).isTrue();
+        assertThat(updated.getPrice()).isEqualByComparingTo(new BigDecimal("0.00"));
+        assertThat(updated.getName()).isEqualTo("Free Updated");
+    }
+
+    @Test
+    void updateMembership_WithPaidPlan_ShouldApplySubmittedPrice() {
+        // Arrange
+        Membership paidPlan = Membership.builder()
+                .id(2)
+                .name("Premium")
+                .description("Premium plan")
+                .price(new BigDecimal("20.00"))
+                .features("- Premium")
+                .isFree(false)
+                .active(true)
+                .displayOrder(2)
+                .build();
+
+        when(membershipRepository.findById(2)).thenReturn(Optional.of(paidPlan));
+        when(membershipRepository.save(any(Membership.class))).thenReturn(paidPlan);
+
+        // Act
+        Membership updated = membershipService.updateMembership(
+                2,
+                "Premium Updated",
+                "Updated premium description",
+                "99.99",
+                "- Premium benefits");
+
+        // Assert
+        assertThat(updated).isNotNull();
+        assertThat(updated.isFree()).isFalse();
+        assertThat(updated.getPrice()).isEqualByComparingTo(new BigDecimal("99.99"));
+        assertThat(updated.getName()).isEqualTo("Premium Updated");
     }
 }

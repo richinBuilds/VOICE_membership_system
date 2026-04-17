@@ -212,7 +212,9 @@ public class MembershipService {
         }
         membership.setName(name.trim());
         membership.setDescription(description.trim());
-        if (price != null && !price.trim().isEmpty()) {
+        if (membership.isFree()) {
+            membership.setPrice(BigDecimal.ZERO.setScale(2));
+        } else if (price != null && !price.trim().isEmpty()) {
             membership.setPrice(new BigDecimal(price.trim()));
         }
         if (features != null) {
