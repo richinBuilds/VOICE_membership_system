@@ -79,6 +79,8 @@
                        id="firstName"
                        th:field="*{firstName}"
                        placeholder="First Name"
+                      pattern="(?=.*[A-Za-z])[A-Za-z0-9\s'-]+"
+                      title="First name must include at least one letter and can contain letters, numbers, spaces, apostrophes, or hyphens"
                        required
                        data-testid="register-firstName">
                 <label for="firstName">
@@ -110,6 +112,8 @@
                        id="lastName"
                        th:field="*{lastName}"
                        placeholder="Last Name"
+                      pattern="(?=.*[A-Za-z])[A-Za-z0-9\s'-]+"
+                      title="Last name must include at least one letter and can contain letters, numbers, spaces, apostrophes, or hyphens"
                        required
                        data-testid="register-lastName">
                 <label for="lastName">
@@ -298,9 +302,29 @@
 <script>
 // Form validation
 document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
     const phone = document.getElementById('phone').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+
+    const nameRegex = /^(?=.*[A-Za-z])[A-Za-z0-9\s'-]+$/;
+    const firstName = firstNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+
+    if (!nameRegex.test(firstName)) {
+        e.preventDefault();
+        firstNameInput.classList.add('is-invalid');
+        alert('First name must include at least one letter and cannot be only numbers.');
+        return false;
+    }
+
+    if (!nameRegex.test(lastName)) {
+        e.preventDefault();
+        lastNameInput.classList.add('is-invalid');
+        alert('Last name must include at least one letter and cannot be only numbers.');
+        return false;
+    }
     
     // Validate phone number - Canadian format
     const phoneRegex = /^(\()?([0-9]{3})(\))?([-.\s])?([0-9]{3})([-.\s])?([0-9]{4})$/;

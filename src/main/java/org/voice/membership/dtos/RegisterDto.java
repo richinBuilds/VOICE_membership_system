@@ -15,11 +15,13 @@ import org.voice.membership.validation.StrongPassword;
 public class RegisterDto {
 
     @NotEmpty(message = "First name is required")
+    @Pattern(regexp = "^(?=.*[A-Za-z])[A-Za-z0-9\\s'-]+$", message = "First name must include at least one letter and may contain letters, numbers, spaces, apostrophes, or hyphens")
     private String firstName;
 
     private String middleName;
 
     @NotEmpty(message = "Last name is required")
+    @Pattern(regexp = "^(?=.*[A-Za-z])[A-Za-z0-9\\s'-]+$", message = "Last name must include at least one letter and may contain letters, numbers, spaces, apostrophes, or hyphens")
     private String lastName;
 
     @NotEmpty

@@ -2,6 +2,13 @@ package org.voice.membership.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +22,7 @@ import org.voice.membership.repositories.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Service for admin member management operations.
@@ -357,14 +365,24 @@ public class AdminMemberService {
             try {
                 User user = userRepository.findById(userId).orElse(null);
                 if (user != null && user.getEmail() != null) {
-                    log.debug("Sending email to user {} ({})", user.getId(), user.getEmail());
+                    String recipientEmail = user.getEmail().trim();
+
+                    String validationError = validateRecipientEmail(recipientEmail);
+                    if (validationError != null) {
+                        failureCount++;
+                        log.warn("Skipping email for user {} ({}): {}", user.getId(), recipientEmail, validationError);
+                        failedEmails.append(recipientEmail).append(" (").append(validationError).append("), ");
+                        continue;
+                    }
+
+                    log.debug("Sending email to user {} ({})", user.getId(), recipientEmail);
                     emailSenderService.sendCustomEmail(
-                            user.getEmail(),
+                            recipientEmail,
                             request.getSubject(),
                             request.getMessageBody(),
                             adminName);
                     successCount++;
-                    log.debug("Email sent successfully to user {} ({})", user.getId(), user.getEmail());
+                    log.debug("Email sent successfully to user {} ({})", user.getId(), recipientEmail);
                 } else {
                     failureCount++;
                     log.warn("User not found or email missing for userId {}", userId);
@@ -378,7 +396,8 @@ public class AdminMemberService {
                 log.error("Error sending email to userId {}: {}", userId, e.getMessage(), e);
                 User user = userRepository.findById(userId).orElse(null);
                 if (user != null) {
-                    failedEmails.append(user.getEmail()).append(" (").append(e.getMessage()).append("), ");
+                    String rootMessage = getRootCauseMessage(e);
+                    failedEmails.append(user.getEmail()).append(" (").append(rootMessage).append("), ");
                 }
             }
         }
@@ -400,5 +419,67 @@ public class AdminMemberService {
             }
         }
         return message;
+    }
+
+    private String validateRecipientEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return "Email is empty";
+        }
+
+        try {
+            InternetAddress address = new InternetAddress(email);
+            address.validate();
+        } catch (AddressException ex) {
+            return "Invalid email format";
+        }
+
+        String lowerEmail = email.toLowerCase(Locale.ROOT);
+        if (lowerEmail.endsWith("@example.com") || lowerEmail.endsWith("@example.net")
+                || lowerEmail.endsWith("@example.org")) {
+            return "Reserved test domain (not deliverable)";
+        }
+
+        String domain = lowerEmail.substring(lowerEmail.indexOf('@') + 1);
+        if (hasNullMxRecord(domain)) {
+            return "Recipient domain does not accept emails";
+        }
+
+        return null;
+    }
+
+    private boolean hasNullMxRecord(String domain) {
+        try {
+            DirContext context = new InitialDirContext();
+            Attributes attrs = context.getAttributes("dns:/" + domain, new String[] { "MX" });
+            Attribute mxAttr = attrs.get("MX");
+            if (mxAttr == null || mxAttr.size() == 0) {
+                return false;
+            }
+
+            boolean allNullMx = true;
+            for (int i = 0; i < mxAttr.size(); i++) {
+                String mxValue = String.valueOf(mxAttr.get(i)).trim();
+                String host = mxValue.contains(" ")
+                        ? mxValue.substring(mxValue.lastIndexOf(' ') + 1).trim()
+                        : mxValue;
+                if (!".".equals(host)) {
+                    allNullMx = false;
+                    break;
+                }
+            }
+            return allNullMx;
+        } catch (NamingException ex) {
+            log.debug("MX lookup skipped/failed for domain {}: {}", domain, ex.getMessage());
+            return false;
+        }
+    }
+
+    private String getRootCauseMessage(Exception exception) {
+        Throwable current = exception;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        String message = current.getMessage();
+        return (message == null || message.isBlank()) ? exception.getMessage() : message;
     }
 }
